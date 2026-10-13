@@ -1,0 +1,528 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 7,
+    "ts": "2014-08-20T10:02:58.010486Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ConnectionRequest",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "512"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 8,
+    "ts": "2014-08-20T10:02:58.014285Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ConnectionConfirm",
+    "function_code": -1,
+    "class": "other",
+    "identity": {
+      "rack": "0",
+      "slot": "2"
+    },
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "512"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 9,
+    "ts": "2014-08-20T10:02:58.014402Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "1920",
+      "pdu_reference": "65535",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 10,
+    "ts": "2014-08-20T10:02:58.018202Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "240",
+      "pdu_reference": "65535",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 11,
+    "ts": "2014-08-20T10:02:58.021735Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "READ_VAR",
+    "function_code": 4,
+    "class": "read",
+    "address": 0,
+    "quantity": 64,
+    "attrs": {
+      "area": "DB",
+      "db_number": "1",
+      "item_count": "1",
+      "items": "DB1.0",
+      "pdu_reference": "0",
+      "rosctr": "Job",
+      "transport_size": "BYTE"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 12,
+    "ts": "2014-08-20T10:02:58.024324Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "READ_VAR",
+    "function_code": 4,
+    "class": "read",
+    "attrs": {
+      "item_count": "1",
+      "items_truncated": "true",
+      "pdu_reference": "0",
+      "return_code": "SUCCESS",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 13,
+    "ts": "2014-08-20T10:02:58.034551Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "READ_VAR",
+    "function_code": 4,
+    "class": "read",
+    "address": 0,
+    "quantity": 16,
+    "attrs": {
+      "area": "Flags",
+      "db_number": "0",
+      "item_count": "1",
+      "items": "Flags.0",
+      "pdu_reference": "1",
+      "rosctr": "Job",
+      "transport_size": "BYTE"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 14,
+    "ts": "2014-08-20T10:02:58.038314Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "READ_VAR",
+    "function_code": 4,
+    "class": "read",
+    "attrs": {
+      "item_count": "1",
+      "items_truncated": "true",
+      "pdu_reference": "1",
+      "return_code": "SUCCESS",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 15,
+    "ts": "2014-08-20T10:02:58.049427Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "address": 0,
+    "quantity": 4,
+    "attrs": {
+      "area": "Flags",
+      "db_number": "0",
+      "item_count": "1",
+      "items": "Flags.0",
+      "pdu_reference": "2",
+      "rosctr": "Job",
+      "transport_size": "BYTE",
+      "value": "a9100001"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 16,
+    "ts": "2014-08-20T10:02:58.053317Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "attrs": {
+      "item_count": "1",
+      "items_truncated": "true",
+      "pdu_reference": "2",
+      "return_code": "SUCCESS",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 17,
+    "ts": "2014-08-20T10:02:58.053428Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "address": 4,
+    "quantity": 4,
+    "attrs": {
+      "area": "Flags",
+      "db_number": "0",
+      "item_count": "1",
+      "items": "Flags.4",
+      "pdu_reference": "3",
+      "rosctr": "Job",
+      "transport_size": "BYTE",
+      "value": "00000103"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 18,
+    "ts": "2014-08-20T10:02:58.057284Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "attrs": {
+      "item_count": "1",
+      "items_truncated": "true",
+      "pdu_reference": "3",
+      "return_code": "SUCCESS",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 19,
+    "ts": "2014-08-20T10:02:58.057342Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "address": 8,
+    "quantity": 4,
+    "attrs": {
+      "area": "Flags",
+      "db_number": "0",
+      "item_count": "1",
+      "items": "Flags.8",
+      "pdu_reference": "4",
+      "rosctr": "Job",
+      "transport_size": "BYTE",
+      "value": "00000003"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 20,
+    "ts": "2014-08-20T10:02:58.061288Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "attrs": {
+      "item_count": "1",
+      "items_truncated": "true",
+      "pdu_reference": "4",
+      "return_code": "SUCCESS",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 21,
+    "ts": "2014-08-20T10:02:58.061336Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "address": 12,
+    "quantity": 4,
+    "attrs": {
+      "area": "Flags",
+      "db_number": "0",
+      "item_count": "1",
+      "items": "Flags.12",
+      "pdu_reference": "5",
+      "rosctr": "Job",
+      "transport_size": "BYTE",
+      "value": "3f8ccccd"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 22,
+    "ts": "2014-08-20T10:02:58.065321Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "WRITE_VAR",
+    "function_code": 5,
+    "class": "write",
+    "attrs": {
+      "item_count": "1",
+      "items_truncated": "true",
+      "pdu_reference": "5",
+      "return_code": "SUCCESS",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 23,
+    "ts": "2014-08-20T10:02:58.065455Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "READ_VAR",
+    "function_code": 4,
+    "class": "read",
+    "address": 0,
+    "quantity": 16,
+    "attrs": {
+      "area": "Flags",
+      "db_number": "0",
+      "item_count": "1",
+      "items": "Flags.0",
+      "pdu_reference": "6",
+      "rosctr": "Job",
+      "transport_size": "BYTE"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 24,
+    "ts": "2014-08-20T10:02:58.069292Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4258,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "READ_VAR",
+    "function_code": 4,
+    "class": "read",
+    "attrs": {
+      "item_count": "1",
+      "items_truncated": "true",
+      "pdu_reference": "6",
+      "return_code": "SUCCESS",
+      "rosctr": "AckData"
+    }
+  }
+]

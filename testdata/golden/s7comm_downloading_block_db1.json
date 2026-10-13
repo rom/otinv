@@ -1,0 +1,1556 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 5,
+    "ts": "2014-08-20T10:00:03.880679Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ConnectionRequest",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 6,
+    "ts": "2014-08-20T10:00:03.884414Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ConnectionConfirm",
+    "function_code": -1,
+    "class": "other",
+    "identity": {
+      "rack": "0",
+      "slot": "2"
+    },
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 7,
+    "ts": "2014-08-20T10:00:03.884562Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "480",
+      "pdu_reference": "512",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 8,
+    "ts": "2014-08-20T10:00:03.887528Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "240",
+      "pdu_reference": "512",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 10,
+    "ts": "2014-08-20T10:00:03.887683Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "768",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 11,
+    "ts": "2014-08-20T10:00:03.894509Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "768",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "szl_records": "1",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 13,
+    "ts": "2014-08-20T10:00:03.899252Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "1024",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0002",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 14,
+    "ts": "2014-08-20T10:00:03.903498Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "1024",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0002",
+      "szl_records": "1",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 16,
+    "ts": "2014-08-20T10:00:03.904205Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "1280",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "szl_id": "0x0013",
+      "szl_index": "0x0000",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 17,
+    "ts": "2014-08-20T10:00:03.910535Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "1280",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x01",
+      "szl_id": "0x0013",
+      "szl_index": "0x0000",
+      "szl_records": "5",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 19,
+    "ts": "2014-08-20T10:00:03.910913Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "1536",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "szl_id": "0x0131",
+      "szl_index": "0x0004",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 20,
+    "ts": "2014-08-20T10:00:03.916505Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "1536",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x01",
+      "szl_id": "0x0131",
+      "szl_index": "0x0004",
+      "szl_records": "1",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 22,
+    "ts": "2014-08-20T10:00:03.916954Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "1792",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 23,
+    "ts": "2014-08-20T10:00:03.925514Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "1792",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 25,
+    "ts": "2014-08-20T10:00:03.925824Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2048",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 26,
+    "ts": "2014-08-20T10:00:03.934489Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2048",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 28,
+    "ts": "2014-08-20T10:00:03.934788Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2304",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 29,
+    "ts": "2014-08-20T10:00:03.943502Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2304",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 31,
+    "ts": "2014-08-20T10:00:03.943839Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2560",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 32,
+    "ts": "2014-08-20T10:00:03.952492Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2560",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 34,
+    "ts": "2014-08-20T10:00:03.952851Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2816",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x02",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 35,
+    "ts": "2014-08-20T10:00:03.95748Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "2816",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x02",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 37,
+    "ts": "2014-08-20T10:00:03.957861Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "3072",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x03",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 38,
+    "ts": "2014-08-20T10:00:03.962485Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "error_code": "0xd209",
+      "function_group": "0x3",
+      "pdu_reference": "3072",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x03",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 40,
+    "ts": "2014-08-20T10:00:03.963562Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "3328",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 41,
+    "ts": "2014-08-20T10:00:03.969518Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "3328",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "szl_records": "1",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 43,
+    "ts": "2014-08-20T10:00:03.969906Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "REQUEST_DOWNLOAD",
+    "function_code": 26,
+    "class": "program",
+    "attrs": {
+      "block_number": "1",
+      "block_type": "DB",
+      "destination_filesystem": "P",
+      "filename": "_0A00001P",
+      "pdu_reference": "3584",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 44,
+    "ts": "2014-08-20T10:00:03.97449Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "REQUEST_DOWNLOAD",
+    "function_code": 26,
+    "class": "program",
+    "attrs": {
+      "anomaly": "truncated_block_transfer",
+      "pdu_reference": "3584",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 46,
+    "ts": "2014-08-20T10:00:03.977452Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "DOWNLOAD_BLOCK",
+    "function_code": 27,
+    "class": "program",
+    "attrs": {
+      "block_number": "1",
+      "block_type": "DB",
+      "destination_filesystem": "P",
+      "filename": "_0A00001P",
+      "pdu_reference": "256",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 48,
+    "ts": "2014-08-20T10:00:03.977707Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "DOWNLOAD_BLOCK",
+    "function_code": 27,
+    "class": "program",
+    "attrs": {
+      "anomaly": "truncated_block_transfer",
+      "pdu_reference": "256",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 49,
+    "ts": "2014-08-20T10:00:03.982421Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "DOWNLOAD_BLOCK",
+    "function_code": 27,
+    "class": "program",
+    "attrs": {
+      "block_number": "1",
+      "block_type": "DB",
+      "destination_filesystem": "P",
+      "filename": "_0A00001P",
+      "pdu_reference": "768",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 51,
+    "ts": "2014-08-20T10:00:03.982566Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "DOWNLOAD_BLOCK",
+    "function_code": 27,
+    "class": "program",
+    "attrs": {
+      "anomaly": "truncated_block_transfer",
+      "pdu_reference": "768",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 52,
+    "ts": "2014-08-20T10:00:03.987375Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "DOWNLOAD_BLOCK",
+    "function_code": 27,
+    "class": "program",
+    "attrs": {
+      "block_number": "1",
+      "block_type": "DB",
+      "destination_filesystem": "P",
+      "filename": "_0A00001P",
+      "pdu_reference": "1280",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 54,
+    "ts": "2014-08-20T10:00:03.987573Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "DOWNLOAD_BLOCK",
+    "function_code": 27,
+    "class": "program",
+    "attrs": {
+      "anomaly": "truncated_block_transfer",
+      "pdu_reference": "1280",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 55,
+    "ts": "2014-08-20T10:00:04.003496Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "DOWNLOAD_ENDED",
+    "function_code": 28,
+    "class": "program",
+    "attrs": {
+      "block_number": "1",
+      "block_type": "DB",
+      "destination_filesystem": "P",
+      "filename": "_0A00001P",
+      "pdu_reference": "1792",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 57,
+    "ts": "2014-08-20T10:00:04.003702Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "DOWNLOAD_ENDED",
+    "function_code": 28,
+    "class": "program",
+    "attrs": {
+      "anomaly": "truncated_block_transfer",
+      "pdu_reference": "1792",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 58,
+    "ts": "2014-08-20T10:00:04.003972Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4185,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "PLC_CONTROL",
+    "function_code": 40,
+    "class": "program",
+    "attrs": {
+      "pdu_reference": "3840",
+      "pi_parameter": "0A00001P",
+      "pi_service": "_INSE",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 59,
+    "ts": "2014-08-20T10:00:04.016478Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4185,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "PLC_CONTROL",
+    "function_code": 40,
+    "class": "control",
+    "attrs": {
+      "anomaly": "truncated_plc_control",
+      "pdu_reference": "3840",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 66,
+    "ts": "2014-08-20T10:00:04.314691Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4186,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ConnectionRequest",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 67,
+    "ts": "2014-08-20T10:00:04.318469Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4186,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ConnectionConfirm",
+    "function_code": -1,
+    "class": "other",
+    "identity": {
+      "rack": "0",
+      "slot": "2"
+    },
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 68,
+    "ts": "2014-08-20T10:00:04.318614Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4186,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "480",
+      "pdu_reference": "512",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 69,
+    "ts": "2014-08-20T10:00:04.322421Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4186,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "240",
+      "pdu_reference": "512",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 71,
+    "ts": "2014-08-20T10:00:04.322572Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4186,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "768",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 72,
+    "ts": "2014-08-20T10:00:04.328504Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4186,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "768",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "szl_records": "1",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 74,
+    "ts": "2014-08-20T10:00:04.328845Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4186,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "1024",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 75,
+    "ts": "2014-08-20T10:00:04.337497Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4186,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "1024",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 77,
+    "ts": "2014-08-20T10:00:04.337829Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4186,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "1280",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x02",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 78,
+    "ts": "2014-08-20T10:00:04.344508Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4186,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "BlockFunction",
+    "function_code": -1,
+    "class": "program",
+    "attrs": {
+      "function_group": "0x3",
+      "pdu_reference": "1280",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x02",
+      "userdata_type": "response"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 84,
+    "ts": "2014-08-20T10:00:04.351529Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4187,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ConnectionRequest",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 85,
+    "ts": "2014-08-20T10:00:04.355445Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4187,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ConnectionConfirm",
+    "function_code": -1,
+    "class": "other",
+    "identity": {
+      "rack": "0",
+      "slot": "2"
+    },
+    "attrs": {
+      "connection_type": "PG",
+      "dst_tsap": "0x0102",
+      "layer": "cotp",
+      "rack": "0",
+      "slot": "2",
+      "src_tsap": "0x0100",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 86,
+    "ts": "2014-08-20T10:00:04.355576Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4187,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "480",
+      "pdu_reference": "512",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 87,
+    "ts": "2014-08-20T10:00:04.359395Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4187,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "240",
+      "pdu_reference": "512",
+      "rosctr": "AckData"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 89,
+    "ts": "2014-08-20T10:00:04.359537Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4187,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "768",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "0",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "userdata_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 90,
+    "ts": "2014-08-20T10:00:04.365508Z",
+    "flow": {
+      "src_mac": "00:1b:1b:23:eb:3b",
+      "dst_mac": "90:e6:ba:84:5e:41",
+      "src_ip": "192.168.1.40",
+      "dst_ip": "192.168.1.10",
+      "src_port": 102,
+      "dst_port": 4187,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ReadSZL",
+    "function_code": -1,
+    "class": "discovery",
+    "attrs": {
+      "function_group": "0x4",
+      "pdu_reference": "768",
+      "return_code": "SUCCESS",
+      "rosctr": "Userdata",
+      "sequence_number": "1",
+      "subfunction": "0x01",
+      "szl_id": "0x0132",
+      "szl_index": "0x0004",
+      "szl_records": "1",
+      "userdata_type": "response"
+    }
+  }
+]

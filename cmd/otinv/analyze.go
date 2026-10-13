@@ -15,6 +15,7 @@ import (
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the DNP3 dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the Modbus dissector
+	_ "github.com/rom/otinv/internal/dissect/s7comm" // register the S7comm dissector
 	"github.com/rom/otinv/internal/ingest"
 	"github.com/rom/otinv/internal/inventory"
 	"github.com/rom/otinv/internal/model"
