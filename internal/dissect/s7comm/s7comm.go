@@ -130,6 +130,44 @@ func (d *Dissector) Probe(_ *dissect.FlowContext, payload []byte) int {
 	return min(score, 100)
 }
 
+// ProbeDefers implements dissect.Deferring.
+//
+// ISO-on-TCP port 102 carries S7comm, S7comm-plus and IEC 61850 MMS, and the
+// COTP connection phase is the same for all of them: the connection request
+// names transport selectors, not the protocol above. Scoring that phase bound
+// MMS streams to this dissector, which then reported a rack and a slot for a
+// substation IED that has neither. So a stream that has shown nothing above
+// COTP waits for the frame that does.
+func (d *Dissector) ProbeDefers(payload []byte) bool {
+	frames := 0
+	for rest := payload; len(rest) > 0; {
+		n, err := d.PDULen(rest)
+		if err != nil {
+			return false
+		}
+		frame := rest[:n]
+		rest = rest[n:]
+		frames++
+
+		li := int(frame[4])
+		if li < 2 || 5+li > n {
+			return false
+		}
+		switch frame[5] {
+		case cotpData:
+			if 5+li < n {
+				// User data has arrived, so Probe can judge it.
+				return false
+			}
+		case cotpConnectRequest, cotpConnectConfirm, cotpDisconnectReq,
+			cotpDisconnectConf, cotpError, cotpDataAck, cotpReject:
+		default:
+			return false
+		}
+	}
+	return frames > 0
+}
+
 // streamState remembers what has already been reported for a stream, so that
 // a payload this dissector cannot read is mentioned once instead of on every
 // frame.

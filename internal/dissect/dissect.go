@@ -87,6 +87,27 @@ type Framer interface {
 	PDULen(buf []byte) (int, error)
 }
 
+// Deferring is implemented by a dissector that shares its transport with other
+// protocols on the same port, where the connection phase does not say which of
+// them the stream will carry.
+//
+// ISO-on-TCP port 102 is the case this exists for: S7comm, S7comm-plus and
+// IEC 61850 MMS all open with the same COTP connection request, and only the
+// first data PDU tells them apart. Binding a stream from its connection
+// request alone would attribute MMS traffic to S7comm roughly as often as not,
+// and a wrong protocol on an asset is worse than a late one: it changes the
+// role inferred for the device.
+//
+// A dissector that defers is left out of the selection entirely, whatever its
+// Probe score, until it stops deferring.
+type Deferring interface {
+	// ProbeDefers reports that payload is framed the way this dissector
+	// expects but carries nothing yet that separates its protocol from the
+	// others sharing the port. The caller keeps the bytes and asks again when
+	// more arrive.
+	ProbeDefers(payload []byte) bool
+}
+
 // MaxPDUSize is the largest PDU any stream dissector may claim, and therefore
 // the cap on per-stream reassembly buffers. It bounds memory regardless of
 // capture size and of what a crafted length field asks for.

@@ -101,21 +101,22 @@ func TestSelectPrefersPortMatch(t *testing.T) {
 	heuristic := &stub{name: "heuristic", score: 95}
 	r.Register(onPort, dissect.TCPPorts(502))
 	r.Register(heuristic)
-	got, score := r.Select(testCtx(), []byte{1, 2, 3}, dissect.DefaultMinConfidence)
+	got, score, wait := r.Select(testCtx(), []byte{1, 2, 3}, dissect.DefaultMinConfidence)
 	require.NotNil(t, got)
 	assert.Equal(t, "onport", got.Name(), "the port is evidence in its own right")
 	assert.Equal(t, 40, score)
+	assert.False(t, wait)
 }
 func TestSelectRequiresConfidenceWithoutPortMatch(t *testing.T) {
 	r := dissect.NewRegistry()
 	weak := &stub{name: "weak", score: 69}
 	r.Register(weak)
-	got, _ := r.Select(testCtx(), []byte{1, 2, 3}, 70)
+	got, _, _ := r.Select(testCtx(), []byte{1, 2, 3}, 70)
 	assert.Nil(t, got, "below the threshold and no port match: no binding")
 	r2 := dissect.NewRegistry()
 	strong := &stub{name: "strong", score: 70}
 	r2.Register(strong)
-	got, score := r2.Select(testCtx(), []byte{1, 2, 3}, 70)
+	got, score, _ := r2.Select(testCtx(), []byte{1, 2, 3}, 70)
 	require.NotNil(t, got)
 	assert.Equal(t, "strong", got.Name())
 	assert.Equal(t, 70, score)
@@ -123,7 +124,7 @@ func TestSelectRequiresConfidenceWithoutPortMatch(t *testing.T) {
 func TestSelectIgnoresEmptyPayload(t *testing.T) {
 	r := dissect.NewRegistry()
 	r.Register(&stub{name: "any", score: 100}, dissect.TCPPorts(502))
-	got, _ := r.Select(testCtx(), nil, 70)
+	got, _, _ := r.Select(testCtx(), nil, 70)
 	assert.Nil(t, got)
 }
 func TestLookupAndExtraPorts(t *testing.T) {
@@ -154,4 +155,83 @@ func (s *stub) Probe(*dissect.FlowContext, []byte) int {
 }
 func (s *stub) Parse(ctx *dissect.FlowContext, _ []byte) ([]model.Event, error) {
 	return []model.Event{{Protocol: s.name, Flow: ctx.Flow}}, nil
+}
+
+// deferStub is a dissector that shares a port and can say it is not yet able
+// to tell its protocol from the others on it.
+type deferStub struct {
+	stub
+	wait bool
+}
+
+func (d *deferStub) ProbeDefers([]byte) bool { return d.wait }
+
+// A dissector that defers is left out of the comparison whatever it would
+// score, because on a shared port a confident guess from the connection phase
+// is still a guess, and a wrong protocol on an asset changes the role inferred
+// for the device.
+func TestSelectHonoursDeferral(t *testing.T) {
+	waiting := &deferStub{stub: stub{name: "waiting", score: 90}, wait: true}
+	other := &stub{name: "other", score: 40}
+
+	r := dissect.NewRegistry()
+	r.Register(waiting, dissect.TCPPorts(102))
+	got, score, wait := r.Select(testCtx102(), []byte{3, 0, 0, 7}, 70)
+	assert.Nil(t, got, "the only candidate is waiting for more bytes")
+	assert.Zero(t, score)
+	assert.True(t, wait, "the caller must keep the bytes rather than give up")
+
+	// Another candidate on the same port that does not defer wins outright.
+	r2 := dissect.NewRegistry()
+	r2.Register(waiting, dissect.TCPPorts(102))
+	r2.Register(other, dissect.TCPPorts(102))
+	got, score, wait = r2.Select(testCtx102(), []byte{3, 0, 0, 7}, 70)
+	require.NotNil(t, got)
+	assert.Equal(t, "other", got.Name())
+	assert.Equal(t, 40, score)
+	assert.False(t, wait)
+
+	// Once it stops deferring its own score decides.
+	waiting.wait = false
+	got, score, wait = r2.Select(testCtx102(), []byte{3, 0, 0, 7}, 70)
+	require.NotNil(t, got)
+	assert.Equal(t, "waiting", got.Name())
+	assert.Equal(t, 90, score)
+	assert.False(t, wait)
+}
+
+// A heuristic candidate must not pick up a stream that a port-matched
+// dissector has asked to wait for: that is how MMS traffic would end up
+// labelled as something else entirely.
+func TestDeferralOutranksHeuristics(t *testing.T) {
+	r := dissect.NewRegistry()
+	r.Register(&deferStub{stub: stub{name: "waiting", score: 0}, wait: true}, dissect.TCPPorts(102))
+	r.Register(&stub{name: "guesser", score: 100})
+
+	got, _, wait := r.Select(testCtx102(), []byte{3, 0, 0, 7}, 70)
+	assert.Nil(t, got)
+	assert.True(t, wait)
+}
+
+// A dissector that panics when asked is a bug, not a reason to stall the
+// stream, so the selection goes ahead on the scores at hand.
+func TestDeferralPanicIsRecovered(t *testing.T) {
+	r := dissect.NewRegistry()
+	r.Register(&panicDeferStub{stub{name: "boom", score: 80}}, dissect.TCPPorts(102))
+
+	got, score, wait := r.Select(testCtx102(), []byte{3, 0, 0, 7}, 70)
+	require.NotNil(t, got)
+	assert.Equal(t, 80, score)
+	assert.False(t, wait)
+	assert.Equal(t, uint64(1), r.Health()["boom"].Panics)
+}
+
+type panicDeferStub struct{ stub }
+
+func (p *panicDeferStub) ProbeDefers([]byte) bool { panic("probe defers panicked") }
+
+func testCtx102() *dissect.FlowContext {
+	ctx := testCtx()
+	ctx.Flow.DstPort = 102
+	return ctx
 }

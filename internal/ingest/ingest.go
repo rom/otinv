@@ -458,12 +458,56 @@ func portOf(e gopacket.Endpoint) uint16 {
 	return binary.BigEndian.Uint16(raw)
 }
 
+// hold marks where in the bytes kept for a later call one packet's
+// contribution began.
+//
+// Reassembly has no per-byte provenance: a chunk is delivered with the context
+// of the packet that completed it. That is the right answer for a PDU split
+// across packets, which only became readable with the last of them, but not
+// for a PDU that arrived whole and was only kept because the stream's
+// protocol was still undecided. Those marks give each held PDU back the
+// packet it travelled in, which is what a finding has to point at.
+type hold struct {
+	offset int
+	index  uint64
+	ts     time.Time
+}
+
 // side is one direction of a stream.
 type side struct {
 	direction     model.Direction
 	ctx           *dissect.FlowContext
 	framingErrors int
 	abandoned     bool
+
+	// heldLen is how many bytes at the front of the next chunk were kept
+	// from earlier packets, and holds says which packet each stretch of them
+	// arrived in.
+	heldLen int
+	holds   []hold
+}
+
+// stamp sets the packet a PDU starting at off in the current chunk belongs to.
+func (sd *side) stamp(off int, curIndex uint64, curTime time.Time) {
+	if off >= sd.heldLen {
+		sd.ctx.PacketIndex, sd.ctx.Timestamp = curIndex, curTime
+		return
+	}
+	for i := len(sd.holds) - 1; i >= 0; i-- {
+		if sd.holds[i].offset <= off {
+			sd.ctx.PacketIndex, sd.ctx.Timestamp = sd.holds[i].index, sd.holds[i].ts
+			return
+		}
+	}
+	sd.ctx.PacketIndex, sd.ctx.Timestamp = curIndex, curTime
+}
+
+// release forgets the held bytes that have now been framed.
+func (sd *side) release(consumed int) {
+	if consumed >= sd.heldLen {
+		sd.heldLen = 0
+		sd.holds = nil
+	}
 }
 
 // tcpStream decodes both directions of one TCP connection.
@@ -529,11 +573,21 @@ func (s *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	data := sg.Fetch(available)
 
 	if s.bound == nil {
-		if !s.bind(flow, data, actx) {
+		bound, deferred := s.bind(flow, data, actx)
+		if !bound {
 			// A verdict on a handful of bytes is not worth much, so a short
-			// first chunk gets another look once more data arrives. Enough
-			// bytes with no match means this stream is not ours.
-			if s.tries < maxBindAttempts && len(data) < bindDecisionBytes {
+			// first chunk gets another look once more data arrives, and so
+			// does a stream whose candidates share a port and have not yet
+			// been handed what tells them apart. Enough bytes with no match
+			// means this stream is not ours.
+			retry := deferred || len(data) < bindDecisionBytes
+			if s.tries < maxBindAttempts && retry && len(data) <= dissect.MaxPDUSize {
+				if actx != nil {
+					sd.holds = append(sd.holds, hold{
+						offset: sd.heldLen, index: actx.index, ts: actx.ci.Timestamp,
+					})
+				}
+				sd.heldLen = len(data)
 				sg.KeepFrom(0)
 				return
 			}
@@ -576,8 +630,11 @@ func (s *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 // consumed. Whatever is left is an incomplete PDU to be kept for later.
 func (s *tcpStream) frame(sd *side, data []byte) int {
 	reg := s.f.opts.Registry
+	curIndex, curTime := sd.ctx.PacketIndex, sd.ctx.Timestamp
 	consumed := 0
+	defer func() { sd.release(consumed) }()
 	for consumed < len(data) {
+		sd.stamp(consumed, curIndex, curTime)
 		rest := data[consumed:]
 		n, err := reg.PDULen(s.bound, rest)
 		switch {
@@ -592,12 +649,14 @@ func (s *tcpStream) frame(sd *side, data []byte) int {
 			if sd.framingErrors >= maxFramingErrors {
 				sd.abandoned = true
 				s.f.res.AbandonedSides++
-				return len(data)
+				consumed = len(data)
+				return consumed
 			}
 			skip := s.resync(rest, sd.ctx)
 			s.f.res.Resyncs++
 			if skip <= 0 {
-				return len(data)
+				consumed = len(data)
+				return consumed
 			}
 			consumed += skip
 			continue
@@ -641,8 +700,10 @@ func (s *tcpStream) resync(buf []byte, ctx *dissect.FlowContext) int {
 	return 0
 }
 
-// bind picks the dissector for this stream from its first bytes.
-func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) bool {
+// bind picks the dissector for this stream from its first bytes. It reports
+// whether a dissector was bound, and if not, whether a candidate asked to be
+// shown more bytes before the stream is given up on.
+func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) (bound, deferred bool) {
 	s.tries++
 	probeCtx := &dissect.FlowContext{
 		CaptureID:  s.f.res.Capture.ID,
@@ -654,9 +715,9 @@ func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) bool 
 		probeCtx.PacketIndex = actx.index
 		probeCtx.Timestamp = actx.ci.Timestamp
 	}
-	d, score := s.f.opts.Registry.Select(probeCtx, data, s.f.opts.MinConfidence)
+	d, score, wait := s.f.opts.Registry.Select(probeCtx, data, s.f.opts.MinConfidence)
 	if d == nil {
-		return false
+		return false, wait
 	}
 	s.bound = d
 	s.f.res.BoundStreams++
@@ -664,7 +725,7 @@ func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) bool 
 		"protocol", d.Name(), "confidence", score,
 		"src", flow.SrcIP, "src_port", flow.SrcPort,
 		"dst", flow.DstIP, "dst_port", flow.DstPort)
-	return true
+	return true, false
 }
 
 // serverPort reports which side of the flow looks like the listening one.
@@ -724,6 +785,16 @@ func (s *tcpStream) framingErrorEvent(sd *side, err error) model.Event {
 
 // ReassemblyComplete implements reassembly.Stream.
 func (s *tcpStream) ReassemblyComplete(_ reassembly.AssemblerContext) bool {
+	for i := range s.sides {
+		if s.sides[i].heldLen > 0 {
+			// Bytes kept while the protocol of this direction was still
+			// undecided, on a direction that then said nothing more. A
+			// connection request on its own could be any of the protocols
+			// sharing its port, and naming one would be a guess, so they are
+			// counted as unrecognised rather than attributed or forgotten.
+			s.f.res.UnboundPayloads++
+		}
+	}
 	return true
 }
 
@@ -750,7 +821,9 @@ func (f *factory) handleDatagram(pkt *packetInfo, udp *layers.UDP, actx *assembl
 		Timestamp:   actx.ci.Timestamp,
 		Direction:   model.DirUnknown,
 	}
-	d, _ := f.opts.Registry.Select(ctx, udp.Payload, f.opts.MinConfidence)
+	// A datagram is self-contained, so there is nothing to wait for: a
+	// candidate that would defer simply does not match here.
+	d, _, _ := f.opts.Registry.Select(ctx, udp.Payload, f.opts.MinConfidence)
 	if d == nil {
 		f.res.UnboundPayloads++
 		return

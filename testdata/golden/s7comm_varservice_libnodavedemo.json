@@ -30,6 +30,33 @@
   },
   {
     "capture_id": "test",
+    "packet_index": 9,
+    "ts": "2014-08-20T10:02:58.014402Z",
+    "flow": {
+      "src_mac": "90:e6:ba:84:5e:41",
+      "dst_mac": "00:1b:1b:23:eb:3b",
+      "src_ip": "192.168.1.10",
+      "dst_ip": "192.168.1.40",
+      "src_port": 4258,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "s7comm",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "SETUP_COMMUNICATION",
+    "function_code": 240,
+    "class": "other",
+    "attrs": {
+      "max_amq_called": "1",
+      "max_amq_calling": "1",
+      "pdu_length": "1920",
+      "pdu_reference": "65535",
+      "rosctr": "Job"
+    }
+  },
+  {
+    "capture_id": "test",
     "packet_index": 8,
     "ts": "2014-08-20T10:02:58.014285Z",
     "flow": {
@@ -59,33 +86,6 @@
       "slot": "2",
       "src_tsap": "0x0100",
       "tpdu_size": "512"
-    }
-  },
-  {
-    "capture_id": "test",
-    "packet_index": 9,
-    "ts": "2014-08-20T10:02:58.014402Z",
-    "flow": {
-      "src_mac": "90:e6:ba:84:5e:41",
-      "dst_mac": "00:1b:1b:23:eb:3b",
-      "src_ip": "192.168.1.10",
-      "dst_ip": "192.168.1.40",
-      "src_port": 4258,
-      "dst_port": 102,
-      "transport": "tcp"
-    },
-    "protocol": "s7comm",
-    "direction": "request",
-    "server_port": 102,
-    "operation": "SETUP_COMMUNICATION",
-    "function_code": 240,
-    "class": "other",
-    "attrs": {
-      "max_amq_called": "1",
-      "max_amq_calling": "1",
-      "pdu_length": "1920",
-      "pdu_reference": "65535",
-      "rosctr": "Job"
     }
   },
   {

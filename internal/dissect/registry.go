@@ -162,9 +162,15 @@ func containsPort(ports []uint16, p uint16) bool {
 // A port-matched dissector is accepted on any non-zero confidence, because the
 // port is already evidence. A dissector reached only by heuristics must score
 // at least minConfidence. Highest score wins; on a tie the port match wins.
-func (r *Registry) Select(ctx *FlowContext, payload []byte, minConfidence int) (Dissector, int) {
+//
+// The third return value asks the caller to wait. A port-matched dissector
+// that implements Deferring and says it cannot yet tell its protocol from the
+// others on its port is left out of the comparison; if that leaves no winner,
+// deferred is true and the caller should keep the bytes and try again rather
+// than treat the stream as unrecognised. See Deferring.
+func (r *Registry) Select(ctx *FlowContext, payload []byte, minConfidence int) (d Dissector, confidence int, deferred bool) {
 	if len(payload) == 0 {
-		return nil, 0
+		return nil, 0, false
 	}
 	if minConfidence <= 0 {
 		minConfidence = DefaultMinConfidence
@@ -173,20 +179,44 @@ func (r *Registry) Select(ctx *FlowContext, payload []byte, minConfidence int) (
 
 	var best Dissector
 	bestScore := 0
-	for _, d := range matched {
-		if s := r.Probe(d, ctx, payload); s > bestScore {
-			best, bestScore = d, s
+	for _, cand := range matched {
+		if r.defers(cand, payload) {
+			deferred = true
+			continue
+		}
+		if s := r.Probe(cand, ctx, payload); s > bestScore {
+			best, bestScore = cand, s
 		}
 	}
 	if best != nil {
-		return best, bestScore
+		return best, bestScore, false
 	}
-	for _, d := range others {
-		if s := r.Probe(d, ctx, payload); s > bestScore && s >= minConfidence {
-			best, bestScore = d, s
+	if deferred {
+		return nil, 0, true
+	}
+	for _, cand := range others {
+		if s := r.Probe(cand, ctx, payload); s > bestScore && s >= minConfidence {
+			best, bestScore = cand, s
 		}
 	}
-	return best, bestScore
+	return best, bestScore, false
+}
+
+// defers asks a Deferring dissector whether it wants to wait, recovering from
+// a panic the same way Probe does. A dissector that panics here is a bug and
+// is taken not to defer, so the stream is decided on the scores at hand.
+func (r *Registry) defers(d Dissector, payload []byte) (wait bool) {
+	dd, ok := d.(Deferring)
+	if !ok {
+		return false
+	}
+	defer func() {
+		if v := recover(); v != nil {
+			r.recordPanic(d.Name(), "ProbeDefers", v)
+			wait = false
+		}
+	}()
+	return dd.ProbeDefers(payload)
 }
 
 // Probe calls d.Probe, recovering from a panic and clamping the result to
