@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/rom/otinv/internal/dissect"
+	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the DNP3 dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the Modbus dissector
 	"github.com/rom/otinv/internal/ingest"
 	"github.com/rom/otinv/internal/inventory"

@@ -1,10 +1,12 @@
 package ingest_test
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/rom/otinv/internal/dissect"
+	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the dissector
 	"github.com/rom/otinv/internal/ingest"
 	"github.com/rom/otinv/internal/model"
@@ -57,6 +60,8 @@ func TestGolden(t *testing.T) {
 	for _, name := range []string{
 		"modbus_test_data_part1",
 		"modbus_test_data_part2",
+		"dnp3_test_data_part1",
+		"dnp3_test_data_part2",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", name+".pcap"))
@@ -405,4 +410,166 @@ func TestOptionsExtraPortsAreHonoured(t *testing.T) {
 	require.Len(t, events, 1)
 	assert.Equal(t, model.DirRequest, events[0].Direction,
 		"a user-configured port tells request from response too")
+}
+
+// The DNP3 counts below were cross-checked against an independent decode of
+// the capture, frame by frame.
+func TestDNP3Part1Facts(t *testing.T) {
+	root := repoRoot(t)
+	res, events := run(t, filepath.Join(root, "testdata", "pcaps", "dnp3_test_data_part1.pcap"))
+
+	assert.Equal(t, "Ethernet", res.Capture.LinkType)
+	assert.Equal(t,
+		"71779cac342a37b412df5bb6372ec22c35b5127ad2bfed4447d7ab6b92ebb4bf",
+		res.Capture.SHA256)
+
+	byOperation := map[string]int{}
+	for _, e := range events {
+		assert.Equal(t, "dnp3", e.Protocol)
+		assert.True(t, e.Class.Valid(), "class %q", e.Class)
+		assert.NotEmpty(t, e.Operation)
+		byOperation[e.Operation]++
+	}
+
+	// 93 application fragments, one per link frame in this capture.
+	assert.Equal(t, 30, byOperation["UNSOLICITED_RESPONSE"])
+	assert.Equal(t, 23, byOperation["RESPONSE"])
+	assert.Equal(t, 13, byOperation["CONFIRM"])
+	assert.Equal(t, 7, byOperation["DISABLE_UNSOLICITED"])
+	assert.Equal(t, 6, byOperation["WRITE"])
+	assert.Equal(t, 4, byOperation["STOP_APPL"])
+	assert.Equal(t, 3, byOperation["READ"])
+	assert.Equal(t, 3, byOperation["ENABLE_UNSOLICITED"])
+	assert.Equal(t, 2, byOperation["COLD_RESTART"])
+	assert.Equal(t, 2, byOperation["WARM_RESTART"])
+
+	// The two frames with a corrupted start octet break framing and must be
+	// reported rather than skipped.
+	assert.Equal(t, 2, byOperation["FramingError"])
+	assert.Equal(t, uint64(95), res.Events, "93 fragments plus the two broken frames")
+
+	// Link addresses: 4 and 6 are outstations. The master also broadcasts to
+	// 65535, which reaches every outstation on the link at once, so those
+	// frames carry no unit and are flagged instead.
+	units := map[uint16]bool{}
+	broadcasts := 0
+	for _, e := range events {
+		if e.UnitID != nil {
+			units[*e.UnitID] = true
+			continue
+		}
+		if e.Attrs["broadcast"] == "true" {
+			broadcasts++
+			assert.Equal(t, "broadcast", e.Attrs["address_kind"])
+			assert.Equal(t, "65535", e.Attrs["link_dest"])
+		}
+	}
+	assert.Equal(t, map[uint16]bool{4: true, 6: true}, units)
+	assert.Equal(t, 4, broadcasts,
+		"four broadcast operations, among them a stop application to every device")
+}
+
+func TestDNP3Part2DecodesControlCommands(t *testing.T) {
+	root := repoRoot(t)
+	_, events := run(t, filepath.Join(root, "testdata", "pcaps", "dnp3_test_data_part2.pcap"))
+
+	require.Len(t, events, 22, "22 link frames, each one fragment")
+
+	var selects, refusedSelect, refusedUnknownObject, unknownGroup int
+	for _, e := range events {
+		switch e.Operation {
+		case "SELECT":
+			selects++
+			assert.Equal(t, model.ClassControl, e.Class)
+			assert.Equal(t, "LATCH_ON", e.Attrs["control_code"],
+				"the command's own control code must be decoded")
+			assert.Equal(t, "BinaryOutputCommand", e.Attrs["object_name"])
+			require.NotNil(t, e.Address)
+			assert.Equal(t, uint32(34463), *e.Address, "the point the master selected")
+		case "RESPONSE":
+			flags := e.Attrs["iin_flags"]
+			switch {
+			case strings.Contains(flags, "object_unknown"):
+				// The replies to the group 255 reads say both that the object
+				// is unknown and that the parameter was wrong.
+				assert.Contains(t, flags, "parameter_error")
+				refusedUnknownObject++
+			case strings.Contains(flags, "parameter_error"):
+				refusedSelect++
+			}
+		case "READ":
+			if strings.Contains(e.Attrs["anomaly"], "unknown_object_group") {
+				unknownGroup++
+			}
+		}
+	}
+
+	assert.Equal(t, 5, selects, "five select attempts on a control relay output block")
+	assert.Equal(t, 5, refusedSelect, "each select refused with a parameter error")
+	assert.Equal(t, 5, unknownGroup, "five reads of object group 255")
+	assert.Equal(t, 5, refusedUnknownObject, "each refused as an unknown object")
+}
+
+// udpDatagram builds one Ethernet/IPv4/UDP packet.
+func udpDatagram(t *testing.T, srcPort, dstPort uint16, payload []byte) []byte {
+	t.Helper()
+
+	eth := &layers.Ethernet{
+		SrcMAC:       []byte{0x00, 0x1b, 0x1b, 0x00, 0x00, 0x01},
+		DstMAC:       []byte{0x00, 0x1b, 0x1b, 0x00, 0x00, 0x02},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	ip := &layers.IPv4{
+		Version: 4, TTL: 64, Protocol: layers.IPProtocolUDP,
+		SrcIP: []byte{10, 0, 0, 8}, DstIP: []byte{10, 0, 0, 3},
+	}
+	udp := &layers.UDP{SrcPort: layers.UDPPort(srcPort), DstPort: layers.UDPPort(dstPort)}
+	require.NoError(t, udp.SetNetworkLayerForChecksum(ip))
+
+	buf := gopacket.NewSerializeBuffer()
+	require.NoError(t, gopacket.SerializeLayers(buf,
+		gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true},
+		eth, ip, udp, gopacket.Payload(payload)))
+	return buf.Bytes()
+}
+
+// DNP3 runs over UDP as well as TCP, and a datagram may hold more than one
+// link frame.
+func TestUDPDatagramIsFramed(t *testing.T) {
+	coldRestart, err := hex.DecodeString("056408c404000300b4b8cdc30daf84")
+	require.NoError(t, err)
+	// The same frame with the application function code changed to warm
+	// restart and the block CRC recomputed accordingly.
+	warmRestart, err := hex.DecodeString("056408c404000300b4b8cdc30e4dde")
+	require.NoError(t, err)
+
+	two := append(append([]byte{}, coldRestart...), warmRestart...)
+	res, events := run(t, writePcap(t, [][]byte{udpDatagram(t, 20000, 20000, two)}))
+
+	assert.Equal(t, uint64(1), res.UDPDatagrams)
+	require.Len(t, events, 2, "both frames in the datagram must be decoded")
+	assert.Equal(t, "COLD_RESTART", events[0].Operation)
+	assert.Equal(t, "WARM_RESTART", events[1].Operation)
+	assert.Equal(t, model.TransportUDP, events[0].Flow.Transport)
+	for _, e := range events {
+		// Both frames carry valid CRCs, so neither may be flagged. Without
+		// this the fixtures could rot into invalid frames unnoticed, since a
+		// bad block CRC is an anomaly rather than a parse error.
+		assert.Empty(t, e.Attrs["anomaly"], "%s", e.Operation)
+		assert.Empty(t, e.Attrs["crc_errors"], "%s", e.Operation)
+	}
+}
+
+// A datagram that ends inside a frame is an error: there is no later datagram
+// that may legitimately continue it.
+func TestUDPPartialPDUIsReported(t *testing.T) {
+	coldRestart, err := hex.DecodeString("056408c404000300b4b8cdc30daf84")
+	require.NoError(t, err)
+	truncated := append(append([]byte{}, coldRestart...), coldRestart[:6]...)
+
+	_, events := run(t, writePcap(t, [][]byte{udpDatagram(t, 20000, 20000, truncated)}))
+	require.Len(t, events, 2)
+	assert.Equal(t, "COLD_RESTART", events[0].Operation)
+	assert.True(t, events[1].Malformed)
+	assert.Contains(t, events[1].Error, "datagram ends inside a PDU")
 }
