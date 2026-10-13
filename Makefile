@@ -5,9 +5,15 @@ PKG        := ./...
 VERSION    ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT     ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+TEMPL_VERSION := v0.3.898
 
 # One static binary, no libpcap: captures are read with pure Go.
 export CGO_ENABLED := 0
+
+# Never download a toolchain: the build must work on an air-gapped laptop, and
+# this fails loudly if a dependency raises the Go floor above the installed
+# toolchain instead of silently fetching another one.
+export GOTOOLCHAIN := local
 
 LDFLAGS := -s -w \
 	-X main.version=$(VERSION) \
@@ -21,10 +27,15 @@ all: build
 build: generate
 	go build -trimpath -ldflags '$(LDFLAGS)' -o $(BIN) ./cmd/otinv
 
-# templ generate and the OUI table regeneration hook in here once internal/web
-# and internal/oui exist. Kept as a no-op so `make generate lint test` works.
+# Regenerates the templ components. The generated *_templ.go files are
+# committed, so building needs no tools beyond the Go toolchain; only changing
+# a .templ file needs templ itself.
+# The OUI table regeneration hooks in here once internal/oui exists.
 generate:
-	@echo "generate: nothing to generate yet (no templ components, no OUI table)"
+	@command -v templ >/dev/null 2>&1 || { \
+		echo "templ not installed: go install github.com/a-h/templ/cmd/templ@$(TEMPL_VERSION)"; \
+		exit 1; }
+	templ generate
 
 test:
 	go test $(PKG)

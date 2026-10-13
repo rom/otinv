@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +15,9 @@ import (
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the Modbus dissector
 	"github.com/rom/otinv/internal/ingest"
+	"github.com/rom/otinv/internal/inventory"
 	"github.com/rom/otinv/internal/model"
+	"github.com/rom/otinv/internal/store"
 )
 
 func newAnalyzeCommand() *cobra.Command {
@@ -22,6 +25,9 @@ func newAnalyzeCommand() *cobra.Command {
 		configPath string
 		asJSON     bool
 		withEvents bool
+		project    string
+		dbPath     string
+		reingest   bool
 	)
 
 	cmd := &cobra.Command{
@@ -30,25 +36,31 @@ func newAnalyzeCommand() *cobra.Command {
 		Long: "analyze reads one or more pcap/pcapng files, dissects the industrial\n" +
 			"protocols it recognises and reports the devices, operations and anomalies\n" +
 			"it observed.\n\n" +
-			"Results are not yet persisted: the SQLite store and the web GUI are\n" +
-			"separate milestones, so for now analyze prints its findings.",
+			"With --project the events and the asset inventory are stored, and\n" +
+			"`otinv serve --project <name>` then browses them. Without it, analyze\n" +
+			"prints its findings and keeps nothing.",
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := LoadConfig(configPath)
 			if err != nil {
 				return err
 			}
-			for i, path := range args {
-				if i > 0 {
-					if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
+
+			if project == "" {
+				for i, path := range args {
+					if i > 0 {
+						if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
+							return err
+						}
+					}
+					if err := analyze(cmd.OutOrStdout(), path, cfg, asJSON, withEvents); err != nil {
 						return err
 					}
 				}
-				if err := analyze(cmd.OutOrStdout(), path, cfg, asJSON, withEvents); err != nil {
-					return err
-				}
+				return nil
 			}
-			return nil
+			return analyzeIntoProject(cmd.Context(), cmd.OutOrStdout(), args, cfg,
+				project, dbPath, reingest, asJSON, withEvents)
 		},
 	}
 
@@ -56,7 +68,149 @@ func newAnalyzeCommand() *cobra.Command {
 		"configuration file (default "+DefaultConfigPath+" when present)")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "emit the report as JSON")
 	cmd.Flags().BoolVar(&withEvents, "events", false, "include every decoded event in the JSON report")
+	cmd.Flags().StringVarP(&project, "project", "p", "",
+		"store the results in this project instead of only printing them")
+	cmd.Flags().StringVar(&dbPath, "db", "",
+		"project database file (default <project>.otinv.db)")
+	cmd.Flags().BoolVar(&reingest, "reingest", false,
+		"replace a capture that was already ingested into this project")
 	return cmd
+}
+
+// analyzeIntoProject ingests captures into a project database and rebuilds its
+// inventory from everything the project holds.
+func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, cfg *Config,
+	project, dbPath string, reingest, asJSON, withEvents bool,
+) error {
+	db, err := store.Open(ctx, projectDBPath(project, dbPath))
+	if err != nil {
+		return err
+	}
+	defer func() { _ = db.Close() }()
+
+	p, err := db.EnsureProject(ctx, project)
+	if err != nil {
+		return err
+	}
+
+	for i, path := range paths {
+		if i > 0 {
+			if _, err := fmt.Fprintln(out); err != nil {
+				return err
+			}
+		}
+		if err := ingestCapture(ctx, out, db, p, path, cfg, reingest, asJSON, withEvents); err != nil {
+			return err
+		}
+	}
+
+	assets, err := inventory.Rebuild(ctx, db, db, p.ID)
+	if err != nil {
+		return err
+	}
+	events, err := db.CountEvents(ctx, p.ID)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(out,
+		"\nproject %q: %d assets from %d stored events in %s\nbrowse with: otinv serve --project %s\n",
+		p.Name, len(assets), events, db.Path(), p.Name)
+	return err
+}
+
+func ingestCapture(ctx context.Context, out io.Writer, db *store.Store, p model.Project,
+	path string, cfg *Config, reingest, asJSON, withEvents bool,
+) error {
+	digest, size, err := ingest.Fingerprint(path)
+	if err != nil {
+		return err
+	}
+	row := model.Capture{ID: digest[:12], Path: path, SHA256: digest, Bytes: size}
+
+	capturePK, inserted, err := db.SaveCapture(ctx, p.ID, row)
+	if err != nil {
+		return err
+	}
+	if !inserted {
+		if !reingest {
+			_, err := fmt.Fprintf(out,
+				"capture %s is already in project %q (sha256 %s); pass --reingest to replace it\n",
+				path, p.Name, digest[:12])
+			return err
+		}
+		// Dropping the capture takes its events with it, so a replacement
+		// cannot leave the project holding two copies of the same traffic.
+		if err := db.DeleteCapture(ctx, capturePK); err != nil {
+			return err
+		}
+		if capturePK, _, err = db.SaveCapture(ctx, p.ID, row); err != nil {
+			return err
+		}
+	}
+
+	w := db.NewEventWriter(p.ID, capturePK)
+	servers := map[string]*serverReport{}
+	var (
+		events   []model.Event
+		writeErr error
+	)
+
+	res, err := ingest.File(path, ingest.Options{
+		CaptureID:     digest[:12],
+		Registry:      dissect.Default(),
+		MinConfidence: cfg.Probe.MinConfidence,
+		ExtraTCPPorts: cfg.ExtraTCPPorts(),
+		Sink: func(e model.Event) {
+			if writeErr != nil {
+				return
+			}
+			if err := w.Add(ctx, e); err != nil {
+				writeErr = err
+				return
+			}
+			if withEvents {
+				events = append(events, e)
+			}
+			record(servers, e)
+		},
+	})
+	if err != nil {
+		return err
+	}
+	if writeErr != nil {
+		return writeErr
+	}
+	if err := w.Close(ctx); err != nil {
+		return err
+	}
+	if err := db.UpdateCapture(ctx, capturePK, res.Capture); err != nil {
+		return err
+	}
+
+	rep := report{Result: res, Servers: sortedServers(servers), Events: events}
+	if asJSON {
+		enc := json.NewEncoder(out)
+		enc.SetIndent("", "  ")
+		return enc.Encode(rep)
+	}
+	return writeText(out, &rep)
+}
+
+// projectDBPath keeps one database file per project unless told otherwise.
+func projectDBPath(project, override string) string {
+	if override != "" {
+		return override
+	}
+	safe := strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '_':
+			return r
+		default:
+			return '-'
+		}
+	}, project)
+	return safe + ".otinv.db"
 }
 
 // report is the JSON shape of an analysis.

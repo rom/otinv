@@ -265,6 +265,23 @@ func File(path string, opts Options) (*Result, error) {
 	return res, nil
 }
 
+// Fingerprint returns a capture's digest and size without decoding it.
+//
+// The store needs a capture row before its events can reference it, but the
+// packet counts and time range are only known once the file has been read, so
+// ingest is asked for the identity first and the counts afterwards.
+func Fingerprint(path string) (digest string, size int64, err error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return "", 0, fmt.Errorf("ingest: %w", err)
+	}
+	digest, err = hashFile(path)
+	if err != nil {
+		return "", 0, err
+	}
+	return digest, info.Size(), nil
+}
+
 // hashFile returns the hex SHA-256 of a file.
 func hashFile(path string) (string, error) {
 	f, err := os.Open(path)
