@@ -604,6 +604,7 @@ func (s *tcpStream) frame(sd *side, data []byte) int {
 			sd.framingErrors = 0 // the framing held; only the body was bad
 		}
 		for _, e := range events {
+			e.ServerPort = sd.ctx.ServerPort
 			s.f.sink(e)
 		}
 		consumed += n
@@ -708,6 +709,7 @@ func (s *tcpStream) framingErrorEvent(sd *side, err error) model.Event {
 		Flow:         sd.ctx.Flow,
 		Protocol:     s.bound.Name(),
 		Direction:    sd.direction,
+		ServerPort:   sd.ctx.ServerPort,
 		Operation:    "FramingError",
 		FunctionCode: -1,
 		Class:        model.ClassOther,
@@ -764,6 +766,7 @@ func (f *factory) handleDatagram(pkt *packetInfo, udp *layers.UDP, actx *assembl
 	if _, framed := d.(dissect.Framer); !framed {
 		events, _ := f.opts.Registry.Parse(d, ctx, udp.Payload)
 		for _, e := range events {
+			e.ServerPort = ctx.ServerPort
 			f.sink(e)
 		}
 		return
@@ -784,6 +787,7 @@ func (f *factory) handleDatagram(pkt *packetInfo, udp *layers.UDP, actx *assembl
 		}
 		events, _ := reg.Parse(d, ctx, rest[:n])
 		for _, e := range events {
+			e.ServerPort = ctx.ServerPort
 			f.sink(e)
 		}
 		consumed += n

@@ -9,6 +9,9 @@ commit captures from real customer or production environments.
 | `modbus_test_data_part2.pcap` | 27764 | `f7cca627fe9b740b5881e8b33b4143b59158240192ecbf5caa727a7dda35d110` |
 | `dnp3_test_data_part1.pcap` | 15838 | `71779cac342a37b412df5bb6372ec22c35b5127ad2bfed4447d7ab6b92ebb4bf` |
 | `dnp3_test_data_part2.pcap` | 2976 | `cb7de30363a64f1a6d3b7332f78d937a1f05677e546db0ad2790b2c481a7bc4b` |
+| `s7comm_varservice_libnodavedemo.pcap` | 2846 | `a1ff275c087fafbfdc8821ea59ab9bfb11f5adcc9ce6bb5888a1c4a4d7b6affc` |
+| `s7comm_downloading_block_db1.pcap` | 9523 | `48725bd1af7b778821351cd0f50f0ee259e438074a27f8431a8a1a3351dfd3d0` |
+| `s7comm_reading_plc_status.pcap` | 25112 | `e71f81b471bd67da2fd6e40dc69a7179574ba66771c6150cd7bfe232cc07b8a9` |
 
 ## Origin
 
@@ -65,3 +68,30 @@ control relay output block (group 12 variation 1), with the outstation
 rejecting each one, and reads of object group 255, which does not exist. It
 exercises control decoding, internal indication flags and the unknown-group
 path.
+
+## S7comm captures
+
+The three `s7comm_*.pcap` files are the long-published S7comm sample captures
+that accompany the Wireshark s7comm dissector; these copies came from the same
+public collection as the files above (`pcaps/s7/`), and their filenames and
+contents match that sample set.
+
+`s7comm_varservice_libnodavedemo.pcap` — 18 frames of the variable services:
+an ISO connection to rack 0 slot 2, the PDU size negotiation, then a read of
+DB1 and reads and writes of flag memory. Small enough to reason about by hand.
+
+`s7comm_downloading_block_db1.pcap` — a block download: REQUEST_DOWNLOAD,
+DOWNLOAD_BLOCK, DOWNLOAD_ENDED and the PLC_CONTROL `_INSE` service that
+activates the block afterwards. This is the traffic behind CLAUDE.md's rule on
+S7 program download.
+
+`s7comm_reading_plc_status.pcap` — 218 frames of SZL reads, which is how STEP 7
+asks a CPU what it is. It carries the two lists CLAUDE.md names as the S7
+enrichment source: list 0x0011 with the Siemens order number and the firmware
+version, and list 0x001C with the CPU model, its serial number and the station
+name. The device is an IM151-8 PN/DP CPU, order number 6ES7 151-8AB01-0AB0,
+firmware V3.2.6, serial S C-C6TW74882012.
+
+It also holds two things a dissector has to take in its stride: COTP data
+frames with no payload at all, which STEP 7 sends as keep-alives, and an SZL
+reply that is only one data unit of a longer list.

@@ -87,6 +87,12 @@ type Event struct {
 	Protocol  string    `json:"protocol"`
 	Direction Direction `json:"direction"`
 
+	// ServerPort is the port the listening side of this session answers on,
+	// as ingest determined it. Direction describes one PDU and can invert
+	// mid-session — an S7 CPU sends the jobs that fetch each block during a
+	// download — so this is what says which endpoint is the device.
+	ServerPort uint16 `json:"server_port,omitempty"`
+
 	// Operation is the protocol's own name for the operation, e.g.
 	// "ReadHoldingRegisters". FunctionCode is its numeric form; -1 when the
 	// protocol has no such concept or the PDU could not be decoded.

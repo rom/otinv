@@ -25,6 +25,7 @@ sample captures.
 | `internal/dissect` — `Dissector` contract, registry, port and heuristic binding, panic recovery, parse health | done |
 | `internal/dissect/modbus` — Tier 1 Modbus/TCP | done |
 | `internal/dissect/dnp3` — Tier 1 DNP3, link/transport/application layers | done |
+| `internal/dissect/s7comm` — Tier 1 Siemens S7comm over ISO-on-TCP | done |
 | `internal/store` — SQLite (pure Go), embedded migrations, batched event writes, asset queries | done |
 | `internal/inventory` — asset identity and merge, gateway detection, role inference, identity enrichment | done |
 | `internal/web` — GUI: asset list with server-side filtering and paging, asset detail, captures | done |
@@ -76,16 +77,18 @@ for: one device identified across both protocols, and a station classified by
 what it did rather than by its address.
 
 ```
-Address                            Role                      Vendor            Protocols                        Events
-10.0.0.3   00:02:b3:ce:70:51       PLC / RTU / IED           Wingpath Limited  dnp3 (server), modbus (server)      127
-10.0.0.8   00:50:04:93:70:67       Engineering workstation   —                 dnp3 (client), modbus (client)      125
-10.0.0.57  00:20:78:00:62:0d       HMI / SCADA               —                 modbus (client)                      38
+Address                             Role                      Vendor            Protocols                        Events
+192.168.1.40  00:1b:1b:23:eb:3b     PLC / RTU / IED           Siemens           s7comm (server)                     200
+192.168.1.10  90:e6:ba:84:5e:41     Engineering workstation   —                 s7comm (client)                     200
+10.0.0.3      00:02:b3:ce:70:51     PLC / RTU / IED           Wingpath Limited  dnp3 (server), modbus (server)      127
+10.0.0.57     00:20:78:00:62:0d     HMI / SCADA               —                 modbus (client)                      38
 ```
 
-10.0.0.3 is one asset speaking two protocols, merged on its MAC, with the
-vendor read out of its own Modbus identity reply. 10.0.0.8 is an engineering
-workstation because it sent DNP3 `STOP_APPL`, a program-class operation, not
-because of anything about its address.
+Nothing there comes from an address or a port alone. 10.0.0.3 is one asset
+speaking two protocols, merged on its MAC, with the vendor read out of its own
+Modbus identity reply. 192.168.1.40 is a Siemens CPU because it said so when
+asked for its SZL lists, and 192.168.1.10 is an engineering workstation
+because it downloaded a block into that CPU.
 
 Copy `otinv.example.yaml` to `otinv.yaml` to add non-standard ports. Protocols
 are also detected heuristically, so an unlisted port is still found.
@@ -122,6 +125,45 @@ never needs a function number: cold and warm restart and enable/disable
 unsolicited are `control`, stop/start/initialize application, configuration
 activation and the file transfers that carry configuration and firmware are
 `program`, reads are `read`.
+
+## What the S7comm dissector decodes
+
+The protocol STEP 7 and WinCC speak to S7-300 and S7-400 controllers, over
+ISO-on-TCP (RFC 1006) on port 102. Three layers are decoded, because an
+operation is not readable until the last one:
+
+- **TPKT** gives the frame its length.
+- **COTP** carries the connection, and its TSAPs name the **rack and slot** of
+  the CPU the session is aimed at.
+- **S7comm**: the message kind, the PDU reference, the error class of a reply,
+  the function codes, the memory areas and offsets of the variable services,
+  the block filenames of an upload or download, the program invocation
+  services, and the SZL lists.
+
+The SZL reads are the point of it. `CLAUDE.md` names them as the S7
+enrichment source, and the bundled capture gives up its device completely:
+
+```
+Field               Value                  Confidence  Evidence
+model               IM151-8 PN/DP CPU      95%         s7comm ReadSZL · Packet 69
+order_number        6ES7 151-8AB01-0AB0    95%         s7comm ReadSZL · Packet 59
+serial_number       S C-C6TW74882012       95%         s7comm ReadSZL · Packet 69
+firmware_revision   V3.2.6                 95%         s7comm ReadSZL · Packet 59
+name                IM151-8-CPU            85%         s7comm ReadSZL · Packet 69
+vendor              Siemens                90%         s7comm ReadSZL · Packet 69
+rack / slot         0 / 2                  80%         s7comm ConnectionConfirm · Packet 6
+```
+
+Uploading and downloading blocks is how a PLC's program is changed, so that
+whole family classifies as `program`, as do the `_INSE` and `_DELE` services
+that activate or delete a block; stopping the CPU is `control`. Both are rules
+`CLAUDE.md` names, and a rule never needs an S7 function number to match them.
+
+Two things the dissector handles quietly: the empty COTP frames STEP 7 sends
+as keep-alives produce no events at all (72 of the 218 frames in one capture),
+and S7comm-plus — what the S7-1200 and S7-1500 speak on the same port — is
+reported once per stream rather than flooding the timeline or being dropped in
+silence.
 
 ## What the GUI shows
 
@@ -201,10 +243,10 @@ from real customer or production environments.
 Capture bytes are treated as hostile throughout. Every length field is checked
 against both the protocol maximum and the bytes actually present, dissectors
 never panic (the registry recovers and counts it as a bug if one does), and
-per-stream buffers are capped. Each dissector has a fuzz target: the
-Modbus one survived 1.3 million inputs, and the DNP3 one 1.4 million through
-`FuzzParse` plus 0.8 million through `FuzzTransportReassembly`, which drives
-fragments across frames. No crash and no invariant violation. Asset searches are bound parameters, never concatenated SQL, and a
+per-stream buffers are capped. Each dissector has a fuzz target: Modbus
+survived 1.3 million inputs, DNP3 1.4 million through `FuzzParse` plus 0.8
+million through `FuzzTransportReassembly`, which drives fragments across
+frames, and S7comm 2.2 million. No crash and no invariant violation. Asset searches are bound parameters, never concatenated SQL, and a
 test tries to drop the table through the search box.
 
 ### Known limitations
@@ -216,6 +258,12 @@ test tries to drop the table through the search box.
   frame to look convincingly like the protocol, so the frame right after the
   broken one is reported as a `FramingError` rather than decoded. This is
   visible in `modbus_test_data_part1.pcap`, which contains such a sender.
+- **S7comm-plus is not decoded**, so an S7-1200 or S7-1500 is seen but its
+  operations are not read; it is a Tier 2 milestone of its own. S7 secure
+  communication is likewise out of scope.
+- An SZL partial list spanning several data units is decoded per unit rather
+  than stitched together. The identity lists arrive in the first unit in
+  practice, and an event says when more follow.
 - DNP3 object *data* is only walked where the standard fixes its size. An
   unknown variation stops the walk and the event says so
   (`objects_truncated`) rather than guessing a size and reporting invented

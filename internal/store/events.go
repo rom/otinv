@@ -18,8 +18,8 @@ const insertEventSQL = `INSERT INTO events
 	(project_id, capture_pk, capture_id, packet_index, ts, protocol, direction,
 	 operation, function_code, class, unit_id, transaction_id, address, quantity,
 	 exception, malformed, error, src_mac, dst_mac, src_ip, dst_ip, src_port,
-	 dst_port, transport, vlan, identity, attrs)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	 dst_port, transport, server_port, vlan, identity, attrs)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 // EventWriter batches events into transactions.
 //
@@ -75,7 +75,7 @@ func (w *EventWriter) Add(ctx context.Context, e model.Event) error {
 		nullString(e.Exception), e.Malformed, nullString(e.Error),
 		nullString(e.Flow.SrcMAC), nullString(e.Flow.DstMAC),
 		e.Flow.SrcIP, e.Flow.DstIP, e.Flow.SrcPort, e.Flow.DstPort,
-		string(e.Flow.Transport), vlan, identity, attrs)
+		string(e.Flow.Transport), nullPort(e.ServerPort), vlan, identity, attrs)
 	if err != nil {
 		return fmt.Errorf("store: inserting event: %w", err)
 	}
@@ -144,7 +144,7 @@ func (s *Store) CountEvents(ctx context.Context, projectID int64) (int64, error)
 const selectEventColumns = `capture_id, packet_index, ts, protocol, direction, operation,
 	function_code, class, unit_id, transaction_id, address, quantity, exception,
 	malformed, error, src_mac, dst_mac, src_ip, dst_ip, src_port, dst_port,
-	transport, vlan, identity, attrs`
+	transport, server_port, vlan, identity, attrs`
 
 // EachEvent streams a project's events in insertion order. Streaming keeps the
 // inventory rebuild bounded in memory however large the project is.
@@ -231,6 +231,7 @@ func scanEvent(rows *sql.Rows) (model.Event, error) {
 		srcMAC, dstMAC                  sql.NullString
 		unitID, transactionID           sql.NullInt64
 		address, quantity               sql.NullInt64
+		serverPort                      sql.NullInt64
 		ts                              int64
 		direction, class, transport     string
 		vlanJSON, identityJSON, attrsJS []byte
@@ -239,7 +240,7 @@ func scanEvent(rows *sql.Rows) (model.Event, error) {
 		&e.Operation, &e.FunctionCode, &class, &unitID, &transactionID,
 		&address, &quantity, &exception, &e.Malformed, &errText,
 		&srcMAC, &dstMAC, &e.Flow.SrcIP, &e.Flow.DstIP, &e.Flow.SrcPort,
-		&e.Flow.DstPort, &transport, &vlanJSON, &identityJSON, &attrsJS)
+		&e.Flow.DstPort, &transport, &serverPort, &vlanJSON, &identityJSON, &attrsJS)
 	if err != nil {
 		return model.Event{}, fmt.Errorf("store: scanning event: %w", err)
 	}
@@ -265,6 +266,9 @@ func scanEvent(rows *sql.Rows) (model.Event, error) {
 	}
 	if quantity.Valid {
 		e.Quantity = model.Ptr(uint32(quantity.Int64))
+	}
+	if serverPort.Valid {
+		e.ServerPort = uint16(serverPort.Int64)
 	}
 	if err := unmarshalJSON(vlanJSON, &e.Flow.VLAN); err != nil {
 		return model.Event{}, fmt.Errorf("store: decoding event vlan: %w", err)
