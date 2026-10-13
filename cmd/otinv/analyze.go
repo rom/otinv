@@ -14,6 +14,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the DNP3 dissector
+	_ "github.com/rom/otinv/internal/dissect/enip"   // register the EtherNet/IP and CIP dissector
 	_ "github.com/rom/otinv/internal/dissect/goose"  // register the IEC 61850 GOOSE dissector
 	_ "github.com/rom/otinv/internal/dissect/iec104" // register the IEC 60870-5-104 dissector
 	_ "github.com/rom/otinv/internal/dissect/mms"    // register the IEC 61850 MMS dissector

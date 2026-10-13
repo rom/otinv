@@ -1,0 +1,63 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 6,
+    "ts": "2015-03-31T17:41:35.08971Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.164",
+      "src_port": 5262,
+      "dst_port": 44818,
+      "transport": "tcp"
+    },
+    "protocol": "enip",
+    "direction": "request",
+    "server_port": 44818,
+    "operation": "ListIdentity",
+    "function_code": 99,
+    "class": "discovery",
+    "attrs": {
+      "command": "ListIdentity"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 7,
+    "ts": "2015-03-31T17:41:35.129679Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.164",
+      "dst_ip": "10.1.1.167",
+      "src_port": 44818,
+      "dst_port": 5262,
+      "transport": "tcp"
+    },
+    "protocol": "enip",
+    "direction": "response",
+    "server_port": 44818,
+    "operation": "ListIdentity",
+    "function_code": 99,
+    "class": "discovery",
+    "identity": {
+      "device_type": "Communications Adapter",
+      "major_minor_revision": "4.3",
+      "product_code": "58",
+      "product_name": "1756-ENBT/A",
+      "serial_number": "0x00524d8e",
+      "vendor_id": "1",
+      "vendor_name": "Rockwell Automation/Allen-Bradley"
+    },
+    "attrs": {
+      "command": "ListIdentity",
+      "device_state": "3",
+      "device_status": "0x0030",
+      "encapsulation_version": "1",
+      "item": "ListIdentityResponse",
+      "item_count": "1",
+      "reported_address": "10.1.1.164:44818"
+    }
+  }
+]

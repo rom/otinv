@@ -267,6 +267,12 @@ var identityTargets = map[string][]struct {
 	// An MMS device answers Identify with its vendor, model and revision,
 	// which is the same kind of structured self-description as an SZL read.
 	"revision": {{"firmware_revision", 90}},
+	// A CIP device states its ODVA device profile — what kind of thing it
+	// is — and the vendor identifier ODVA assigned its manufacturer. Both
+	// are the device's own answer about itself, which is the strongest
+	// evidence available without asking it anything.
+	"device_type": {{"device_type", 90}},
+	"vendor_id":   {{"vendor_id", 90}},
 	// In IEC 61850 the MMS domain is the logical device, which is the name
 	// the substation configuration gave this server. It is kept as its own
 	// field rather than as the asset's name, because one device commonly

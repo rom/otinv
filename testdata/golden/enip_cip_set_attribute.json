@@ -1,0 +1,28 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2009-09-18T05:04:36.869629Z",
+    "flow": {
+      "src_mac": "00:00:bc:3b:d6:59",
+      "dst_mac": "00:1d:09:99:b2:2c",
+      "src_ip": "192.168.10.121",
+      "dst_ip": "192.168.10.105",
+      "src_port": 44818,
+      "dst_port": 1402,
+      "transport": "tcp"
+    },
+    "protocol": "enip",
+    "direction": "response",
+    "server_port": 44818,
+    "operation": "Set_Attribute_Single",
+    "function_code": 16,
+    "class": "write",
+    "attrs": {
+      "cip_status": "Success",
+      "command": "SendRRData",
+      "item": "UnconnectedData",
+      "session_handle": "0x12020100"
+    }
+  }
+]

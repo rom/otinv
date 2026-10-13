@@ -18,6 +18,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/enip"   // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/goose"  // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/iec104" // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/mms"    // register the dissector
@@ -60,6 +61,9 @@ func run(t *testing.T, path string) (*ingest.Result, []model.Event) {
 // The golden files pin the full decode of the public sample captures. Review
 // the diff before committing a regenerated file.
 //
+// enip_rockwell_session is not here either: its 791 events are one session
+// repeating itself, and TestENIPRockwellSessionFacts counts what it is for.
+//
 // iec61850_goose_interlocking is deliberately not here. Its 451 frames differ
 // from one another in a counter and a quality bit, so pinning them all would
 // add half a megabyte that nobody can read a diff of, and the two smaller
@@ -85,6 +89,13 @@ func TestGolden(t *testing.T) {
 		"iec61850_mms_download",
 		"iec61850_goose_ge_relay",
 		"iec61850_goose_minimal",
+		"enip_list_identity",
+		"enip_cip_start",
+		"enip_cip_stop",
+		"enip_cip_set_attribute",
+		"enip_cip_vendor_service",
+		"enip_cip_batch_request",
+		"enip_cip_batch_reply",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", name+".pcap"))

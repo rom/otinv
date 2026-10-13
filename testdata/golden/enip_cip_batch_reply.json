@@ -1,0 +1,32 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2008-10-23T23:29:09.026833Z",
+    "flow": {
+      "src_mac": "00:00:bc:3e:eb:e4",
+      "dst_mac": "00:1d:09:99:b2:2c",
+      "src_ip": "192.168.10.120",
+      "dst_ip": "192.168.10.105",
+      "src_port": 44818,
+      "dst_port": 3033,
+      "transport": "tcp"
+    },
+    "protocol": "enip",
+    "direction": "response",
+    "server_port": 44818,
+    "operation": "Multiple_Service_Packet",
+    "function_code": 10,
+    "class": "read",
+    "transaction_id": 1929,
+    "attrs": {
+      "cip_status": "Success",
+      "command": "SendUnitData",
+      "connection_id": "0x80fe0028",
+      "embedded_count": "11",
+      "embedded_services": "Get_Attribute_List",
+      "item": "ConnectedData",
+      "session_handle": "0x11020100"
+    }
+  }
+]
