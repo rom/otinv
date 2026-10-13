@@ -1,0 +1,104 @@
+package templates
+
+import "strconv"
+
+// AssetsPage is the asset list with its filter panel.
+templ AssetsPage(v AssetsView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "assets.title") }</h1>
+		<form class="filters" method="get" action="/assets" hx-get="/assets" hx-target="#asset-table" hx-push-url="true">
+			<input
+				type="search"
+				name="q"
+				value={ v.Filter.Search }
+				placeholder={ T(v.Page.Lang, "assets.search") }
+				aria-label={ T(v.Page.Lang, "assets.search") }
+			/>
+			<label>
+				{ T(v.Page.Lang, "assets.role") }
+				<select name="role">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, role := range v.Roles {
+						if role == v.Filter.Role {
+							<option value={ role } selected>{ RoleLabel(v.Page.Lang, roleName(role)) }</option>
+						} else {
+							<option value={ role }>{ RoleLabel(v.Page.Lang, roleName(role)) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "assets.protocol") }
+				<select name="protocol">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, proto := range v.Protocols {
+						if proto == v.Filter.Protocol {
+							<option value={ proto } selected>{ proto }</option>
+						} else {
+							<option value={ proto }>{ proto }</option>
+						}
+					}
+				</select>
+			</label>
+			<button type="submit">{ T(v.Page.Lang, "assets.filter") }</button>
+		</form>
+		@AssetTable(v)
+	}
+}
+
+// AssetTable is swapped on its own when htmx asks for a filtered list, which
+// keeps paging, sorting and filtering on the server.
+templ AssetTable(v AssetsView) {
+	<div id="asset-table">
+		<p class="count">{ strconv.Itoa(v.Total) } { T(v.Page.Lang, "assets.count") }</p>
+		if len(v.Rows) == 0 {
+			<p class="empty">{ T(v.Page.Lang, "assets.none") }</p>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>{ T(v.Page.Lang, "assets.address") }</th>
+						<th>{ T(v.Page.Lang, "assets.role") }</th>
+						<th>{ T(v.Page.Lang, "assets.vendor") }</th>
+						<th>{ T(v.Page.Lang, "assets.protocols") }</th>
+						<th class="num">{ T(v.Page.Lang, "assets.events") }</th>
+						<th>{ T(v.Page.Lang, "assets.seen") }</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range v.Rows {
+						<tr>
+							<td>
+								<a href={ templ.SafeURL(AssetURL(row.Key)) }>{ row.Label }</a>
+								if row.IsGateway {
+									<span class="tag">{ T(v.Page.Lang, "asset.gateway") }</span>
+								}
+								<div class="sub">{ Join(row.Addresses) }</div>
+							</td>
+							<td>{ RoleLabel(v.Page.Lang, row.Role) }</td>
+							<td>
+								if row.Vendor == "" {
+									—
+								} else {
+									{ row.Vendor }
+								}
+							</td>
+							<td>{ Join(row.Protocols) }</td>
+							<td class="num">{ strconv.FormatUint(row.Events, 10) }</td>
+							<td>{ FormatTime(row.LastSeen) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<nav class="pager">
+				if v.HasPrev() {
+					<a href={ templ.SafeURL(v.PrevURL()) }>{ T(v.Page.Lang, "assets.prev") }</a>
+				}
+				<span>{ pageLabel(v) }</span>
+				if v.HasNext() {
+					<a href={ templ.SafeURL(v.NextURL()) }>{ T(v.Page.Lang, "assets.next") }</a>
+				}
+			</nav>
+		}
+	</div>
+}

@@ -1,0 +1,153 @@
+/* otinv GUI. Light and dark, no external fonts: everything is embedded so the
+   GUI works on an air-gapped laptop. */
+
+:root {
+	--bg: #f7f8fa;
+	--panel: #ffffff;
+	--border: #d9dde3;
+	--text: #14181f;
+	--muted: #5c6672;
+	--accent: #1f5fa9;
+	--warn-bg: #fdf0e3;
+	--warn-text: #8a4b08;
+	--tag-bg: #e8ecf1;
+	--row-hover: #f0f3f7;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #12151a;
+		--panel: #1a1f27;
+		--border: #2c343f;
+		--text: #e6e9ee;
+		--muted: #9aa5b1;
+		--accent: #71aaf0;
+		--warn-bg: #3a2a14;
+		--warn-text: #f0c08a;
+		--tag-bg: #262e39;
+		--row-hover: #202833;
+	}
+}
+
+* { box-sizing: border-box; }
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.topbar {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.75rem 1.25rem;
+	background: var(--panel);
+	border-bottom: 1px solid var(--border);
+}
+
+.brand { font-weight: 650; letter-spacing: 0.02em; }
+.project { color: var(--muted); }
+.topbar nav { margin-left: auto; display: flex; gap: 0.25rem; }
+
+.nav-item {
+	padding: 0.35rem 0.7rem;
+	border-radius: 6px;
+	color: var(--muted);
+	text-decoration: none;
+}
+.nav-item:hover { background: var(--row-hover); color: var(--text); }
+.nav-item.active { background: var(--tag-bg); color: var(--text); }
+
+main { padding: 1.25rem; max-width: 1200px; }
+
+h1 { font-size: 1.4rem; margin: 0 0 0.75rem; }
+h2 { font-size: 1rem; margin: 1.5rem 0 0.5rem; color: var(--muted); font-weight: 600; }
+
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: end;
+	padding: 0.85rem;
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	margin-bottom: 1rem;
+}
+
+.filters label { display: flex; flex-direction: column; gap: 0.2rem; color: var(--muted); font-size: 0.85rem; }
+
+input, select, button {
+	font: inherit;
+	color: var(--text);
+	background: var(--bg);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 0.4rem 0.6rem;
+}
+
+input[type="search"] { min-width: 18rem; }
+
+button {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+	cursor: pointer;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+th, td {
+	text-align: left;
+	padding: 0.5rem 0.7rem;
+	border-bottom: 1px solid var(--border);
+	vertical-align: top;
+}
+
+th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--row-hover); }
+
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+a { color: var(--accent); }
+
+.sub { color: var(--muted); font-size: 0.82rem; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.count { color: var(--muted); margin: 0 0 0.5rem; }
+.empty { color: var(--muted); padding: 1rem; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
+
+.tag {
+	display: inline-block;
+	padding: 0.05rem 0.4rem;
+	margin-left: 0.4rem;
+	border-radius: 999px;
+	background: var(--tag-bg);
+	color: var(--muted);
+	font-size: 0.75rem;
+}
+
+.tag.warn { background: var(--warn-bg); color: var(--warn-text); }
+
+.role { margin: 0 0 1rem; font-weight: 600; }
+.role .sub { margin-left: 0.5rem; font-weight: 400; }
+
+.pager { display: flex; gap: 1rem; align-items: center; justify-content: center; padding: 0.75rem 0; color: var(--muted); }
+
+footer { padding: 1.25rem; color: var(--muted); font-size: 0.82rem; }
+
+/* Keyboard users must see where they are: tables are navigated with the
+   keyboard, so focus is never hidden. */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}

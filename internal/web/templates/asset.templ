@@ -1,0 +1,151 @@
+package templates
+
+import "strconv"
+
+// AssetPage shows one asset: what it is, which evidence says so, how it
+// behaved and the packets behind that.
+templ AssetPage(v AssetView) {
+	@Layout(v.Page) {
+		<h1>
+			{ v.Asset.Label }
+			if v.Asset.IsGateway {
+				<span class="tag">{ T(v.Page.Lang, "asset.gateway") }</span>
+			}
+		</h1>
+		<p class="role">
+			{ RoleLabel(v.Page.Lang, v.Asset.Role.Name) }
+			<span class="sub">{ T(v.Page.Lang, "asset.confidence") } { ConfidenceLabel(v.Asset.Role.Confidence) }</span>
+		</p>
+		if len(v.Asset.Role.Reasons) > 0 {
+			<section>
+				<h2>{ T(v.Page.Lang, "asset.role_reasons") }</h2>
+				<ul>
+					for _, reason := range v.Asset.Role.Reasons {
+						<li>{ reason }</li>
+					}
+				</ul>
+			</section>
+		}
+		if len(v.Asset.Attributes) > 0 {
+			<section>
+				<h2>{ T(v.Page.Lang, "asset.identity") }</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>{ T(v.Page.Lang, "asset.field") }</th>
+							<th>{ T(v.Page.Lang, "asset.value") }</th>
+							<th class="num">{ T(v.Page.Lang, "asset.confidence") }</th>
+							<th>{ T(v.Page.Lang, "asset.source") }</th>
+							<th>{ T(v.Page.Lang, "asset.evidence") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, attr := range v.Asset.Attributes {
+							<tr>
+								<td>{ attr.Field }</td>
+								<td>{ attr.Value }</td>
+								<td class="num">{ ConfidenceLabel(attr.Confidence) }</td>
+								<td>{ attr.Source }</td>
+								<td class="sub">
+									{ attr.Evidence.Protocol } { attr.Evidence.Operation }
+									· { T(v.Page.Lang, "asset.packet") } { strconv.FormatUint(attr.Evidence.PacketIndex, 10) }
+									· { FormatTime(attr.Evidence.Timestamp) }
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</section>
+		}
+		<section>
+			<h2>{ T(v.Page.Lang, "asset.addresses") }</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>MAC</th>
+						<th>IP</th>
+						<th>VLAN</th>
+						<th class="num">{ T(v.Page.Lang, "assets.events") }</th>
+						<th>{ T(v.Page.Lang, "asset.time") }</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, addr := range v.Asset.Addresses {
+						<tr>
+							<td>{ dash(addr.MAC) }</td>
+							<td>{ dash(addr.IP) }</td>
+							<td>{ vlanLabel(addr.VLAN) }</td>
+							<td class="num">{ strconv.FormatUint(addr.Events, 10) }</td>
+							<td class="sub">{ FormatTime(addr.FirstSeen) } → { FormatTime(addr.LastSeen) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</section>
+		if len(v.Asset.Protocols) > 0 {
+			<section>
+				<h2>{ T(v.Page.Lang, "assets.protocols") }</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>{ T(v.Page.Lang, "assets.protocol") }</th>
+							<th>{ T(v.Page.Lang, "asset.side") }</th>
+							<th class="num">{ T(v.Page.Lang, "assets.events") }</th>
+							<th>{ T(v.Page.Lang, "asset.class") }</th>
+							<th>{ T(v.Page.Lang, "asset.unit") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, proto := range v.Asset.Protocols {
+							<tr>
+								<td>{ proto.Protocol }</td>
+								<td>{ T(v.Page.Lang, "asset.side." + proto.Side) }</td>
+								<td class="num">{ strconv.FormatUint(proto.Events, 10) }</td>
+								<td>{ FormatClasses(proto.Classes) }</td>
+								<td>{ FormatUnits(proto.UnitIDs) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</section>
+		}
+		<section>
+			<h2>{ T(v.Page.Lang, "asset.recent_events") }</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>{ T(v.Page.Lang, "asset.time") }</th>
+						<th>{ T(v.Page.Lang, "asset.operation") }</th>
+						<th>{ T(v.Page.Lang, "asset.class") }</th>
+						<th>{ T(v.Page.Lang, "asset.peer") }</th>
+						<th>{ T(v.Page.Lang, "asset.unit") }</th>
+						<th class="num">{ T(v.Page.Lang, "asset.packet") }</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, ev := range v.Events {
+						<tr>
+							<td class="sub">{ FormatTime(ev.Time) }</td>
+							<td>
+								{ ev.Operation }
+								if ev.Exception != "" {
+									<span class="tag warn">{ ev.Exception }</span>
+								}
+								if ev.Malformed {
+									<span class="tag warn">malformed</span>
+								}
+								if ev.Detail != "" {
+									<div class="sub">{ ev.Detail }</div>
+								}
+							</td>
+							<td>{ ev.Class }</td>
+							<td>{ ev.Peer }</td>
+							<td>{ ev.Unit }</td>
+							<td class="num">{ strconv.FormatUint(ev.Packet, 10) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</section>
+	}
+}

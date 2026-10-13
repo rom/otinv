@@ -35,6 +35,17 @@ linters:
         linters:
           - errcheck
           - gosec
+      # The UI string catalogue is Swedish as well as English, and an English
+      # spell checker has opinions about Swedish words.
+      - path: internal/web/templates/i18n\.go
+        linters:
+          - misspell
+      # templ writes these; they are generated output, not hand-written code.
+      - path: _templ\.go
+        linters:
+          - gocritic
+          - revive
+          - unparam
 
 formatters:
   enable:

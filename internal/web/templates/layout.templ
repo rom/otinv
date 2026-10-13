@@ -1,0 +1,40 @@
+package templates
+
+// Layout is the chrome around every page. There are no inline scripts and no
+// external origins: the GUI must work on an air-gapped laptop under a strict
+// content security policy.
+templ Layout(p PageView) {
+	<!DOCTYPE html>
+	<html lang={ string(p.Lang) }>
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ p.Title } · otinv</title>
+			<link rel="stylesheet" href="/static/css/app.css"/>
+			<script src="/static/vendor/htmx.min.js" defer></script>
+		</head>
+		<body>
+			<header class="topbar">
+				<span class="brand">otinv</span>
+				if p.Project != "" {
+					<span class="project">{ p.Project }</span>
+				}
+				<nav>
+					<a href="/assets" class={ navClass(p.Nav, "assets") }>{ T(p.Lang, "nav.assets") }</a>
+					<a href="/captures" class={ navClass(p.Nav, "captures") }>{ T(p.Lang, "nav.captures") }</a>
+				</nav>
+			</header>
+			<main>
+				{ children... }
+			</main>
+			<footer>{ T(p.Lang, "footer.passive") }</footer>
+		</body>
+	</html>
+}
+
+func navClass(active, item string) string {
+	if active == item {
+		return "nav-item active"
+	}
+	return "nav-item"
+}

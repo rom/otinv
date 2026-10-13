@@ -43,7 +43,7 @@ func newRootCommand() *cobra.Command {
 	}
 	root.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "log at debug level")
 
-	root.AddCommand(newAnalyzeCommand(), newVersionCommand())
+	root.AddCommand(newAnalyzeCommand(), newServeCommand(), newVersionCommand())
 	return root
 }
 
