@@ -756,8 +756,53 @@ func (f *factory) handleDatagram(pkt *packetInfo, udp *layers.UDP, actx *assembl
 		ctx.Direction = model.DirResponse
 		ctx.ServerPort = flow.SrcPort
 	}
-	events, _ := f.opts.Registry.Parse(d, ctx, udp.Payload)
-	for _, e := range events {
-		f.sink(e)
+
+	// A datagram can hold several PDUs of a length-delimited protocol, DNP3
+	// over UDP among them, so a framer is used here too. Nothing is carried
+	// between datagrams: a datagram boundary is a message boundary, which is
+	// why a partial PDU at the end is an error rather than something to keep.
+	if _, framed := d.(dissect.Framer); !framed {
+		events, _ := f.opts.Registry.Parse(d, ctx, udp.Payload)
+		for _, e := range events {
+			f.sink(e)
+		}
+		return
+	}
+
+	reg := f.opts.Registry
+	for consumed := 0; consumed < len(udp.Payload); {
+		rest := udp.Payload[consumed:]
+		n, err := reg.PDULen(d, rest)
+		if err != nil {
+			reason := err
+			if errors.Is(err, dissect.ErrNeedMore) {
+				reason = fmt.Errorf("%w: datagram ends inside a PDU", dissect.ErrMalformed)
+			}
+			f.sink(datagramErrorEvent(d.Name(), ctx, reason))
+			reg.RecordError(d.Name())
+			return
+		}
+		events, _ := reg.Parse(d, ctx, rest[:n])
+		for _, e := range events {
+			f.sink(e)
+		}
+		consumed += n
+	}
+}
+
+// datagramErrorEvent reports a datagram that could not be cut into PDUs.
+func datagramErrorEvent(protocol string, ctx *dissect.FlowContext, err error) model.Event {
+	return model.Event{
+		CaptureID:    ctx.CaptureID,
+		PacketIndex:  ctx.PacketIndex,
+		Timestamp:    ctx.Timestamp,
+		Flow:         ctx.Flow,
+		Protocol:     protocol,
+		Direction:    ctx.Direction,
+		Operation:    "FramingError",
+		FunctionCode: -1,
+		Class:        model.ClassOther,
+		Malformed:    true,
+		Error:        err.Error(),
 	}
 }

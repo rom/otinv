@@ -24,12 +24,13 @@ sample captures.
 | `internal/ingest` — pcap/pcapng reading, L2–L4 decode, VLAN/QinQ, TCP reassembly, PDU framing | done |
 | `internal/dissect` — `Dissector` contract, registry, port and heuristic binding, panic recovery, parse health | done |
 | `internal/dissect/modbus` — Tier 1 Modbus/TCP | done |
+| `internal/dissect/dnp3` — Tier 1 DNP3, link/transport/application layers | done |
 | `internal/store` — SQLite (pure Go), embedded migrations, batched event writes, asset queries | done |
 | `internal/inventory` — asset identity and merge, gateway detection, role inference, identity enrichment | done |
 | `internal/web` — GUI: asset list with server-side filtering and paging, asset detail, captures | done |
 | `cmd/otinv` — `analyze`, `serve`, `version` | done |
 | `internal/topology`, `internal/rules`, `internal/baseline`, `internal/export` | not started |
-| Remaining Tier 1/2/3 protocols | not started |
+| Remaining Tier 1/2/3 protocols (S7comm, IEC 104, MMS, GOOSE, CIP, …) | not started |
 
 The GUI has no authentication yet, so it binds to loopback and **refuses to
 start on any other address** rather than exposing OT data unprotected. Capture
@@ -69,18 +70,58 @@ endpoints
     exceptions  GatewayTargetDeviceFailedToRespond=4
 ```
 
-And the GUI turns that into an inventory:
+And the GUI turns that into an inventory. Ingesting a DNP3 and a Modbus
+capture from the same network into one project shows what the inventory is
+for: one device identified across both protocols, and a station classified by
+what it did rather than by its address.
 
 ```
-Address                               Role              Vendor            Protocols                          Events
-192.168.66.235  00:0c:29:6b:2d:28     HMI / SCADA       —                 modbus (client)                       281
-166.161.16.230  00:c0:a8:f2:bf:fb     PLC / RTU / IED   —                 modbus (server)                       281
-10.0.0.3        00:02:b3:ce:70:51     PLC / RTU / IED   Wingpath Limited  modbus (server)                        32
-10.0.0.8        00:50:04:93:70:67     PLC / RTU / IED   —                 modbus (client), modbus (server)       30
+Address                            Role                      Vendor            Protocols                        Events
+10.0.0.3   00:02:b3:ce:70:51       PLC / RTU / IED           Wingpath Limited  dnp3 (server), modbus (server)      127
+10.0.0.8   00:50:04:93:70:67       Engineering workstation   —                 dnp3 (client), modbus (client)      125
+10.0.0.57  00:20:78:00:62:0d       HMI / SCADA               —                 modbus (client)                      38
 ```
+
+10.0.0.3 is one asset speaking two protocols, merged on its MAC, with the
+vendor read out of its own Modbus identity reply. 10.0.0.8 is an engineering
+workstation because it sent DNP3 `STOP_APPL`, a program-class operation, not
+because of anything about its address.
 
 Copy `otinv.example.yaml` to `otinv.yaml` to add non-standard ports. Protocols
 are also detected heuristically, so an unlisted port is still found.
+
+## What the DNP3 dissector decodes
+
+DNP3 per IEEE 1815-2012, on TCP and UDP port 20000. All three layers are
+decoded, because an operation is not readable until the last one:
+
+- **Data link layer**: start octets, length, control (direction and
+  primary/secondary bits, function code), addresses, and the CRC on the header
+  and on every 16-octet block. A frame with no user data — an acknowledgement,
+  a link reset, a status request — is still reported as evidence that DNP3 is
+  spoken.
+- **Transport function**: fragments split across frames are reassembled, with
+  the sequence checked for gaps and the buffer capped.
+- **Application layer**: every function code with the shared classification a
+  rule matches on, internal indication flags on replies (so a refused command
+  says why), and the object headers with their group, variation, qualifier and
+  range.
+
+Control relay output blocks (group 12) are decoded down to the operation:
+otinv reports *which point* was selected and *what* was asked of it, for
+example `SELECT LATCH_ON point 34463 on time 100 ms`, and the command status
+the outstation replied with.
+
+Broadcast addresses (65533–65535) name every outstation on the link rather
+than one device, so they are flagged rather than listed as a unit. The bundled
+capture has a master broadcasting `STOP_APPL` and `DISABLE_UNSOLICITED`, which
+reaches every device at once.
+
+The operations `CLAUDE.md` names as DNP3 rules all classify so that a rule
+never needs a function number: cold and warm restart and enable/disable
+unsolicited are `control`, stop/start/initialize application, configuration
+activation and the file transfers that carry configuration and firmware are
+`program`, reads are `read`.
 
 ## What the GUI shows
 
@@ -160,9 +201,10 @@ from real customer or production environments.
 Capture bytes are treated as hostile throughout. Every length field is checked
 against both the protocol maximum and the bytes actually present, dissectors
 never panic (the registry recovers and counts it as a bug if one does), and
-per-stream buffers are capped. `FuzzParse` covers the Modbus dissector; a
-45 second run over 1.3 million inputs found no crash and no invariant
-violation. Asset searches are bound parameters, never concatenated SQL, and a
+per-stream buffers are capped. Each dissector has a fuzz target: the
+Modbus one survived 1.3 million inputs, and the DNP3 one 1.4 million through
+`FuzzParse` plus 0.8 million through `FuzzTransportReassembly`, which drives
+fragments across frames. No crash and no invariant violation. Asset searches are bound parameters, never concatenated SQL, and a
 test tries to drop the table through the search box.
 
 ### Known limitations
@@ -174,6 +216,10 @@ test tries to drop the table through the search box.
   frame to look convincingly like the protocol, so the frame right after the
   broken one is reported as a `FramingError` rather than decoded. This is
   visible in `modbus_test_data_part1.pcap`, which contains such a sender.
+- DNP3 object *data* is only walked where the standard fixes its size. An
+  unknown variation stops the walk and the event says so
+  (`objects_truncated`) rather than guessing a size and reporting invented
+  headers. Secure authentication objects (group 120) are not interpreted.
 - Gateway detection needs four or more IPs behind one MAC. Below that a MAC
   fronting several IPs stays one multi-homed asset, which is the right answer
   for a dual-homed controller and the wrong one for a small router; the
