@@ -453,3 +453,46 @@ func TestSessionRolesFollowTheServedPort(t *testing.T) {
 	assert.Equal(t, model.RoleEngineering, station.Role.Name,
 		"the device that downloads a block is the engineering station")
 }
+
+// A broadcast or multicast destination is a question put to a whole segment,
+// not a device: a CIP client finds controllers by broadcasting ListIdentity,
+// and only the replies say anything about an asset.
+func TestBroadcastDestinationIsNotAnAsset(t *testing.T) {
+	discover := model.Flow{
+		SrcMAC: "00:20:78:00:62:0d", DstMAC: "ff:ff:ff:ff:ff:ff",
+		SrcIP: "10.0.0.57", DstIP: "255.255.255.255",
+		SrcPort: 61696, DstPort: 44818, Transport: model.TransportUDP,
+	}
+	reply := model.Flow{
+		SrcMAC: "00:00:bc:3e:eb:e4", DstMAC: "00:20:78:00:62:0d",
+		SrcIP: "10.0.0.3", DstIP: "10.0.0.57",
+		SrcPort: 44818, DstPort: 61696, Transport: model.TransportUDP,
+	}
+
+	b := inventory.New()
+	b.Add(request(discover, "ListIdentity", 0x63, model.ClassDiscovery, 0))
+	b.Add(response(reply, "ListIdentity", 0x63, model.ClassDiscovery, time.Second))
+
+	assets := byKey(b.Assets())
+	assert.Len(t, assets, 2, "the client and the device that answered, and nothing else")
+	assert.Contains(t, assets, "mac:00:20:78:00:62:0d")
+	assert.Contains(t, assets, "mac:00:00:bc:3e:eb:e4")
+	for key, a := range assets {
+		assert.NotContains(t, a.IPs, "255.255.255.255", "%s", key)
+	}
+}
+
+// A multicast destination with no IP layer at all, which is how GOOSE and
+// Sampled Values publish, must not become an asset either.
+func TestMulticastPublicationIsNotAnAsset(t *testing.T) {
+	published := model.Flow{
+		SrcMAC: "0a:bb:fe:10:c9:02", DstMAC: "01:0c:cd:01:00:00",
+		Transport: model.TransportEthernet,
+	}
+	b := inventory.New()
+	b.Add(request(published, "GOOSE", -1, model.ClassOther, 0))
+
+	assets := b.Assets()
+	require.Len(t, assets, 1)
+	assert.Equal(t, "mac:0a:bb:fe:10:c9:02", assets[0].Key)
+}

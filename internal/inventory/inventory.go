@@ -13,6 +13,7 @@ package inventory
 import (
 	"context"
 	"fmt"
+	"net"
 	"sort"
 	"strconv"
 	"time"
@@ -114,8 +115,14 @@ func (b *Builder) Add(e model.Event) {
 		vlan, hasVLAN = e.Flow.VLAN[0], true
 	}
 
-	src := tupleKey{mac: unicastMAC(e.Flow.SrcMAC), ip: e.Flow.SrcIP, vlan: vlan, hasVLAN: hasVLAN}
-	dst := tupleKey{mac: unicastMAC(e.Flow.DstMAC), ip: e.Flow.DstIP, vlan: vlan, hasVLAN: hasVLAN}
+	src := tupleKey{
+		mac: unicastMAC(e.Flow.SrcMAC), ip: unicastIP(e.Flow.SrcIP),
+		vlan: vlan, hasVLAN: hasVLAN,
+	}
+	dst := tupleKey{
+		mac: unicastMAC(e.Flow.DstMAC), ip: unicastIP(e.Flow.DstIP),
+		vlan: vlan, hasVLAN: hasVLAN,
+	}
 
 	// A frame that could not be decoded still proves these two hosts
 	// exchanged bytes, but says nothing about what either of them is: no
@@ -437,6 +444,31 @@ func unicastMAC(mac string) string {
 		return mac
 	}
 	return ""
+}
+
+// unicastIP drops an address that names a group of machines rather than one.
+//
+// The discovery protocols ask a whole segment at once: a CIP client finds
+// controllers by broadcasting ListIdentity to 255.255.255.255 on UDP 44818,
+// and mDNS and NTP use multicast the same way. The reply comes from one
+// device and is evidence about it; the question was addressed to nobody in
+// particular, and an asset for 255.255.255.255 would be an invention.
+//
+// A subnet directed broadcast cannot be recognised without knowing the mask,
+// so it is left alone: inventing a mask would be the worse guess.
+func unicastIP(addr string) string {
+	if addr == "" {
+		return ""
+	}
+	ip := net.ParseIP(addr)
+	switch {
+	case ip == nil:
+		return addr
+	case ip.IsMulticast(), ip.Equal(net.IPv4bcast), ip.IsUnspecified():
+		return ""
+	default:
+		return addr
+	}
 }
 
 // assetKey is the identity of an observed tuple: the MAC when it belongs to
