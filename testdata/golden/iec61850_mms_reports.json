@@ -97,6 +97,80 @@
   },
   {
     "capture_id": "test",
+    "packet_index": 39,
+    "ts": "2008-07-18T12:33:28.737505Z",
+    "flow": {
+      "src_mac": "0a:bb:fe:10:c9:06",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q05A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "5",
+      "dat_set": "AA1C1Q05A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q05A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "140071",
+      "st_num": "115",
+      "t": "2008-07-18T12:32:39.328Z",
+      "time_allowed_to_live_ms": "15000",
+      "time_quality": "clock_not_synchronised,accuracy_7_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 55,
+    "ts": "2008-07-18T12:33:30.083492Z",
+    "flow": {
+      "src_mac": "0a:bb:fe:10:c9:08",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q07A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "2",
+      "dat_set": "AA1C1Q07A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q07A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "140071",
+      "st_num": "59",
+      "t": "2008-07-18T12:32:40.687Z",
+      "time_allowed_to_live_ms": "15000",
+      "time_quality": "clock_not_synchronised,accuracy_7_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
     "packet_index": 78,
     "ts": "2008-07-18T12:33:30.560173Z",
     "flow": {
@@ -372,6 +446,154 @@
   },
   {
     "capture_id": "test",
+    "packet_index": 119,
+    "ts": "2008-07-18T12:33:32.255996Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5867",
+      "t": "2008-07-18T12:34:28.149Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x80,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 120,
+    "ts": "2008-07-18T12:33:32.258877Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "1",
+      "st_num": "5867",
+      "t": "2008-07-18T12:34:28.149Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x80,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 121,
+    "ts": "2008-07-18T12:33:32.267718Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "2",
+      "st_num": "5867",
+      "t": "2008-07-18T12:34:28.149Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x80,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 123,
+    "ts": "2008-07-18T12:33:32.298894Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "3",
+      "st_num": "5867",
+      "t": "2008-07-18T12:34:28.149Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x80,…"
+    }
+  },
+  {
+    "capture_id": "test",
     "packet_index": 124,
     "ts": "2008-07-18T12:33:32.313791Z",
     "flow": {
@@ -529,6 +751,43 @@
       "presentation_context": "3",
       "service": "read",
       "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 130,
+    "ts": "2008-07-18T12:33:32.42692Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "4",
+      "st_num": "5867",
+      "t": "2008-07-18T12:34:28.149Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x80,…"
     }
   },
   {
@@ -733,6 +992,154 @@
   },
   {
     "capture_id": "test",
+    "packet_index": 168,
+    "ts": "2008-07-18T12:33:32.938963Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "5",
+      "st_num": "5867",
+      "t": "2008-07-18T12:34:28.149Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x80,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 179,
+    "ts": "2008-07-18T12:33:33.611085Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5868",
+      "t": "2008-07-18T12:34:29.505Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 180,
+    "ts": "2008-07-18T12:33:33.611117Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5869",
+      "t": "2008-07-18T12:34:29.505Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 181,
+    "ts": "2008-07-18T12:33:33.614937Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "1",
+      "st_num": "5869",
+      "t": "2008-07-18T12:34:29.505Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
     "packet_index": 182,
     "ts": "2008-07-18T12:33:33.61682Z",
     "flow": {
@@ -765,6 +1172,154 @@
   },
   {
     "capture_id": "test",
+    "packet_index": 183,
+    "ts": "2008-07-18T12:33:33.617247Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5870",
+      "t": "2008-07-18T12:34:29.511Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 184,
+    "ts": "2008-07-18T12:33:33.620931Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "1",
+      "st_num": "5870",
+      "t": "2008-07-18T12:34:29.511Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 185,
+    "ts": "2008-07-18T12:33:33.62895Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "2",
+      "st_num": "5870",
+      "t": "2008-07-18T12:34:29.511Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 186,
+    "ts": "2008-07-18T12:33:33.660959Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "3",
+      "st_num": "5870",
+      "t": "2008-07-18T12:34:29.511Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
     "packet_index": 187,
     "ts": "2008-07-18T12:33:33.682709Z",
     "flow": {
@@ -793,6 +1348,413 @@
       "report_id": "AA1C1Q01FP1LD0/LLN0$rcb_C01",
       "service": "informationReport",
       "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 188,
+    "ts": "2008-07-18T12:33:33.788973Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "4",
+      "st_num": "5870",
+      "t": "2008-07-18T12:34:29.511Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x00,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 190,
+    "ts": "2008-07-18T12:33:33.807103Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5871",
+      "t": "2008-07-18T12:34:29.701Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 191,
+    "ts": "2008-07-18T12:33:33.810912Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "1",
+      "st_num": "5871",
+      "t": "2008-07-18T12:34:29.701Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 192,
+    "ts": "2008-07-18T12:33:33.818942Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "2",
+      "st_num": "5871",
+      "t": "2008-07-18T12:34:29.701Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 193,
+    "ts": "2008-07-18T12:33:33.827603Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5872",
+      "t": "2008-07-18T12:34:29.722Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 194,
+    "ts": "2008-07-18T12:33:33.830936Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "1",
+      "st_num": "5872",
+      "t": "2008-07-18T12:34:29.722Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 195,
+    "ts": "2008-07-18T12:33:33.838971Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "2",
+      "st_num": "5872",
+      "t": "2008-07-18T12:34:29.722Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 196,
+    "ts": "2008-07-18T12:33:33.870966Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "3",
+      "st_num": "5872",
+      "t": "2008-07-18T12:34:29.722Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 197,
+    "ts": "2008-07-18T12:33:33.896321Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5873",
+      "t": "2008-07-18T12:34:29.790Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 198,
+    "ts": "2008-07-18T12:33:33.898927Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "1",
+      "st_num": "5873",
+      "t": "2008-07-18T12:34:29.790Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 199,
+    "ts": "2008-07-18T12:33:33.906933Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "2",
+      "st_num": "5873",
+      "t": "2008-07-18T12:34:29.790Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
     }
   },
   {
@@ -953,6 +1915,191 @@
       "report_id": "AA1C1Q01A1LD0/LLN0$rcb_E02",
       "service": "informationReport",
       "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 206,
+    "ts": "2008-07-18T12:33:33.938973Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "3",
+      "st_num": "5873",
+      "t": "2008-07-18T12:34:29.790Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "true,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 208,
+    "ts": "2008-07-18T12:33:34.05614Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "StateChange",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "0",
+      "st_num": "5874",
+      "t": "2008-07-18T12:34:29.950Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 211,
+    "ts": "2008-07-18T12:33:34.058923Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "1",
+      "st_num": "5874",
+      "t": "2008-07-18T12:34:29.950Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 212,
+    "ts": "2008-07-18T12:33:34.067036Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "2",
+      "st_num": "5874",
+      "t": "2008-07-18T12:34:29.950Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 213,
+    "ts": "2008-07-18T12:33:34.098989Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "3",
+      "st_num": "5874",
+      "t": "2008-07-18T12:34:29.950Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
     }
   },
   {
@@ -1053,6 +2200,43 @@
   },
   {
     "capture_id": "test",
+    "packet_index": 219,
+    "ts": "2008-07-18T12:33:34.227023Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "4",
+      "st_num": "5874",
+      "t": "2008-07-18T12:34:29.950Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
     "packet_index": 222,
     "ts": "2008-07-18T12:33:34.407772Z",
     "flow": {
@@ -1149,6 +2333,43 @@
   },
   {
     "capture_id": "test",
+    "packet_index": 239,
+    "ts": "2008-07-18T12:33:34.739004Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "5",
+      "st_num": "5874",
+      "t": "2008-07-18T12:34:29.950Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
+    }
+  },
+  {
+    "capture_id": "test",
     "packet_index": 260,
     "ts": "2008-07-18T12:33:35.250975Z",
     "flow": {
@@ -1209,6 +2430,43 @@
       "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
       "service": "informationReport",
       "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 280,
+    "ts": "2008-07-18T12:33:36.787086Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "01:0c:cd:01:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 25,
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "appid": "0x3001",
+      "conf_rev": "1",
+      "dat_set": "AA1C1Q01A1LD0/LLN0$InterlockingA",
+      "entries": "25",
+      "go_id": "InterlockingA",
+      "gocb_ref": "AA1C1Q01A1LD0/LLN0$GO$gcb_A",
+      "sq_num": "6",
+      "st_num": "5874",
+      "t": "2008-07-18T12:34:29.950Z",
+      "time_allowed_to_live_ms": "11000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,false,false,false,false,false,false,0x40,…"
     }
   },
   {

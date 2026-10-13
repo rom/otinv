@@ -18,6 +18,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/goose"  // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/iec104" // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/mms"    // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the dissector
@@ -58,6 +59,13 @@ func run(t *testing.T, path string) (*ingest.Result, []model.Event) {
 
 // The golden files pin the full decode of the public sample captures. Review
 // the diff before committing a regenerated file.
+//
+// iec61850_goose_interlocking is deliberately not here. Its 451 frames differ
+// from one another in a counter and a quality bit, so pinning them all would
+// add half a megabyte that nobody can read a diff of, and the two smaller
+// GOOSE captures and the GOOSE frames in iec61850_mms_reports already pin
+// every field. What that capture is for is the volume of state changes, and
+// TestGooseCaptureFacts counts those.
 func TestGolden(t *testing.T) {
 	root := repoRoot(t)
 	for _, name := range []string{
@@ -75,6 +83,8 @@ func TestGolden(t *testing.T) {
 		"iec61850_mms_write",
 		"iec61850_mms_program_control",
 		"iec61850_mms_download",
+		"iec61850_goose_ge_relay",
+		"iec61850_goose_minimal",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", name+".pcap"))

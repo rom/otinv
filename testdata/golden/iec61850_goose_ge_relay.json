@@ -1,0 +1,300 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2008-07-15T15:20:43.118812Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "sq_num": "10",
+      "st_num": "1",
+      "t": "2000-01-02T02:46:11.258Z",
+      "time_allowed_to_live_ms": "40000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 2,
+    "ts": "2008-07-15T15:20:53.15926Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "sq_num": "11",
+      "st_num": "1",
+      "t": "2000-01-02T02:46:11.258Z",
+      "time_allowed_to_live_ms": "40000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2008-07-15T15:21:03.198794Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "sq_num": "12",
+      "st_num": "1",
+      "t": "2000-01-02T02:46:11.258Z",
+      "time_allowed_to_live_ms": "40000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2008-07-15T15:21:10.951499Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "anomaly": "sq_num_regression",
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "previous_sq_num": "12",
+      "sq_num": "1",
+      "st_num": "1",
+      "t": "2000-01-02T02:47:29.927Z",
+      "time_allowed_to_live_ms": "1000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 5,
+    "ts": "2008-07-15T15:21:10.963584Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "sq_num": "2",
+      "st_num": "1",
+      "t": "2000-01-02T02:47:29.927Z",
+      "time_allowed_to_live_ms": "1000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 6,
+    "ts": "2008-07-15T15:21:10.986981Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "sq_num": "3",
+      "st_num": "1",
+      "t": "2000-01-02T02:47:29.927Z",
+      "time_allowed_to_live_ms": "1000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 7,
+    "ts": "2008-07-15T15:21:11.077396Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "sq_num": "4",
+      "st_num": "1",
+      "t": "2000-01-02T02:47:29.927Z",
+      "time_allowed_to_live_ms": "2000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 8,
+    "ts": "2008-07-15T15:21:11.583138Z",
+    "flow": {
+      "src_mac": "00:a0:f4:08:2f:77",
+      "dst_mac": "01:a0:f4:08:2f:77",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 8,
+    "identity": {
+      "logical_device": "GEDeviceF650"
+    },
+    "attrs": {
+      "appid": "0x0001",
+      "conf_rev": "1",
+      "dat_set": "GEDeviceF650/LLN0$GOOSE1",
+      "entries": "8",
+      "go_id": "F650_GOOSE1",
+      "gocb_ref": "GEDeviceF650/LLN0$GO$gcb01",
+      "sq_num": "5",
+      "st_num": "1",
+      "t": "2000-01-02T02:47:29.927Z",
+      "time_allowed_to_live_ms": "40000",
+      "time_quality": "accuracy_10_bits",
+      "values": "false,0x0000,false,0x0000,false,0x0000,false,0x0000"
+    }
+  }
+]

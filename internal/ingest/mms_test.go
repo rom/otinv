@@ -123,14 +123,20 @@ func TestMMSCaptureFacts(t *testing.T) {
 			res, events := run(t, filepath.Join(root, "testdata", "pcaps", tc.file+".pcap"))
 
 			byOperation := map[string]int{}
+			var mmsEvents uint64
 			for _, e := range events {
-				assert.Equal(t, "mms", e.Protocol)
 				assert.True(t, e.Class.Valid(), "class %q", e.Class)
 				assert.NotEmpty(t, e.Operation)
+				if e.Protocol != "mms" {
+					// One capture carries GOOSE on the same segment; it has
+					// its own test.
+					continue
+				}
+				mmsEvents++
 				byOperation[e.Operation]++
 			}
 
-			assert.Equal(t, tc.wantEvents, res.Events)
+			assert.Equal(t, tc.wantEvents, mmsEvents)
 			assert.Equal(t, tc.wantMalformed, res.Malformed)
 			assert.Equal(t, tc.wantStreams, res.TCPStreams)
 			assert.Equal(t, tc.wantBound, res.BoundStreams)
@@ -158,10 +164,16 @@ func TestPort102IsNotClaimedFromTheConnectionRequest(t *testing.T) {
 		t.Run(tc.file, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", tc.file+".pcap"))
 			require.NotEmpty(t, events)
+			seen := 0
 			for _, e := range events {
+				if e.Flow.SrcPort != 102 && e.Flow.DstPort != 102 {
+					continue
+				}
+				seen++
 				assert.Equal(t, tc.want, e.Protocol,
 					"packet %d decoded as the wrong protocol on port 102", e.PacketIndex)
 			}
+			assert.Positive(t, seen, "the capture holds port 102 traffic")
 		})
 	}
 }
