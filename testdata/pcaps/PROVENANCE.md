@@ -22,6 +22,14 @@ commit captures from real customer or production environments.
 | `iec61850_goose_interlocking.pcap` | 117736 | `7d0ab6ea4580e337e399878ee4c244c69df78c48a5310087d9636fab677c8293` |
 | `iec61850_goose_ge_relay.pcap` | 1420 | `746619df546905feb6f1217ee40750004a1ca1d85fe7be1740bacdf52dca6850` |
 | `iec61850_goose_minimal.pcap` | 166 | `41cb05f4c7843b884ab40fb503471fba7a5f09ee1ffebc441da7cfcdab6877b7` |
+| `enip_list_identity.pcap` | 925 | `0ba6c01fde28912e9f890d839b991cff71cca8e8259e1d93e9c3a312c43bc255` |
+| `enip_cip_start.pcap` | 146 | `3b341bee9e7790bf0fae8468f55c9b90ac49e014cfb1dc3cc97437f811d0933f` |
+| `enip_cip_stop.pcap` | 146 | `93e5d388193fcaff3f3f38878de34269afcd01318897a2d36647c773d1e5ed3d` |
+| `enip_cip_set_attribute.pcap` | 138 | `fe674ddc3e4964c10321dd76f649097c87db6d48091327c6977656a5a3c04b26` |
+| `enip_cip_vendor_service.pcap` | 150 | `26d072e506ffd939b82532b597bdb27684ca79e2abac8ab62b8d65e9ad87313c` |
+| `enip_cip_batch_request.pcap` | 304 | `ecf46cb2bfb1e7cda70d9b966431fe2e1f1056d2a158cf54ddce6f03fc82474e` |
+| `enip_cip_batch_reply.pcap` | 387 | `4a6350da7f5d5b2ee383e9e92e6a5a846931785f849798799a323d0b8a8ba3d4` |
+| `enip_rockwell_session.pcap` | 129648 | `8439230c8c1a3e824fc8e5f0637160ad6d88fcd78cae94c60c1e6f9df9358f57` |
 
 ## Origin
 
@@ -224,3 +232,74 @@ samples. Its control block, data set and identifier are `111`, `222` and
 `333`, which are not object references at all, so nothing can be learnt about
 the publisher from them: it is the test that a name with no logical device in
 it yields no identity rather than a made-up one.
+
+## EtherNet/IP and CIP captures
+
+The eight `enip_*.pcap` files came from the same public collection as the
+files above. Seven are its `pcaps/EthernetIP/` directory, published there as
+`enip_test.pcap`, `cip_start_plc.pcap`, `cip_stop_plc.pcap`,
+`cip-eth-set-2.pcap`, `cip_unlock_cpu.pcap`, `cip-multiple-1.pcap` and
+`cip-multiple-2.pcap`; the eighth is `pcaps/openics/EIP-SoftwareUpload.pcap`,
+which that collection records as coming from the OpenICS sample set. They are
+renamed here after what they hold.
+
+A warning about the OpenICS EtherNet/IP files, since their names invite
+reading something into them: several are byte-identical to each other under
+different names — `EIP-RebootorRestart.pcap` and `EIP-SoftwareDownload.pcap`
+are the same bytes, as are `EIP-LockPLCAttempt.pcap` and
+`EIP-UnlockPLCAttempt.pcap` — so a filename there is not a description of the
+traffic. Only what is in the file is relied on below.
+
+`enip_list_identity.pcap` — eleven packets, of which two are the exchange the
+file is for: a client asks `ListIdentity` on a TCP session and a
+1756-ENBT/A communications adapter answers with its whole Identity object.
+That one reply carries the vendor, the ODVA device profile, the product code
+and name, the revision, the serial number, the device status and state, and
+the address the device believes it has. It is the richest identity a passive
+observer gets from EtherNet/IP, and the reason discovery traffic is worth
+decoding at all.
+
+`enip_cip_start.pcap` and `enip_cip_stop.pcap` — one frame each: the common
+services `Start` and `Stop` sent over a connection to class 0x8E instance 1,
+which on a Logix controller is what puts it into and out of run. This is the
+traffic behind CLAUDE.md's rule on CIP stop and reset services, and the two
+frames differ only in the service code and the connection's sequence count.
+
+`enip_cip_set_attribute.pcap` — one frame, a device answering a
+`Set_Attribute_Single` with success. It is the smallest well formed reply in
+the set and the only one whose source port is 44818, so it also pins that a
+reply is recognised as one from the service octet rather than from the ports.
+
+`enip_cip_vendor_service.pcap` — one frame of service 0x4C sent to class
+0x74. On a symbol that code is `Read_Tag`; class 0x74 defines no such
+service, so what it means here is between the device and its vendor. The file
+is the test that such a request is reported as the number it is rather than
+guessed at.
+
+`enip_cip_batch_request.pcap` and `enip_cip_batch_reply.pcap` — a
+`Multiple_Service_Packet` carrying eleven `Get_Attribute_List` requests to
+eleven different classes, and the reply carrying all eleven answers. They
+exercise the offset table of a batch and the rule that a batch takes the
+classification of the most consequential service in it.
+
+`enip_rockwell_session.pcap` — 129 KB and 791 encapsulation PDUs of one
+engineering client working on a 1756-L61/B LOGIX5561 controller through a
+bridge, which is what realistic EtherNet/IP looks like: 562 attribute list
+reads, 73 batches, 38 requests of service 0x4F, which nobody has published,
+36 reads of the Identity object, 25 of service 0x4B — Execute_PCCC on the
+PCCC object, sent here to a vendor class instead — seven connections opened
+and closed again, and one attribute list write, to a vendor class. Five
+requests are refused: four reads with `PathDestinationUnknown`, which is a
+client asking for objects that are not there, and one unnamed vendor service
+with the device's own general error.
+
+Three things in it are worth knowing. The controller's identity arrives in
+the reply to a `Get_Attributes_All`, not in a `ListIdentity` — there is no
+discovery traffic in the file at all — and a CIP reply says nothing about
+which object answered, so recovering it rests on the shape of the answer
+alone (see `identityFromAttributes`). Eighteen requests are routed through
+the bridge with `Unconnected_Send`, so the object they address is in the
+embedded request and not in the one that was sent. And its 0x52 requests are
+`Unconnected_Send` on the Connection Manager while the same code on a symbol
+is a fragmented tag read, which is the capture that proves a service code
+above the common range cannot be named without knowing the class.
