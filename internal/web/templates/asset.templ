@@ -31,13 +31,7 @@ templ AssetPage(v AssetView) {
 				<h2>{ T(v.Page.Lang, "asset.identity") }</h2>
 				<table>
 					<thead>
-						<tr>
-							<th>{ T(v.Page.Lang, "asset.field") }</th>
-							<th>{ T(v.Page.Lang, "asset.value") }</th>
-							<th class="num">{ T(v.Page.Lang, "asset.confidence") }</th>
-							<th>{ T(v.Page.Lang, "asset.source") }</th>
-							<th>{ T(v.Page.Lang, "asset.evidence") }</th>
-						</tr>
+						@SortableHeaders(v.IdentityHeaders())
 					</thead>
 					<tbody>
 						for _, attr := range v.Asset.Attributes {
@@ -61,13 +55,7 @@ templ AssetPage(v AssetView) {
 			<h2>{ T(v.Page.Lang, "asset.addresses") }</h2>
 			<table>
 				<thead>
-					<tr>
-						<th>MAC</th>
-						<th>IP</th>
-						<th>VLAN</th>
-						<th class="num">{ T(v.Page.Lang, "assets.events") }</th>
-						<th>{ T(v.Page.Lang, "asset.time") }</th>
-					</tr>
+					@SortableHeaders(v.AddressHeaders())
 				</thead>
 				<tbody>
 					for _, addr := range v.Asset.Addresses {
@@ -87,13 +75,7 @@ templ AssetPage(v AssetView) {
 				<h2>{ T(v.Page.Lang, "assets.protocols") }</h2>
 				<table>
 					<thead>
-						<tr>
-							<th>{ T(v.Page.Lang, "assets.protocol") }</th>
-							<th>{ T(v.Page.Lang, "asset.side") }</th>
-							<th class="num">{ T(v.Page.Lang, "assets.events") }</th>
-							<th>{ T(v.Page.Lang, "asset.class") }</th>
-							<th>{ T(v.Page.Lang, "asset.unit") }</th>
-						</tr>
+						@SortableHeaders(v.ProtocolHeaders())
 					</thead>
 					<tbody>
 						for _, proto := range v.Asset.Protocols {
@@ -113,14 +95,7 @@ templ AssetPage(v AssetView) {
 			<h2>{ T(v.Page.Lang, "asset.recent_events") }</h2>
 			<table>
 				<thead>
-					<tr>
-						<th>{ T(v.Page.Lang, "asset.time") }</th>
-						<th>{ T(v.Page.Lang, "asset.operation") }</th>
-						<th>{ T(v.Page.Lang, "asset.class") }</th>
-						<th>{ T(v.Page.Lang, "asset.peer") }</th>
-						<th>{ T(v.Page.Lang, "asset.unit") }</th>
-						<th class="num">{ T(v.Page.Lang, "asset.packet") }</th>
-					</tr>
+					@SortableHeaders(v.EventHeaders())
 				</thead>
 				<tbody>
 					for _, ev := range v.Events {

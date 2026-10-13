@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -516,4 +517,181 @@ func TestEndToEndFromCaptureToPage(t *testing.T) {
 	assert.Contains(t, detail, "ReportServerID")
 	assert.Contains(t, detail, "ForceListenOnlyMode", "the control operation is visible on the device")
 	assert.Contains(t, detail, "control")
+}
+
+// Every column of every table sorts, both ways, and the state lives in the
+// URL so that a sorted view is as deep-linkable as a filtered one.
+func TestAssetListColumnsAreSortable(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+
+	// An unsorted list offers every column, and claims none of them as the
+	// one it is sorted by.
+	rec := get(t, h, "/assets", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+	for _, column := range []string{"address", "role", "vendor", "protocols", "events", "seen"} {
+		assert.Contains(t, body, "sort="+column, "the %s column must offer a sort link", column)
+	}
+	assert.Equal(t, 6, strings.Count(body, `aria-sort="none"`))
+
+	// Each column, once sorted, says which way it is sorted and offers the
+	// other way. The counts and timestamps start at the largest, because that
+	// is the end worth reading first.
+	tests := []struct {
+		target    string
+		direction string
+		toggle    string
+	}{
+		{target: "/assets?sort=address", direction: `aria-sort="ascending"`, toggle: "dir=desc"},
+		{target: "/assets?sort=address&dir=desc", direction: `aria-sort="descending"`, toggle: "sort=address"},
+		{target: "/assets?sort=events&dir=desc", direction: `aria-sort="descending"`, toggle: "sort=events"},
+		{target: "/assets?sort=seen&dir=desc", direction: `aria-sort="descending"`, toggle: "sort=seen"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.target, func(t *testing.T) {
+			rec := get(t, h, tc.target, nil)
+			require.Equal(t, http.StatusOK, rec.Code)
+			body := rec.Body.String()
+			assert.Contains(t, body, tc.direction)
+			assert.Equal(t, 5, strings.Count(body, `aria-sort="none"`),
+				"only the sorted column claims a direction")
+			assert.Contains(t, body, tc.toggle, "the header must offer the other direction")
+		})
+	}
+}
+
+// The order decides which assets a page holds, so a sort is applied in the
+// store rather than to the page after it has been read.
+func TestAssetListSortOrdersTheWholeInventory(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+
+	// sampleAssets holds 10.0.0.3 with 32 events and 10.0.0.57 with 38.
+	ascending := get(t, h, "/assets?sort=events", nil).Body.String()
+	assert.Less(t, rowIndex(ascending, "10.0.0.3"), rowIndex(ascending, "10.0.0.57"),
+		"the quietest asset comes first ascending")
+
+	descending := get(t, h, "/assets?sort=events&dir=desc", nil).Body.String()
+	assert.Less(t, rowIndex(descending, "10.0.0.57"), rowIndex(descending, "10.0.0.3"),
+		"and the busiest comes first descending")
+}
+
+// A paged, filtered, sorted list has to keep all three in its links, or
+// following one of them loses the other two.
+func TestAssetListSortSurvivesFilteringAndPaging(t *testing.T) {
+	assets := make([]model.Asset, 0, 4)
+	for i := range 4 {
+		assets = append(assets, model.Asset{
+			Key:    "ip:10.0.0." + strconv.Itoa(i),
+			Label:  "10.0.0." + strconv.Itoa(i),
+			Role:   model.Role{Name: model.RoleController, Confidence: 80},
+			Events: uint64(i),
+		})
+	}
+	h, _, _ := serve(t, assets)
+
+	rec := get(t, h, "/assets?sort=events&role=plc_rtu_ied&limit=2", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+	assert.Contains(t, body, "sort=events")
+	assert.Contains(t, body, "role=plc_rtu_ied")
+	assert.Contains(t, body, "offset=2", "the pager keeps the sort and the filter")
+
+	// A sort link returns to the first page, because the rows a second page
+	// holds depend on the order.
+	assert.NotContains(t, body, "offset=2&amp;role=plc_rtu_ied&amp;sort=seen")
+}
+
+// A link from an older version, or one edited by hand, must not break the
+// page: an unknown column is ignored.
+func TestAssetListIgnoresAnUnknownSortColumn(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+
+	for _, target := range []string{
+		"/assets?sort=nonsense",
+		"/assets?sort=a.events);DROP+TABLE+assets--",
+		"/assets?sort=events&dir=sideways",
+	} {
+		rec := get(t, h, target, nil)
+		assert.Equal(t, http.StatusOK, rec.Code, target)
+		assert.Contains(t, rec.Body.String(), "10.0.0.3", target)
+	}
+}
+
+// rowIndex is where an asset's row begins in the rendered table, which is
+// what says whether one row comes before another. The label also appears in
+// the row's link, so a plain string search would find either.
+func rowIndex(body, label string) int {
+	table := strings.Index(body, "<tbody>")
+	if table < 0 {
+		return -1
+	}
+	return strings.Index(body[table:], ">"+label+"</a>")
+}
+
+// The detail page's four tables share one sort state, with each column named
+// for the table it belongs to.
+func TestAssetDetailTablesAreSortable(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+
+	rec := get(t, h, "/assets/mac:00:02:b3:ce:70:51", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+	for _, column := range []string{
+		"identity.field", "identity.confidence",
+		"addresses.mac", "addresses.ip", "addresses.vlan",
+		"protocols.protocol", "protocols.events",
+		"events.time", "events.packet",
+	} {
+		assert.Contains(t, body, "sort="+column, "the %s column must offer a sort link", column)
+	}
+
+	// Sorting one table claims a direction for one column only.
+	rec = get(t, h, "/assets/mac:00:02:b3:ce:70:51?sort=events.packet&dir=asc", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body = rec.Body.String()
+	assert.Equal(t, 1, strings.Count(body, `aria-sort="ascending"`))
+	assert.Equal(t, 0, strings.Count(body, `aria-sort="descending"`))
+}
+
+func TestCaptureListIsSortable(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	ctx := context.Background()
+
+	for i, c := range []model.Capture{
+		{ID: "b", Path: "b.pcap", SHA256: "bbb", Packets: 10, LinkType: "Ethernet"},
+		{ID: "a", Path: "a.pcap", SHA256: "aaa", Packets: 90, LinkType: "Ethernet"},
+	} {
+		c.FirstSeen = seen.Add(time.Duration(i) * time.Hour)
+		c.LastSeen = c.FirstSeen.Add(time.Minute)
+		_, _, err := s.SaveCapture(ctx, project.ID, c)
+		require.NoError(t, err)
+	}
+
+	rec := get(t, h, "/captures?sort=packets&dir=desc", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+	assert.Less(t, strings.Index(body, "a.pcap"), strings.Index(body, "b.pcap"),
+		"the largest capture comes first")
+	assert.Contains(t, body, `aria-sort="descending"`)
+	assert.Contains(t, body, "sort=path")
+
+	ascending := get(t, h, "/captures?sort=packets", nil).Body.String()
+	assert.Less(t, strings.Index(ascending, "b.pcap"), strings.Index(ascending, "a.pcap"))
+}
+
+// The header is a link, which is what gives it keyboard access for free:
+// CLAUDE.md asks for keyboard navigation in tables, and a link is reachable
+// by tab and activated by enter without a line of script.
+func TestSortHeadersAreLinks(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+	body := get(t, h, "/assets", nil).Body.String()
+
+	assert.Contains(t, body, `<th aria-sort="none" class="sortable"><a href="/assets?`)
+	assert.Contains(t, body, `hx-target="#asset-table"`,
+		"the asset table is swapped on its own, so its headers go through htmx")
+
+	// The only script on the page is the vendored htmx, which the strict CSP
+	// requires: sorting adds no inline script of its own.
+	assert.Equal(t, 1, strings.Count(body, "<script"))
+	assert.Contains(t, body, `<script src="/static/vendor/htmx.min.js" defer></script>`)
 }

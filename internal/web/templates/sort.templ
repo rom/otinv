@@ -1,0 +1,29 @@
+package templates
+
+// SortableHeaders renders a table's column headers as links that sort by
+// them.
+//
+// The arrow comes from aria-sort in the stylesheet rather than from markup of
+// its own, so what a screen reader is told and what a sighted reader sees can
+// never drift apart. Each header is a real link, so sorting works, is
+// deep-linkable and survives a middle click whether or not htmx loaded;
+// where a table can be swapped on its own, htmx does that instead of
+// reloading the page.
+templ SortableHeaders(headers []SortHeaderView) {
+	<tr>
+		for _, h := range headers {
+			<th aria-sort={ h.Direction } class={ h.Class() }>
+				if h.Target == "" {
+					<a href={ templ.SafeURL(h.URL) }>{ h.Label }</a>
+				} else {
+					<a
+						href={ templ.SafeURL(h.URL) }
+						hx-get={ h.URL }
+						hx-target={ h.Target }
+						hx-push-url="true"
+					>{ h.Label }</a>
+				}
+			</th>
+		}
+	</tr>
+}
