@@ -271,6 +271,19 @@ func TestAssetDetailShowsEvidence(t *testing.T) {
 		Operation: "Diagnostics", FunctionCode: 8, Class: model.ClassControl,
 		UnitID: model.Ptr(uint16(10)),
 	}))
+	// A control command whose select step is what distinguishes arming it
+	// from issuing it.
+	require.NoError(t, w.Add(ctx, model.Event{
+		CaptureID: "part1", PacketIndex: 9, Timestamp: seen,
+		Flow: model.Flow{
+			SrcIP: "10.0.0.57", DstIP: "10.0.0.3", SrcPort: 2578, DstPort: 2404,
+			Transport: model.TransportTCP,
+		},
+		Protocol: "iec104", Direction: model.DirRequest, ServerPort: 2404,
+		Operation: "C_SC_NA_1", FunctionCode: 45, Class: model.ClassControl,
+		UnitID: model.Ptr(uint16(3)), Address: model.Ptr(uint32(10010)),
+		Attrs: map[string]string{"value": "on", "command_mode": "select"},
+	}))
 	require.NoError(t, w.Close(ctx))
 
 	rec := get(t, h, "/assets/mac:00:02:b3:ce:70:51", nil)
@@ -288,6 +301,8 @@ func TestAssetDetailShowsEvidence(t *testing.T) {
 	assert.Contains(t, body, "control 8", "the class histogram")
 	assert.Contains(t, body, "Diagnostics", "the asset's own events")
 	assert.Contains(t, body, "10.0.0.57", "with the peer it talked to")
+	assert.Contains(t, body, "value on · select",
+		"a command shows whether it was the select or the execute step")
 }
 
 func TestAssetDetailNotFound(t *testing.T) {

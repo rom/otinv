@@ -380,6 +380,11 @@ func eventDetail(e model.Event) string {
 	} else if v := e.Attrs["value"]; v != "" {
 		parts = append(parts, "value "+v)
 	}
+	// Select or execute is the difference between arming a command and
+	// issuing it, so a command sequence is unreadable without it.
+	if v := e.Attrs["command_mode"]; v != "" {
+		parts = append(parts, v)
+	}
 	if v := e.Attrs["anomaly"]; v != "" {
 		parts = append(parts, v)
 	}

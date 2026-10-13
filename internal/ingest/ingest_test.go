@@ -18,6 +18,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/iec104" // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/s7comm" // register the dissector
 	"github.com/rom/otinv/internal/ingest"
@@ -66,6 +67,8 @@ func TestGolden(t *testing.T) {
 		"s7comm_varservice_libnodavedemo",
 		"s7comm_downloading_block_db1",
 		"s7comm_reading_plc_status",
+		"iec104_test_dissect",
+		"iec104_diverse_commands",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", name+".pcap"))
