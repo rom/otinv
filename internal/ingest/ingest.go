@@ -56,6 +56,11 @@ const (
 	// ingest gives up identifying its protocol.
 	maxBindAttempts = 4
 
+	// noSequenceYet is what reassembly reports as the next expected sequence
+	// number of a direction whose start it has not seen. The package keeps the
+	// sentinel to itself, but a TCP sequence number is never negative.
+	noSequenceYet = -1
+
 	// bindDecisionBytes is how many bytes make a Probe verdict trustworthy.
 	// Below this a stream gets another chance as more data arrives.
 	bindDecisionBytes = 16
@@ -468,7 +473,6 @@ type tcpStream struct {
 	bound   dissect.Dissector
 	tries   int
 	unbound bool
-	started bool
 	sides   [2]side
 }
 
@@ -476,15 +480,15 @@ type tcpStream struct {
 // the field routinely start in the middle of a session, and a capture is all
 // the evidence there is.
 func (s *tcpStream) Accept(tcp *layers.TCP, _ gopacket.CaptureInfo, _ reassembly.TCPFlowDirection,
-	_ reassembly.Sequence, start *bool, _ reassembly.AssemblerContext,
+	nextSeq reassembly.Sequence, start *bool, _ reassembly.AssemblerContext,
 ) bool {
-	if !s.started {
-		s.started = true
-		if !tcp.SYN && len(tcp.Payload) > 0 {
-			// No handshake in the capture: force the stream to start here
-			// rather than wait for bytes that were never recorded.
-			*start = true
-		}
+	if nextSeq == noSequenceYet && !tcp.SYN && len(tcp.Payload) > 0 {
+		// This direction has no handshake in the capture, so force it to start
+		// here rather than hold its bytes waiting for a SYN that was never
+		// recorded. Each direction needs this of its own: reassembly tracks
+		// them separately, and a held direction is only delivered by the final
+		// flush, long after the packets it came from have gone by.
+		*start = true
 	}
 	return true
 }

@@ -18,6 +18,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/iec104" // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/s7comm" // register the dissector
 	"github.com/rom/otinv/internal/ingest"
@@ -66,6 +67,8 @@ func TestGolden(t *testing.T) {
 		"s7comm_varservice_libnodavedemo",
 		"s7comm_downloading_block_db1",
 		"s7comm_reading_plc_status",
+		"iec104_test_dissect",
+		"iec104_diverse_commands",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", name+".pcap"))
@@ -576,4 +579,30 @@ func TestUDPPartialPDUIsReported(t *testing.T) {
 	assert.Equal(t, "COLD_RESTART", events[0].Operation)
 	assert.True(t, events[1].Malformed)
 	assert.Contains(t, events[1].Error, "datagram ends inside a PDU")
+}
+
+// A capture that begins mid-session has no handshake to tell reassembly where
+// either direction starts, and the two directions are tracked separately. If
+// only the first one seen is forced to start, the other is held back and
+// delivered by the final flush, long after the packets it came from: its
+// events come out at the end of the capture carrying the wrong packet index
+// and timestamp, which is exactly the evidence a finding needs.
+func TestStreamWithoutHandshakeKeepsPacketIndexes(t *testing.T) {
+	// The server answers first, so the client's direction is the second one
+	// reassembly sees.
+	response := []byte{0x00, 0x01, 0x00, 0x00, 0x00, 0x07, 0x0a, 0x03, 0x04, 0x00, 0x01, 0x00, 0x02}
+	request := []byte{0x00, 0x02, 0x00, 0x00, 0x00, 0x06, 0x0a, 0x03, 0x00, 0x05, 0x00, 0x02}
+
+	_, events := run(t, writePcap(t, [][]byte{
+		tcpSegment(t, 502, 3082, 5000, false, true, 0, response),
+		tcpSegment(t, 3082, 502, 1000, false, true, 0, request),
+	}))
+
+	require.Len(t, events, 2)
+	assert.Equal(t, uint64(1), events[0].PacketIndex)
+	assert.Equal(t, model.DirResponse, events[0].Direction)
+	assert.Equal(t, uint64(2), events[1].PacketIndex)
+	assert.Equal(t, model.DirRequest, events[1].Direction)
+	assert.True(t, events[0].Timestamp.Before(events[1].Timestamp),
+		"each event keeps the time of the packet it came from")
 }

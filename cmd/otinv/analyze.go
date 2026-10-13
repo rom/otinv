@@ -14,6 +14,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the DNP3 dissector
+	_ "github.com/rom/otinv/internal/dissect/iec104" // register the IEC 60870-5-104 dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the Modbus dissector
 	_ "github.com/rom/otinv/internal/dissect/s7comm" // register the S7comm dissector
 	"github.com/rom/otinv/internal/ingest"
@@ -266,15 +267,9 @@ func analyze(out io.Writer, path string, cfg *Config, asJSON, withEvents bool) e
 	return writeText(out, &rep)
 }
 
-// record folds one event into the per-endpoint view. The server side of a
-// request is its destination, and of a response its source.
+// record folds one event into the per-endpoint view.
 func record(servers map[string]*serverReport, e model.Event) {
-	server, client := e.Flow.DstIP, e.Flow.SrcIP
-	port := e.Flow.DstPort
-	if e.Direction == model.DirResponse {
-		server, client = e.Flow.SrcIP, e.Flow.DstIP
-		port = e.Flow.SrcPort
-	}
+	server, client, port := endpointsOf(e)
 	addr := server + ":" + strconv.Itoa(int(port))
 
 	s := servers[addr]
@@ -314,6 +309,27 @@ func record(servers map[string]*serverReport, e model.Event) {
 		}
 		s.Identity[k] = v
 	}
+}
+
+// endpointsOf reports which side of an event is the listening one.
+//
+// The port ingest identified as the server's is what decides it, because the
+// direction of a single PDU can run against the session: an IEC 104 station
+// sends the keep-alive its master answers, and during an S7 block download the
+// CPU sends the jobs that fetch each block. Direction is only consulted when
+// ingest could not tell which port was listening. This matches how the
+// inventory assigns an asset its side, so the two agree on what is a device.
+func endpointsOf(e model.Event) (server, client string, port uint16) {
+	switch p := e.ServerPort; {
+	case p != 0 && e.Flow.SrcPort == p && e.Flow.DstPort != p:
+		return e.Flow.SrcIP, e.Flow.DstIP, e.Flow.SrcPort
+	case p != 0 && e.Flow.DstPort == p && e.Flow.SrcPort != p:
+		return e.Flow.DstIP, e.Flow.SrcIP, e.Flow.DstPort
+	}
+	if e.Direction == model.DirResponse {
+		return e.Flow.SrcIP, e.Flow.DstIP, e.Flow.SrcPort
+	}
+	return e.Flow.DstIP, e.Flow.SrcIP, e.Flow.DstPort
 }
 
 func containsUint16(xs []uint16, x uint16) bool {

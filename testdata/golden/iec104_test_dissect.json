@@ -1,0 +1,1917 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2008-08-29T06:43:51.283482Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "STARTDT_act",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 5,
+    "ts": "2008-08-29T06:43:51.33487Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1568,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "STARTDT_con",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 7,
+    "ts": "2008-08-29T06:43:59.282338Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x00, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 9,
+    "ts": "2008-08-29T06:44:08.746307Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x01, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 11,
+    "ts": "2008-08-29T06:44:31.248993Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x02, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 13,
+    "ts": "2008-08-29T06:44:51.323204Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "TESTFR_act",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 14,
+    "ts": "2008-08-29T06:44:51.324568Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1568,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "TESTFR_con",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 16,
+    "ts": "2008-08-29T06:45:04.191637Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x03, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 18,
+    "ts": "2008-08-29T06:45:31.095443Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x04, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 20,
+    "ts": "2008-08-29T06:45:51.32441Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "TESTFR_act",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 21,
+    "ts": "2008-08-29T06:45:51.326948Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1568,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "TESTFR_con",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 23,
+    "ts": "2008-08-29T06:45:53.925413Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x05, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 25,
+    "ts": "2008-08-29T06:46:32.219645Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1568,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x06, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 33,
+    "ts": "2008-08-29T06:46:33.217157Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1570,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "STARTDT_act",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 34,
+    "ts": "2008-08-29T06:46:33.220279Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1570,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "STARTDT_con",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 36,
+    "ts": "2008-08-29T06:47:15.817781Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1570,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x07, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 38,
+    "ts": "2008-08-29T06:47:33.216815Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1570,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "TESTFR_act",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 39,
+    "ts": "2008-08-29T06:47:33.218211Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1570,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "TESTFR_con",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 41,
+    "ts": "2008-08-29T06:48:05.279667Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1570,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x08, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 49,
+    "ts": "2008-08-29T06:48:06.297425Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1571,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "STARTDT_act",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 51,
+    "ts": "2008-08-29T06:48:06.669954Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1571,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "STARTDT_con",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 53,
+    "ts": "2008-08-29T06:49:06.671779Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1571,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "TESTFR_act",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 54,
+    "ts": "2008-08-29T06:49:06.673258Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1571,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "TESTFR_con",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 56,
+    "ts": "2008-08-29T06:49:40.219326Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1571,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x08, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 58,
+    "ts": "2008-08-29T06:49:49.194723Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1571,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x18, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 66,
+    "ts": "2008-08-29T06:49:50.189788Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "STARTDT_act",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 67,
+    "ts": "2008-08-29T06:49:50.192812Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1572,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "STARTDT_con",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 69,
+    "ts": "2008-08-29T06:50:50.189448Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "TESTFR_act",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 70,
+    "ts": "2008-08-29T06:50:50.190856Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1572,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "TESTFR_con",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 71,
+    "ts": "2008-08-29T06:50:50.408217Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x09, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 73,
+    "ts": "2008-08-29T06:51:16.462955Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x09, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 75,
+    "ts": "2008-08-29T06:51:26.414411Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x19, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 77,
+    "ts": "2008-08-29T06:51:50.190541Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "TESTFR_act",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 78,
+    "ts": "2008-08-29T06:51:50.191912Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1572,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "TESTFR_con",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 80,
+    "ts": "2008-08-29T06:52:50.19174Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "TESTFR_act",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 81,
+    "ts": "2008-08-29T06:52:50.193166Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1572,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "TESTFR_con",
+    "function_code": -1,
+    "class": "diagnostic",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "TESTFR_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 83,
+    "ts": "2008-08-29T06:53:01.346375Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1572,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x0a, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 91,
+    "ts": "2008-08-29T06:53:02.350496Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1577,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "STARTDT_act",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 92,
+    "ts": "2008-08-29T06:53:02.353159Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1577,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "STARTDT_con",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 94,
+    "ts": "2008-08-29T06:53:24.345282Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1577,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x0a, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 96,
+    "ts": "2008-08-29T06:53:38.952362Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1577,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: start octet is 0x1a, not 0x68"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 104,
+    "ts": "2008-08-29T06:53:39.944348Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "STARTDT_act",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_act"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 105,
+    "ts": "2008-08-29T06:53:39.947305Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "STARTDT_con",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "U",
+      "u_function": "STARTDT_con"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 107,
+    "ts": "2008-08-29T06:54:12.463357Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "M_EI_NA_1",
+    "function_code": 70,
+    "class": "diagnostic",
+    "unit_id": 37133,
+    "transaction_id": 0,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "initialized",
+      "init_cause": "local_power_on",
+      "recv_seq": "0",
+      "send_seq": "0",
+      "type_id": "70"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 109,
+    "ts": "2008-08-29T06:54:29.912275Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "C_IC_NA_1",
+    "function_code": 100,
+    "class": "read",
+    "unit_id": 37133,
+    "transaction_id": 0,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation",
+      "interrogation": "station_interrogation",
+      "recv_seq": "1",
+      "send_seq": "0",
+      "type_id": "100"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 110,
+    "ts": "2008-08-29T06:54:29.925976Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "1"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 110,
+    "ts": "2008-08-29T06:54:29.925976Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "C_IC_NA_1",
+    "function_code": 100,
+    "class": "read",
+    "unit_id": 37133,
+    "transaction_id": 1,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation_confirmation",
+      "interrogation": "station_interrogation",
+      "recv_seq": "1",
+      "send_seq": "1",
+      "type_id": "100"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 110,
+    "ts": "2008-08-29T06:54:29.925976Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "M_SP_NA_1",
+    "function_code": 1,
+    "class": "read",
+    "unit_id": 37133,
+    "transaction_id": 2,
+    "address": 10010,
+    "quantity": 9,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "interrogated_by_station",
+      "objects": "10010-10018",
+      "quality": "blocked,not_topical,invalid",
+      "recv_seq": "1",
+      "send_seq": "2",
+      "sequence": "true",
+      "type_id": "1",
+      "value": "off"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 110,
+    "ts": "2008-08-29T06:54:29.925976Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "M_DP_NA_1",
+    "function_code": 3,
+    "class": "read",
+    "unit_id": 37133,
+    "transaction_id": 3,
+    "address": 20010,
+    "quantity": 3,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "interrogated_by_station",
+      "objects": "20010-20012",
+      "quality": "invalid",
+      "recv_seq": "1",
+      "send_seq": "3",
+      "sequence": "true",
+      "type_id": "3",
+      "value": "indeterminate"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 112,
+    "ts": "2008-08-29T06:54:49.928069Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "4"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 113,
+    "ts": "2008-08-29T06:54:49.959139Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "C_IC_NA_1",
+    "function_code": 100,
+    "class": "read",
+    "unit_id": 37133,
+    "transaction_id": 4,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation_termination",
+      "interrogation": "station_interrogation",
+      "recv_seq": "1",
+      "send_seq": "4",
+      "type_id": "100"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 115,
+    "ts": "2008-08-29T06:55:09.959873Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "5"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 117,
+    "ts": "2008-08-29T06:55:35.396119Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "C_DC_NA_1",
+    "function_code": 46,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 1,
+    "address": 15000,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation",
+      "command_mode": "select",
+      "command_qualifier": "no_additional_definition",
+      "originator": "1",
+      "recv_seq": "5",
+      "send_seq": "1",
+      "type_id": "46",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 118,
+    "ts": "2008-08-29T06:55:35.429491Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 118,
+    "ts": "2008-08-29T06:55:35.429491Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "C_DC_NA_1",
+    "function_code": 46,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 5,
+    "address": 15000,
+    "exception": "negative_confirmation",
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation_confirmation",
+      "command_mode": "select",
+      "command_qualifier": "no_additional_definition",
+      "negative": "true",
+      "originator": "1",
+      "recv_seq": "2",
+      "send_seq": "5",
+      "type_id": "46",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 120,
+    "ts": "2008-08-29T06:55:55.429371Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "6"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 122,
+    "ts": "2008-08-29T06:56:00.986483Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "M_EI_NA_1",
+    "function_code": 70,
+    "class": "diagnostic",
+    "unit_id": 37133,
+    "transaction_id": 6,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "initialized",
+      "init_cause": "local_power_on",
+      "recv_seq": "2",
+      "send_seq": "6",
+      "type_id": "70"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 124,
+    "ts": "2008-08-29T06:56:11.650484Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "C_SC_NA_1",
+    "function_code": 45,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 2,
+    "address": 10010,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation",
+      "command_mode": "select",
+      "command_qualifier": "no_additional_definition",
+      "originator": "1",
+      "recv_seq": "7",
+      "send_seq": "2",
+      "type_id": "45",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 125,
+    "ts": "2008-08-29T06:56:11.657822Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "3"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 125,
+    "ts": "2008-08-29T06:56:11.657822Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "C_SC_NA_1",
+    "function_code": 45,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 7,
+    "address": 10010,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation_confirmation",
+      "command_mode": "select",
+      "command_qualifier": "no_additional_definition",
+      "originator": "1",
+      "recv_seq": "3",
+      "send_seq": "7",
+      "type_id": "45",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 126,
+    "ts": "2008-08-29T06:56:11.664418Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "C_SC_NA_1",
+    "function_code": 45,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 3,
+    "address": 10010,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation",
+      "command_mode": "execute",
+      "command_qualifier": "no_additional_definition",
+      "originator": "1",
+      "recv_seq": "8",
+      "send_seq": "3",
+      "type_id": "45",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 127,
+    "ts": "2008-08-29T06:56:11.673024Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "4"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 127,
+    "ts": "2008-08-29T06:56:11.673024Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "C_SC_NA_1",
+    "function_code": 45,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 8,
+    "address": 10010,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation_confirmation",
+      "command_mode": "execute",
+      "command_qualifier": "no_additional_definition",
+      "originator": "1",
+      "recv_seq": "4",
+      "send_seq": "8",
+      "type_id": "45",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 129,
+    "ts": "2008-08-29T06:56:11.804331Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "M_SP_TB_1",
+    "function_code": 30,
+    "class": "read",
+    "unit_id": 37133,
+    "transaction_id": 9,
+    "address": 10010,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "spontaneous",
+      "object_time": "2000-01-01T00:00:10.837",
+      "quality": "blocked,not_topical,invalid",
+      "recv_seq": "4",
+      "send_seq": "9",
+      "type_id": "30",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 131,
+    "ts": "2008-08-29T06:56:31.664467Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "10"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 133,
+    "ts": "2008-08-29T06:56:39.761283Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "C_SC_NA_1",
+    "function_code": 45,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 4,
+    "address": 22222,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation",
+      "command_mode": "select",
+      "command_qualifier": "no_additional_definition",
+      "originator": "2",
+      "recv_seq": "10",
+      "send_seq": "4",
+      "test": "true",
+      "type_id": "45",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 134,
+    "ts": "2008-08-29T06:56:39.768376Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "5"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 134,
+    "ts": "2008-08-29T06:56:39.768376Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "C_SC_NA_1",
+    "function_code": 45,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 10,
+    "address": 22222,
+    "exception": "negative_confirmation",
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation_confirmation",
+      "command_mode": "select",
+      "command_qualifier": "no_additional_definition",
+      "negative": "true",
+      "originator": "2",
+      "recv_seq": "5",
+      "send_seq": "10",
+      "test": "true",
+      "type_id": "45",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 136,
+    "ts": "2008-08-29T06:56:52.760589Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "C_SC_NA_1",
+    "function_code": 45,
+    "class": "control",
+    "unit_id": 37133,
+    "transaction_id": 5,
+    "address": 33333,
+    "attrs": {
+      "anomaly": "negative_bit_in_control_direction",
+      "apci_format": "I",
+      "cause": "activation",
+      "command_mode": "select",
+      "command_qualifier": "no_additional_definition",
+      "negative": "true",
+      "originator": "3",
+      "recv_seq": "11",
+      "send_seq": "5",
+      "type_id": "45",
+      "value": "on"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 137,
+    "ts": "2008-08-29T06:56:52.764146Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "6"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 139,
+    "ts": "2008-08-29T06:57:13.55981Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "C_CS_NA_1",
+    "function_code": 103,
+    "class": "write",
+    "unit_id": 37133,
+    "transaction_id": 6,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation",
+      "clock_time": "2008-08-29T08:57:13.000",
+      "originator": "4",
+      "recv_seq": "11",
+      "send_seq": "6",
+      "type_id": "103"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 140,
+    "ts": "2008-08-29T06:57:13.566822Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "7"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 140,
+    "ts": "2008-08-29T06:57:13.566822Z",
+    "flow": {
+      "src_mac": "00:15:c5:18:d4:cc",
+      "dst_mac": "00:13:72:d7:87:8a",
+      "src_ip": "172.27.248.79",
+      "dst_ip": "172.27.248.109",
+      "src_port": 2404,
+      "dst_port": 1578,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "response",
+    "server_port": 2404,
+    "operation": "C_CS_NA_1",
+    "function_code": 103,
+    "class": "write",
+    "unit_id": 37133,
+    "transaction_id": 11,
+    "attrs": {
+      "apci_format": "I",
+      "cause": "activation_confirmation",
+      "clock_time": "2008-08-29T08:57:13.000",
+      "originator": "4",
+      "recv_seq": "7",
+      "send_seq": "11",
+      "type_id": "103"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 142,
+    "ts": "2008-08-29T06:57:33.556506Z",
+    "flow": {
+      "src_mac": "00:13:72:d7:87:8a",
+      "dst_mac": "00:15:c5:18:d4:cc",
+      "src_ip": "172.27.248.109",
+      "dst_ip": "172.27.248.79",
+      "src_port": 1578,
+      "dst_port": 2404,
+      "transport": "tcp"
+    },
+    "protocol": "iec104",
+    "direction": "request",
+    "server_port": 2404,
+    "operation": "SUPERVISORY",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "apci_format": "S",
+      "recv_seq": "12"
+    }
+  }
+]
