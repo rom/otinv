@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/rom/otinv/internal/model"
@@ -113,8 +114,8 @@ func (b *Builder) Add(e model.Event) {
 		vlan, hasVLAN = e.Flow.VLAN[0], true
 	}
 
-	src := tupleKey{mac: e.Flow.SrcMAC, ip: e.Flow.SrcIP, vlan: vlan, hasVLAN: hasVLAN}
-	dst := tupleKey{mac: e.Flow.DstMAC, ip: e.Flow.DstIP, vlan: vlan, hasVLAN: hasVLAN}
+	src := tupleKey{mac: unicastMAC(e.Flow.SrcMAC), ip: e.Flow.SrcIP, vlan: vlan, hasVLAN: hasVLAN}
+	dst := tupleKey{mac: unicastMAC(e.Flow.DstMAC), ip: e.Flow.DstIP, vlan: vlan, hasVLAN: hasVLAN}
 
 	// A frame that could not be decoded still proves these two hosts
 	// exchanged bytes, but says nothing about what either of them is: no
@@ -410,6 +411,26 @@ func (b *Builder) gatewayMACs() map[string]bool {
 		}
 	}
 	return out
+}
+
+// unicastMAC drops a group address, which is never one device.
+//
+// A multicast or broadcast destination names a subscription, not a machine:
+// GOOSE and Sampled Values publish to 01:0c:cd:01:00:00 and its neighbours,
+// and ARP and the discovery protocols broadcast. An inventory that listed
+// those as assets would invent a device for every data set a substation
+// publishes.
+func unicastMAC(mac string) string {
+	// The group bit is the least significant bit of the first octet, which in
+	// the usual notation is the low bit of the second hex digit.
+	if len(mac) < 2 {
+		return mac
+	}
+	first, err := strconv.ParseUint(mac[:2], 16, 8)
+	if err != nil || first&0x01 == 0 {
+		return mac
+	}
+	return ""
 }
 
 // assetKey is the identity of an observed tuple: the MAC when it belongs to

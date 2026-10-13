@@ -19,6 +19,9 @@ commit captures from real customer or production environments.
 | `iec61850_mms_write.pcap` | 2970 | `10a45e74f8fd5cf06055b8b18ee9598c2bfb09ba9222348cb35eb708c9659a56` |
 | `iec61850_mms_program_control.pcap` | 1906 | `b5a55177b2344dbe5c95263bd31b78797776c62b334642140f91bd8a79097e63` |
 | `iec61850_mms_download.pcap` | 1905 | `9d9a836a8e308dfedd6b565e7ee98c98fdc3061e88fc4d7536a22299a7a0e0e0` |
+| `iec61850_goose_interlocking.pcap` | 117736 | `7d0ab6ea4580e337e399878ee4c244c69df78c48a5310087d9636fab677c8293` |
+| `iec61850_goose_ge_relay.pcap` | 1420 | `746619df546905feb6f1217ee40750004a1ca1d85fe7be1740bacdf52dca6850` |
+| `iec61850_goose_minimal.pcap` | 166 | `41cb05f4c7843b884ab40fb503471fba7a5f09ee1ffebc441da7cfcdab6877b7` |
 
 ## Origin
 
@@ -189,3 +192,35 @@ cover what CLAUDE.md's S7 rules name — CPU stop and start, program download �
 under the MMS names for the same operations. Every one of the server's replies
 in both files declares a TPKT length that counts only its own header, so they
 are the hostile framing material as well.
+
+## IEC 61850 GOOSE captures
+
+The three `iec61850_goose_*.pcap` files came from the same public collection
+as the files above (`pcaps/IEC61850/GOOSE/`), where they are published as
+`Sample_File_GOOSE.pcap`, `GOOSE.pcap` and `GOOSE_DEMO.pcap`. They are
+renamed here after what they hold. `iec61850_mms_reports.pcap`, listed above,
+carries 34 GOOSE frames of its own alongside its MMS traffic.
+
+`iec61850_goose_interlocking.pcap` — 451 frames and nothing else, from three
+bay controllers publishing interlocking data sets of 25 entries to
+01:0c:cd:01:00:00 on a priority tagged VLAN. 252 of them report a state
+change and 199 are the repeats between changes, and the three publishers'
+state numbers interleave across the capture without any of them skipping,
+which is what makes it the test that the counters are tracked per publisher
+rather than per segment. Its publishers all report an unsynchronised clock,
+which is a standing condition of the installation rather than a fault.
+
+`iec61850_goose_ge_relay.pcap` — eight frames from a GE F650 relay,
+publishing `GEDeviceF650/LLN0$GO$gcb01` to a vendor multicast address of its
+own rather than the one IEC 61850 assigns, and with no VLAN tag: two shapes a
+dissector must take as readily as the standard one. It is also two bursts of
+the same control block spliced together, so the sequence number goes
+backwards once while the state number never moves — a replayed frame looks
+exactly like that, and it is the one anomaly in the GOOSE captures that comes
+from real traffic rather than being crafted for a test.
+
+`iec61850_goose_minimal.pcap` — one frame, and the smallest shape in the
+samples. Its control block, data set and identifier are `111`, `222` and
+`333`, which are not object references at all, so nothing can be learnt about
+the publisher from them: it is the test that a name with no logical device in
+it yields no identity rather than a made-up one.

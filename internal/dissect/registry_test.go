@@ -235,3 +235,59 @@ func testCtx102() *dissect.FlowContext {
 	ctx.Flow.DstPort = 102
 	return ctx
 }
+
+// Several industrial protocols have no port because they have no IP layer, so
+// they are bound by the EtherType IEEE assigned them. An EtherType names one
+// protocol, unlike a port, so a registered dissector is accepted outright and
+// nothing unregistered is offered the frame.
+func TestSelectEtherType(t *testing.T) {
+	const gooseEtherType = 0x88B8
+
+	r := dissect.NewRegistry()
+	layer2 := &stub{name: "layer2", score: 40}
+	onPort := &stub{name: "onport", score: 100}
+	r.Register(layer2, dissect.EtherTypes(gooseEtherType))
+	r.Register(onPort, dissect.TCPPorts(502))
+
+	got, score := r.SelectEtherType(testCtx(), gooseEtherType, []byte{1, 2, 3})
+	require.NotNil(t, got)
+	assert.Equal(t, "layer2", got.Name())
+	assert.Equal(t, 40, score)
+
+	// An EtherType nobody claims is not ours, however the frame looks.
+	got, score = r.SelectEtherType(testCtx(), 0x88BA, []byte{1, 2, 3})
+	assert.Nil(t, got)
+	assert.Zero(t, score)
+
+	// Nor is an empty frame.
+	got, _ = r.SelectEtherType(testCtx(), gooseEtherType, nil)
+	assert.Nil(t, got)
+
+	// A dissector that scores zero on the frame does not get it either.
+	r2 := dissect.NewRegistry()
+	r2.Register(&stub{name: "silent", score: 0}, dissect.EtherTypes(gooseEtherType))
+	got, _ = r2.SelectEtherType(testCtx(), gooseEtherType, []byte{1, 2, 3})
+	assert.Nil(t, got)
+}
+
+func TestEtherTypeRegistration(t *testing.T) {
+	r := dissect.NewRegistry()
+	r.Register(&stub{name: "layer2", score: 50}, dissect.EtherTypes(0x88B8, 0x88BA))
+	r.Register(&stub{name: "ported", score: 50}, dissect.TCPPorts(502))
+
+	assert.True(t, r.HasEtherType("layer2", 0x88B8))
+	assert.True(t, r.HasEtherType("layer2", 0x88BA))
+	assert.False(t, r.HasEtherType("layer2", 0x8892))
+	assert.False(t, r.HasEtherType("ported", 0x88B8))
+	assert.False(t, r.HasEtherType("absent", 0x88B8))
+
+	assert.Len(t, r.EtherTypeCandidates(0x88B8), 1)
+	assert.Empty(t, r.EtherTypeCandidates(0x0800))
+
+	// A protocol bound by EtherType is not offered port-matched streams.
+	matched, others := r.Candidates(model.TransportTCP, 1234, 502)
+	require.Len(t, matched, 1)
+	assert.Equal(t, "ported", matched[0].Name())
+	require.Len(t, others, 1)
+	assert.Equal(t, "layer2", others[0].Name())
+}

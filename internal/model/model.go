@@ -51,6 +51,12 @@ type Transport string
 const (
 	TransportTCP Transport = "tcp"
 	TransportUDP Transport = "udp"
+
+	// TransportEthernet is a protocol carried directly in an Ethernet frame,
+	// with no IP or transport layer at all. The industrial protocols that do
+	// this — GOOSE, Sampled Values, PROFINET RT — are the time critical ones,
+	// and a flow of theirs is identified by its MAC addresses alone.
+	TransportEthernet Transport = "ethernet"
 )
 
 // Flow identifies one unidirectional conversation between two endpoints. It is

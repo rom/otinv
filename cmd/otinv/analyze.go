@@ -14,6 +14,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the DNP3 dissector
+	_ "github.com/rom/otinv/internal/dissect/goose"  // register the IEC 61850 GOOSE dissector
 	_ "github.com/rom/otinv/internal/dissect/iec104" // register the IEC 60870-5-104 dissector
 	_ "github.com/rom/otinv/internal/dissect/mms"    // register the IEC 61850 MMS dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the Modbus dissector
@@ -271,7 +272,10 @@ func analyze(out io.Writer, path string, cfg *Config, asJSON, withEvents bool) e
 // record folds one event into the per-endpoint view.
 func record(servers map[string]*serverReport, e model.Event) {
 	server, client, port := endpointsOf(e)
-	addr := server + ":" + strconv.Itoa(int(port))
+	addr := server
+	if port != 0 {
+		addr += ":" + strconv.Itoa(int(port))
+	}
 
 	s := servers[addr]
 	if s == nil {
@@ -301,7 +305,9 @@ func record(servers map[string]*serverReport, e model.Event) {
 	if e.UnitID != nil && !containsUint16(s.Units, *e.UnitID) {
 		s.Units = append(s.Units, *e.UnitID)
 	}
-	if !containsString(s.Clients, client) {
+	// A group address names a subscription, not a client: GOOSE publishes to
+	// one and nothing answers from it.
+	if !isGroupAddress(client) && !containsString(s.Clients, client) {
 		s.Clients = append(s.Clients, client)
 	}
 	for k, v := range e.Identity {
@@ -321,6 +327,15 @@ func record(servers map[string]*serverReport, e model.Event) {
 // ingest could not tell which port was listening. This matches how the
 // inventory assigns an asset its side, so the two agree on what is a device.
 func endpointsOf(e model.Event) (server, client string, port uint16) {
+	if e.Flow.Transport == model.TransportEthernet {
+		// A protocol with no IP layer has no port either, and its publisher
+		// is named by its MAC address alone.
+		if e.Direction == model.DirRequest {
+			return e.Flow.DstMAC, e.Flow.SrcMAC, 0
+		}
+		return e.Flow.SrcMAC, e.Flow.DstMAC, 0
+	}
+
 	switch p := e.ServerPort; {
 	case p != 0 && e.Flow.SrcPort == p && e.Flow.DstPort != p:
 		return e.Flow.SrcIP, e.Flow.DstIP, e.Flow.SrcPort
@@ -331,6 +346,16 @@ func endpointsOf(e model.Event) (server, client string, port uint16) {
 		return e.Flow.SrcIP, e.Flow.DstIP, e.Flow.SrcPort
 	}
 	return e.Flow.DstIP, e.Flow.SrcIP, e.Flow.DstPort
+}
+
+// isGroupAddress reports whether a MAC address is multicast or broadcast,
+// which is the low bit of its first octet.
+func isGroupAddress(addr string) bool {
+	if len(addr) != len("01:0c:cd:01:00:00") {
+		return false
+	}
+	first, err := strconv.ParseUint(addr[:2], 16, 8)
+	return err == nil && first&0x01 != 0
 }
 
 func containsUint16(xs []uint16, x uint16) bool {
