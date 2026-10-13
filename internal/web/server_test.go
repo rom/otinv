@@ -284,6 +284,20 @@ func TestAssetDetailShowsEvidence(t *testing.T) {
 		UnitID: model.Ptr(uint16(3)), Address: model.Ptr(uint32(10010)),
 		Attrs: map[string]string{"value": "on", "command_mode": "select"},
 	}))
+	// A report, which addresses its object by name rather than by number.
+	require.NoError(t, w.Add(ctx, model.Event{
+		CaptureID: "part1", PacketIndex: 10, Timestamp: seen,
+		Flow: model.Flow{
+			SrcIP: "10.0.0.3", DstIP: "10.0.0.57", SrcPort: 102, DstPort: 1069,
+			Transport: model.TransportTCP,
+		},
+		Protocol: "mms", Direction: model.DirResponse, ServerPort: 102,
+		Operation: "informationReport", FunctionCode: 0, Class: model.ClassRead,
+		Attrs: map[string]string{
+			"object":    "RPT",
+			"report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+		},
+	}))
 	require.NoError(t, w.Close(ctx))
 
 	rec := get(t, h, "/assets/mac:00:02:b3:ce:70:51", nil)
@@ -303,6 +317,8 @@ func TestAssetDetailShowsEvidence(t *testing.T) {
 	assert.Contains(t, body, "10.0.0.57", "with the peer it talked to")
 	assert.Contains(t, body, "value on · select",
 		"a command shows whether it was the select or the execute step")
+	assert.Contains(t, body, "AA1C1Q01A1LD0/LLN0$rcb_I02",
+		"an object addressed by name is named in the detail line")
 }
 
 func TestAssetDetailNotFound(t *testing.T) {

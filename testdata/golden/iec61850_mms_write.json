@@ -1,0 +1,379 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2008-12-18T01:27:27.740631Z",
+    "flow": {
+      "src_mac": "00:10:db:17:ab:11",
+      "dst_mac": "00:0c:bd:00:8a:26",
+      "src_ip": "192.168.30.247",
+      "dst_ip": "192.168.30.150",
+      "src_port": 102,
+      "dst_port": 53413,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "initiate-Response",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "AARE",
+      "anomaly": "session_user_data_not_declared",
+      "application_context": "1.0.9506.2.3",
+      "max_pdu_size": "0",
+      "mms_version": "0",
+      "pdu": "initiate-Response",
+      "presentation": "connect",
+      "presentation_context": "1",
+      "responding_ae_qualifier": "23",
+      "responding_ap_title": "1.3.9999.2",
+      "result": "accepted",
+      "session": "ACCEPT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 2,
+    "ts": "2008-12-18T01:27:27.751515Z",
+    "flow": {
+      "src_mac": "00:0c:bd:00:8a:26",
+      "dst_mac": "00:10:db:17:ab:11",
+      "src_ip": "192.168.30.150",
+      "dst_ip": "192.168.30.247",
+      "src_port": 53413,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "write",
+    "function_code": 5,
+    "class": "write",
+    "transaction_id": 0,
+    "attrs": {
+      "invoke_id": "0",
+      "object": "ACTSETGGIO80$DC$NamPlt$vendor",
+      "pdu": "confirmed-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "write",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2008-12-18T01:27:27.761097Z",
+    "flow": {
+      "src_mac": "00:10:db:17:ab:11",
+      "dst_mac": "00:0c:bd:00:8a:26",
+      "src_ip": "192.168.30.247",
+      "dst_ip": "192.168.30.150",
+      "src_port": 102,
+      "dst_port": 53413,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "confirmed-Response",
+    "function_code": -1,
+    "class": "other",
+    "transaction_id": 0,
+    "attrs": {
+      "anomaly": "truncated_pdu",
+      "invoke_id": "0",
+      "pdu": "confirmed-Response",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2008-12-18T01:27:27.765662Z",
+    "flow": {
+      "src_mac": "00:0c:bd:00:8a:26",
+      "dst_mac": "00:10:db:17:ab:11",
+      "src_ip": "192.168.30.150",
+      "dst_ip": "192.168.30.247",
+      "src_port": 53413,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "conclude-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "pdu": "conclude-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 5,
+    "ts": "2008-12-18T01:27:27.772842Z",
+    "flow": {
+      "src_mac": "00:10:db:17:ab:11",
+      "dst_mac": "00:0c:bd:00:8a:26",
+      "src_ip": "192.168.30.247",
+      "dst_ip": "192.168.30.150",
+      "src_port": 102,
+      "dst_port": 53413,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "confirmed-Response",
+    "function_code": -1,
+    "class": "other",
+    "transaction_id": 0,
+    "attrs": {
+      "invoke_id": "0",
+      "pdu": "confirmed-Response",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 13,
+    "ts": "2008-12-18T01:27:27.83757Z",
+    "flow": {
+      "src_mac": "00:0c:bd:00:8a:26",
+      "dst_mac": "00:10:db:17:ab:11",
+      "src_ip": "192.168.30.150",
+      "dst_ip": "192.168.30.247",
+      "src_port": 53416,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ConnectionRequest",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "called_tsap": "0x0001",
+      "calling_tsap": "0x0002",
+      "cotp": "ConnectionRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 17,
+    "ts": "2008-12-18T01:27:27.86997Z",
+    "flow": {
+      "src_mac": "00:0c:bd:00:8a:26",
+      "dst_mac": "00:10:db:17:ab:11",
+      "src_ip": "192.168.30.150",
+      "dst_ip": "192.168.30.247",
+      "src_port": 53416,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "initiate-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "AARQ",
+      "application_context": "1.0.9506.2.3",
+      "called_ae_qualifier": "23",
+      "called_ap_title": "1.3.9999.2",
+      "called_session_selector": "0x0001",
+      "calling_session_selector": "0x0001",
+      "mms_version": "0",
+      "pdu": "initiate-Request",
+      "presentation": "connect",
+      "presentation_context": "1",
+      "session": "CONNECT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 15,
+    "ts": "2008-12-18T01:27:27.841057Z",
+    "flow": {
+      "src_mac": "00:10:db:17:ab:11",
+      "dst_mac": "00:0c:bd:00:8a:26",
+      "src_ip": "192.168.30.247",
+      "dst_ip": "192.168.30.150",
+      "src_port": 102,
+      "dst_port": 53416,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ConnectionConfirm",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "called_tsap": "0x0200",
+      "calling_tsap": "0x0002",
+      "cotp": "ConnectionConfirm",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 18,
+    "ts": "2008-12-18T01:27:27.898778Z",
+    "flow": {
+      "src_mac": "00:10:db:17:ab:11",
+      "dst_mac": "00:0c:bd:00:8a:26",
+      "src_ip": "192.168.30.247",
+      "dst_ip": "192.168.30.150",
+      "src_port": 102,
+      "dst_port": 53416,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "initiate-Response",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "AARE",
+      "anomaly": "session_user_data_not_declared",
+      "application_context": "1.0.9506.2.3",
+      "max_pdu_size": "0",
+      "mms_version": "0",
+      "pdu": "initiate-Response",
+      "presentation": "connect",
+      "presentation_context": "1",
+      "responding_ae_qualifier": "23",
+      "responding_ap_title": "1.3.9999.2",
+      "result": "accepted",
+      "session": "ACCEPT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 19,
+    "ts": "2008-12-18T01:27:27.909409Z",
+    "flow": {
+      "src_mac": "00:0c:bd:00:8a:26",
+      "dst_mac": "00:10:db:17:ab:11",
+      "src_ip": "192.168.30.150",
+      "dst_ip": "192.168.30.247",
+      "src_port": 53416,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "write",
+    "function_code": 5,
+    "class": "write",
+    "transaction_id": 0,
+    "attrs": {
+      "invoke_id": "0",
+      "object": "ACTSETGGIO80$DC$NamPlt$vendor",
+      "pdu": "confirmed-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "write",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 20,
+    "ts": "2008-12-18T01:27:27.91703Z",
+    "flow": {
+      "src_mac": "00:10:db:17:ab:11",
+      "dst_mac": "00:0c:bd:00:8a:26",
+      "src_ip": "192.168.30.247",
+      "dst_ip": "192.168.30.150",
+      "src_port": 102,
+      "dst_port": 53416,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "confirmed-Response",
+    "function_code": -1,
+    "class": "other",
+    "transaction_id": 0,
+    "attrs": {
+      "invoke_id": "0",
+      "pdu": "confirmed-Response",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 21,
+    "ts": "2008-12-18T01:27:27.921516Z",
+    "flow": {
+      "src_mac": "00:0c:bd:00:8a:26",
+      "dst_mac": "00:10:db:17:ab:11",
+      "src_ip": "192.168.30.150",
+      "dst_ip": "192.168.30.247",
+      "src_port": 53416,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "conclude-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "pdu": "conclude-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 22,
+    "ts": "2008-12-18T01:27:27.928508Z",
+    "flow": {
+      "src_mac": "00:10:db:17:ab:11",
+      "dst_mac": "00:0c:bd:00:8a:26",
+      "src_ip": "192.168.30.247",
+      "dst_ip": "192.168.30.150",
+      "src_port": 102,
+      "dst_port": 53416,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "confirmed-Response",
+    "function_code": -1,
+    "class": "other",
+    "transaction_id": 0,
+    "attrs": {
+      "invoke_id": "0",
+      "pdu": "confirmed-Response",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  }
+]

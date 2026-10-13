@@ -262,6 +262,15 @@ var identityTargets = map[string][]struct {
 	// where in the chassis it answered.
 	"rack": {{"rack", 80}},
 	"slot": {{"slot", 80}},
+
+	// An MMS device answers Identify with its vendor, model and revision,
+	// which is the same kind of structured self-description as an SZL read.
+	"revision": {{"firmware_revision", 90}},
+	// In IEC 61850 the MMS domain is the logical device, which is the name
+	// the substation configuration gave this server. It is kept as its own
+	// field rather than as the asset's name, because one device commonly
+	// hosts several logical devices and none of them is the device.
+	"logical_device": {{"logical_device", 85}},
 }
 
 func (b *Builder) enrich(k tupleKey, e model.Event) {

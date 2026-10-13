@@ -375,6 +375,17 @@ func eventDetail(e model.Event) string {
 		}
 		parts = append(parts, addr)
 	}
+	// Protocols that address objects by name rather than by number: an MMS
+	// object reference says more about what happened than any other field.
+	if v := e.Attrs["report_id"]; v != "" {
+		parts = append(parts, v)
+	} else if v := e.Attrs["object"]; v != "" {
+		obj := v
+		if e.Quantity != nil && *e.Quantity > 1 {
+			obj += " ×" + strconv.FormatUint(uint64(*e.Quantity), 10)
+		}
+		parts = append(parts, obj)
+	}
 	if v := e.Attrs["coil_state"]; v != "" {
 		parts = append(parts, v)
 	} else if v := e.Attrs["value"]; v != "" {

@@ -1,0 +1,1246 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2008-07-18T12:33:27.275752Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 25,
+    "ts": "2008-07-18T12:33:28.26803Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 37,
+    "ts": "2008-07-18T12:33:28.573147Z",
+    "flow": {
+      "src_mac": "00:00:23:06:32:35",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.4",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1083,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01FP1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01FP1LD0/LLN0$rcb_H02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 78,
+    "ts": "2008-07-18T12:33:30.560173Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 99,
+    "ts": "2008-07-18T12:33:31.676636Z",
+    "flow": {
+      "src_mac": "00:00:23:06:32:35",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.4",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1083,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01FP1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01FP1LD0/LLN0$rcb_H02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 101,
+    "ts": "2008-07-18T12:33:31.791573Z",
+    "flow": {
+      "src_mac": "00:00:23:06:32:35",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.4",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1083,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01FP1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01FP1LD0/LLN0$rcb_H02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 107,
+    "ts": "2008-07-18T12:33:31.916691Z",
+    "flow": {
+      "src_mac": "00:1b:21:02:f7:9d",
+      "dst_mac": "00:00:23:06:31:ca",
+      "src_ip": "172.16.0.101",
+      "dst_ip": "172.16.202.5",
+      "src_port": 1345,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ConnectionRequest",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "called_tsap": "0x0001",
+      "calling_tsap": "0x0001",
+      "cotp": "ConnectionRequest",
+      "tpdu_size": "8192"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 110,
+    "ts": "2008-07-18T12:33:31.923486Z",
+    "flow": {
+      "src_mac": "00:1b:21:02:f7:9d",
+      "dst_mac": "00:00:23:06:31:ca",
+      "src_ip": "172.16.0.101",
+      "dst_ip": "172.16.202.5",
+      "src_port": 1345,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "initiate-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "AARQ",
+      "application_context": "1.0.9506.2.3",
+      "called_session_selector": "0x0001",
+      "calling_session_selector": "0x0001",
+      "max_pdu_size": "64000",
+      "mms_version": "1",
+      "pdu": "initiate-Request",
+      "presentation": "connect",
+      "presentation_context": "1",
+      "session": "CONNECT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 109,
+    "ts": "2008-07-18T12:33:31.923392Z",
+    "flow": {
+      "src_mac": "00:00:23:06:31:ca",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.202.5",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1345,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "ConnectionConfirm",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "called_tsap": "0x0001",
+      "calling_tsap": "0x0001",
+      "cotp": "ConnectionConfirm",
+      "tpdu_size": "1024"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 111,
+    "ts": "2008-07-18T12:33:31.931957Z",
+    "flow": {
+      "src_mac": "00:00:23:06:31:ca",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.202.5",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1345,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "initiate-Response",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "AARE",
+      "application_context": "1.0.9506.2.3",
+      "max_pdu_size": "32000",
+      "mms_version": "1",
+      "pdu": "initiate-Response",
+      "presentation": "connect",
+      "presentation_context": "1",
+      "result": "accepted",
+      "session": "ACCEPT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 112,
+    "ts": "2008-07-18T12:33:31.980247Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 114,
+    "ts": "2008-07-18T12:33:32.058777Z",
+    "flow": {
+      "src_mac": "00:00:23:06:31:cc",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.5",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1072,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01FP2LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01FP2LD0/LLN0$rcb_E01",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 124,
+    "ts": "2008-07-18T12:33:32.313791Z",
+    "flow": {
+      "src_mac": "00:1b:21:02:f7:9d",
+      "dst_mac": "00:00:23:06:31:ca",
+      "src_ip": "172.16.0.101",
+      "dst_ip": "172.16.202.5",
+      "src_port": 1345,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "getVariableAccessAttributes",
+    "function_code": 6,
+    "class": "read",
+    "transaction_id": 303731,
+    "identity": {
+      "logical_device": "AA1E1Q01FP2LD0"
+    },
+    "attrs": {
+      "domain": "AA1E1Q01FP2LD0",
+      "invoke_id": "303731",
+      "item": "LLN0$BR$rcb_B02",
+      "object": "AA1E1Q01FP2LD0/LLN0$BR$rcb_B02",
+      "pdu": "confirmed-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "getVariableAccessAttributes",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 126,
+    "ts": "2008-07-18T12:33:32.318773Z",
+    "flow": {
+      "src_mac": "00:00:23:06:31:ca",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.202.5",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1345,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "confirmed-Error",
+    "function_code": -1,
+    "class": "other",
+    "transaction_id": 303731,
+    "exception": "access/object-access-denied",
+    "attrs": {
+      "error": "access/object-access-denied",
+      "invoke_id": "303731",
+      "pdu": "confirmed-Error",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 127,
+    "ts": "2008-07-18T12:33:32.391899Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_A02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 128,
+    "ts": "2008-07-18T12:33:32.413371Z",
+    "flow": {
+      "src_mac": "00:1b:21:02:f7:9d",
+      "dst_mac": "00:00:23:06:31:ca",
+      "src_ip": "172.16.0.101",
+      "dst_ip": "172.16.202.5",
+      "src_port": 1345,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "read",
+    "function_code": 4,
+    "class": "read",
+    "transaction_id": 303732,
+    "identity": {
+      "logical_device": "AA1E1Q01FP2LD0"
+    },
+    "attrs": {
+      "domain": "AA1E1Q01FP2LD0",
+      "invoke_id": "303732",
+      "item": "LLN0$BR$rcb_B02",
+      "object": "AA1E1Q01FP2LD0/LLN0$BR$rcb_B02",
+      "pdu": "confirmed-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "read",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 129,
+    "ts": "2008-07-18T12:33:32.418901Z",
+    "flow": {
+      "src_mac": "00:00:23:06:31:ca",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.202.5",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1345,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "read",
+    "function_code": 4,
+    "class": "read",
+    "transaction_id": 303732,
+    "attrs": {
+      "invoke_id": "303732",
+      "pdu": "confirmed-Response",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "read",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 136,
+    "ts": "2008-07-18T12:33:32.513956Z",
+    "flow": {
+      "src_mac": "00:1b:21:02:f7:9d",
+      "dst_mac": "00:00:23:06:31:ca",
+      "src_ip": "172.16.0.101",
+      "dst_ip": "172.16.202.5",
+      "src_port": 1345,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "conclude-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "pdu": "conclude-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 138,
+    "ts": "2008-07-18T12:33:32.518656Z",
+    "flow": {
+      "src_mac": "00:00:23:06:31:ca",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.202.5",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1345,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "conclude-Response",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "pdu": "conclude-Response",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 139,
+    "ts": "2008-07-18T12:33:32.518738Z",
+    "flow": {
+      "src_mac": "00:1b:21:02:f7:9d",
+      "dst_mac": "00:00:23:06:31:ca",
+      "src_ip": "172.16.0.101",
+      "dst_ip": "172.16.202.5",
+      "src_port": 1345,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "RLRQ",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "RLRQ",
+      "presentation": "user-data",
+      "presentation_context": "1",
+      "session": "FINISH"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 140,
+    "ts": "2008-07-18T12:33:32.522663Z",
+    "flow": {
+      "src_mac": "00:00:23:06:31:ca",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.202.5",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1345,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "RLRE",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "RLRE",
+      "presentation": "user-data",
+      "presentation_context": "1",
+      "session": "DISCONNECT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 149,
+    "ts": "2008-07-18T12:33:32.660773Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_F02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 167,
+    "ts": "2008-07-18T12:33:32.798422Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 167,
+    "ts": "2008-07-18T12:33:32.798422Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_E02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 182,
+    "ts": "2008-07-18T12:33:33.61682Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_A02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 187,
+    "ts": "2008-07-18T12:33:33.682709Z",
+    "flow": {
+      "src_mac": "00:00:23:06:32:35",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.4",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1083,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01FP1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01FP1LD0/LLN0$rcb_C01",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 202,
+    "ts": "2008-07-18T12:33:33.907878Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_A02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 202,
+    "ts": "2008-07-18T12:33:33.907878Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_A02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 202,
+    "ts": "2008-07-18T12:33:33.907878Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_B02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 202,
+    "ts": "2008-07-18T12:33:33.907878Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_A02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 202,
+    "ts": "2008-07-18T12:33:33.907878Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_E02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 215,
+    "ts": "2008-07-18T12:33:34.105127Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_A02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 215,
+    "ts": "2008-07-18T12:33:34.105127Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_B02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 218,
+    "ts": "2008-07-18T12:33:34.197589Z",
+    "flow": {
+      "src_mac": "00:00:23:06:32:35",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.4",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1083,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01FP1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01FP1LD0/LLN0$rcbStatUrg01",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 222,
+    "ts": "2008-07-18T12:33:34.407772Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_E02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 222,
+    "ts": "2008-07-18T12:33:34.407772Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_A02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 232,
+    "ts": "2008-07-18T12:33:34.711493Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_F02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 260,
+    "ts": "2008-07-18T12:33:35.250975Z",
+    "flow": {
+      "src_mac": "00:02:a3:01:3b:b8",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.7",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1089,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1QBQBBFP1ABB05"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1QBQBBFP1ABB05/LLN0$brcb_B0601",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 264,
+    "ts": "2008-07-18T12:33:35.662228Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 288,
+    "ts": "2008-07-18T12:33:37.461666Z",
+    "flow": {
+      "src_mac": "00:00:23:06:30:fe",
+      "dst_mac": "00:1b:21:02:f7:9d",
+      "src_ip": "172.16.201.2",
+      "dst_ip": "172.16.0.101",
+      "src_port": 102,
+      "dst_port": 1069,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "informationReport",
+    "function_code": 0,
+    "class": "read",
+    "identity": {
+      "logical_device": "AA1C1Q01A1LD0"
+    },
+    "attrs": {
+      "object": "RPT",
+      "pdu": "unconfirmed",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "report_id": "AA1C1Q01A1LD0/LLN0$rcb_I02",
+      "service": "informationReport",
+      "session": "DATA_TRANSFER"
+    }
+  }
+]

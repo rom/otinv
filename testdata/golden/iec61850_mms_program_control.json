@@ -1,0 +1,243 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2008-11-26T20:04:54.243785Z",
+    "flow": {
+      "src_mac": "01:02:03:04:05:06",
+      "dst_mac": "06:05:04:03:02:01",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 19615,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "ConnectionRequest",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "called_tsap": "0x0200",
+      "calling_tsap": "0x0002",
+      "cotp": "ConnectionRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 8,
+    "ts": "2008-11-26T20:04:54.244091Z",
+    "flow": {
+      "src_mac": "01:02:03:04:05:06",
+      "dst_mac": "06:05:04:03:02:01",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 19615,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "initiate-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "max_pdu_size": "31",
+      "mms_version": "1",
+      "pdu": "initiate-Request",
+      "stack": "cotp"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 6,
+    "ts": "2008-11-26T20:04:54.243873Z",
+    "flow": {
+      "src_mac": "06:05:04:03:02:01",
+      "dst_mac": "01:02:03:04:05:06",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 102,
+      "dst_port": 19615,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: TPKT declares 5 octets, below the minimum 6"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 12,
+    "ts": "2008-11-26T20:04:54.244346Z",
+    "flow": {
+      "src_mac": "01:02:03:04:05:06",
+      "dst_mac": "06:05:04:03:02:01",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 19615,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "stop",
+    "function_code": 41,
+    "class": "control",
+    "transaction_id": 1,
+    "attrs": {
+      "invoke_id": "1",
+      "object": "R395024397Application_1",
+      "pdu": "confirmed-Request",
+      "service": "stop",
+      "stack": "cotp"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 14,
+    "ts": "2008-11-26T20:04:54.244433Z",
+    "flow": {
+      "src_mac": "06:05:04:03:02:01",
+      "dst_mac": "01:02:03:04:05:06",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 102,
+      "dst_port": 19615,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: TPKT declares 5 octets, below the minimum 6"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 16,
+    "ts": "2008-11-26T20:04:54.244568Z",
+    "flow": {
+      "src_mac": "01:02:03:04:05:06",
+      "dst_mac": "06:05:04:03:02:01",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 19615,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "start",
+    "function_code": 40,
+    "class": "control",
+    "transaction_id": 1,
+    "attrs": {
+      "invoke_id": "1",
+      "object": "R395024397Application_1",
+      "pdu": "confirmed-Request",
+      "service": "start",
+      "stack": "cotp"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 18,
+    "ts": "2008-11-26T20:04:54.244695Z",
+    "flow": {
+      "src_mac": "06:05:04:03:02:01",
+      "dst_mac": "01:02:03:04:05:06",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 102,
+      "dst_port": 19615,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "COTP",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: COTP length indicator is zero"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 18,
+    "ts": "2008-11-26T20:04:54.244695Z",
+    "flow": {
+      "src_mac": "06:05:04:03:02:01",
+      "dst_mac": "01:02:03:04:05:06",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 102,
+      "dst_port": 19615,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: TPKT version is 40, not 3"
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 20,
+    "ts": "2008-11-26T20:04:54.244799Z",
+    "flow": {
+      "src_mac": "01:02:03:04:05:06",
+      "dst_mac": "06:05:04:03:02:01",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 19615,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "conclude-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "pdu": "conclude-Request",
+      "stack": "cotp"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 22,
+    "ts": "2008-11-26T20:04:54.244876Z",
+    "flow": {
+      "src_mac": "06:05:04:03:02:01",
+      "dst_mac": "01:02:03:04:05:06",
+      "src_ip": "127.0.0.1",
+      "dst_ip": "127.0.0.1",
+      "src_port": 102,
+      "dst_port": 19615,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "FramingError",
+    "function_code": -1,
+    "class": "other",
+    "malformed": true,
+    "error": "malformed PDU: TPKT declares 5 octets, below the minimum 6"
+  }
+]
