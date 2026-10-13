@@ -1,0 +1,34 @@
+package templates
+
+import "strconv"
+
+// CapturesPage lists what has been ingested into the project.
+templ CapturesPage(v CapturesView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "captures.title") }</h1>
+		if len(v.Captures) == 0 {
+			<p class="empty">{ T(v.Page.Lang, "captures.none") }</p>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>{ T(v.Page.Lang, "captures.file") }</th>
+						<th>{ T(v.Page.Lang, "captures.digest") }</th>
+						<th class="num">{ T(v.Page.Lang, "captures.packets") }</th>
+						<th>{ T(v.Page.Lang, "captures.range") }</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, c := range v.Captures {
+						<tr>
+							<td>{ c.Path }<div class="sub">{ c.LinkType }</div></td>
+							<td class="sub mono">{ ShortDigest(c.SHA256) }</td>
+							<td class="num">{ strconv.FormatUint(c.Packets, 10) }</td>
+							<td class="sub">{ FormatTime(c.FirstSeen) } → { FormatTime(c.LastSeen) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
