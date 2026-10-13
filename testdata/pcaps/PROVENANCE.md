@@ -12,6 +12,8 @@ commit captures from real customer or production environments.
 | `s7comm_varservice_libnodavedemo.pcap` | 2846 | `a1ff275c087fafbfdc8821ea59ab9bfb11f5adcc9ce6bb5888a1c4a4d7b6affc` |
 | `s7comm_downloading_block_db1.pcap` | 9523 | `48725bd1af7b778821351cd0f50f0ee259e438074a27f8431a8a1a3351dfd3d0` |
 | `s7comm_reading_plc_status.pcap` | 25112 | `e71f81b471bd67da2fd6e40dc69a7179574ba66771c6150cd7bfe232cc07b8a9` |
+| `iec104_test_dissect.pcap` | 11409 | `292c18a8765db3b1bcaa9bd0b8455e4e61b8366cc5910a7363b7381eb11441b8` |
+| `iec104_diverse_commands.pcap` | 13952 | `07b9a0879dc83e420c4cf83b37fb5830d1d8fb5f6ac6edc435896f70b0fc6bc7` |
 
 ## Origin
 
@@ -95,3 +97,40 @@ firmware V3.2.6, serial S C-C6TW74882012.
 It also holds two things a dissector has to take in its stride: COTP data
 frames with no payload at all, which STEP 7 sends as keep-alives, and an SZL
 reply that is only one data unit of a longer list.
+
+## IEC 60870-5-104 captures
+
+The two `iec104_*.pcap` files came from the same public collection as the files
+above (`pcaps/IEC60870-5-104/`), where they are published as
+`TestDissectIec104.pcap` and `090813_diverse.pcap`. They are renamed here after
+what they hold.
+
+`iec104_test_dissect.pcap` — 147 packets over six connections to port 2404,
+carrying 57 APDUs: 26 unnumbered control functions, 12 supervisory frames and
+19 information frames, all for common address 37133. Between the APDUs it
+injects 17 payloads of filler — runs of a repeated byte around a 0x68 with a
+length too short to be an APDU — which is what the file is for: a dissector
+has to report each one and then find the next real frame, without inventing
+frames out of the filler or losing the rest of the connection. Its ASDUs cover
+end of initialisation, general interrogation with its confirmation and
+termination, single and double points answering it in a sequence, a time
+tagged single point, single and double commands with select and execute, and
+clock synchronisation. It also carries the three things that make a reply a
+refusal: a negative confirmation, one marked as test traffic, and an
+activation with the negative bit set, which the standard leaves undefined in
+the control direction.
+
+`iec104_diverse_commands.pcap` — 173 packets of one connection carrying 86
+APDUs for common address 3, which is where the command family lives:
+single, double and set point commands — C_SC_NA_1, C_DC_NA_1 and C_SE_NC_1 —
+with the time tagged C_SC_TA_1, C_DC_TA_1, C_SE_TC_1 and C_SE_TA_1 alongside
+them, and measured values and single points reported in between. This is the
+traffic behind CLAUDE.md's rule on IEC 104 control commands from unexpected
+sources. Eight of its ten commands are issued select-before-operate and two
+directly, so it exercises both. Three further things in it are worth knowing:
+both endpoints are 10.0.0.10, so the capture is a simulator talking to itself
+and its two assets merge into one; the capture starts mid-session with no
+handshake, which is what a capture from the field usually looks like; and the
+time tags of its commands carry the year less 1900 rather than modulo 100,
+which the standard does not allow and which the dissector reports as an
+anomaly. One stray NetBIOS datagram is Windows background noise.
