@@ -99,5 +99,8 @@ func FuzzParse(f *testing.F) {
 		if c := d.Probe(ctx, payload); c < 0 || c > 100 {
 			t.Fatalf("Probe returned %d, outside 0..100", c)
 		}
+		// Deferring shares the framing walk with Probe, so it has to tolerate
+		// the same inputs.
+		d.ProbeDefers(payload)
 	})
 }

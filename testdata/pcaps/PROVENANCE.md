@@ -14,6 +14,11 @@ commit captures from real customer or production environments.
 | `s7comm_reading_plc_status.pcap` | 25112 | `e71f81b471bd67da2fd6e40dc69a7179574ba66771c6150cd7bfe232cc07b8a9` |
 | `iec104_test_dissect.pcap` | 11409 | `292c18a8765db3b1bcaa9bd0b8455e4e61b8366cc5910a7363b7381eb11441b8` |
 | `iec104_diverse_commands.pcap` | 13952 | `07b9a0879dc83e420c4cf83b37fb5830d1d8fb5f6ac6edc435896f70b0fc6bc7` |
+| `iec61850_mms_reports.pcap` | 43379 | `50e405f9dbca335dcf457424a8e8ad04caa6fc85b81671e7ddb5ba8a99567c30` |
+| `iec61850_mms_identify.pcap` | 838 | `5e6d24a3729c1ca69aabd4c3da3d5d9d158e06b0b10c2e6d9399e64622293a0a` |
+| `iec61850_mms_write.pcap` | 2970 | `10a45e74f8fd5cf06055b8b18ee9598c2bfb09ba9222348cb35eb708c9659a56` |
+| `iec61850_mms_program_control.pcap` | 1906 | `b5a55177b2344dbe5c95263bd31b78797776c62b334642140f91bd8a79097e63` |
+| `iec61850_mms_download.pcap` | 1905 | `9d9a836a8e308dfedd6b565e7ee98c98fdc3061e88fc4d7536a22299a7a0e0e0` |
 
 ## Origin
 
@@ -134,3 +139,53 @@ handshake, which is what a capture from the field usually looks like; and the
 time tags of its commands carry the year less 1900 rather than modulo 100,
 which the standard does not allow and which the dissector reports as an
 anomaly. One stray NetBIOS datagram is Windows background noise.
+
+## IEC 61850 MMS captures
+
+The five `iec61850_mms_*.pcap` files came from the same public collection as
+the files above (`pcaps/IEC61850/`), where they are published as
+`Sample_File_MMS_and_GOOSE.pcap`, `piccolo.pcap`, `iec`,
+`MMS - Specific Commands/mms-startRequest.pcap` and
+`MMS - Specific Commands/mms-initiateDownloadSequence.pcap`. That directory
+records them as taken from the pcapr.net MMS collection. They are renamed here
+after what they hold.
+
+`iec61850_mms_reports.pcap` — 43 KB of substation traffic from four IEDs to
+one client, and the primary MMS capture. Twenty-eight information reports
+carry the references of the report control blocks that sent them, which is
+where the logical device names come from: `AA1C1Q01A1LD0`, `AA1C1Q01FP1LD0`,
+`AA1C1Q01FP2LD0` and `AA1QBQBBFP1ABB05`. One association is recorded whole —
+transport connection, session CONNECT, presentation CP, AARQ and AARE,
+requests, orderly conclude and ACSE release — and inside it the client asks a
+fifth IED for the attributes of `AA1E1Q01FP2LD0/LLN0$BR$rcb_B02`, is refused
+with an access error, and reads the object instead. It also holds file sharing
+traffic on port 139 and GOOSE frames on EtherType 0x88B8, which nothing claims
+yet, so it doubles as proof that this dissector does not reach beyond its own
+streams.
+
+`iec61850_mms_identify.pcap` — five frames of an association in which the
+client asks the device what it is. The answer names the vendor `INFO TECH`,
+the model `S61850 for PC` and the revision `0.0.1`, which is the identity
+source CLAUDE.md names for MMS. Its AARQ and AARE also carry application
+process titles and application entity qualifiers on both sides, which the
+substation captures leave out.
+
+`iec61850_mms_write.pcap` — a write to `ACTSETGGIO80$DC$NamPlt$vendor`, the
+vendor attribute of a generic I/O logical node, which is the traffic behind
+CLAUDE.md's rule on MMS writes. It is also the awkward one: the first of its
+four streams begins mid-session with no handshake, its accepts declare the
+user data parameter empty and then send it anyway, their parameter fields
+overrun the frame by an octet, and one response declares one octet more than
+it carries. All four are off-spec, all four are readable, and the dissector
+reports each rather than passing it off as normal.
+
+`iec61850_mms_program_control.pcap` and `iec61850_mms_download.pcap` — two
+exchanges that put MMS straight on top of COTP, with no session, presentation
+or association layer at all, which is a shape a dissector has to read as
+readily as the full stack. The first stops and then starts the program
+invocation `R395024397Application_1`; the second takes control of a semaphore
+and opens a download into the domain `DTLogFilesDomain`. Between them they
+cover what CLAUDE.md's S7 rules name — CPU stop and start, program download —
+under the MMS names for the same operations. Every one of the server's replies
+in both files declares a TPKT length that counts only its own header, so they
+are the hostile framing material as well.
