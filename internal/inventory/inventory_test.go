@@ -358,3 +358,98 @@ func TestInventoryFromSampleCapture(t *testing.T) {
 	assert.Equal(t, model.RoleOperator, hmi.Role.Name)
 	assert.Contains(t, hmi.IPs, "10.0.0.57")
 }
+
+// An S7 CPU answering an SZL read is the richest identity evidence otinv
+// gets, and it has to land on the asset as separate fields rather than as one
+// opaque string.
+func TestS7IdentityEnrichment(t *testing.T) {
+	server := flow("00:1b:1b:aa:bb:cc", "192.168.1.40", 102, "00:0c:29:11:22:33", "192.168.1.10", 4305)
+
+	szl := response(server, "ReadSZL", -1, model.ClassDiscovery, time.Second)
+	szl.PacketIndex = 69
+	szl.Identity = map[string]string{
+		"model":             "IM151-8 PN/DP CPU",
+		"order_number":      "6ES7 151-8AB01-0AB0",
+		"serial_number":     "S C-C6TW74882012",
+		"firmware_revision": "V3.2.6",
+		"plc_name":          "IM151-8-CPU",
+		"vendor_name":       "Siemens",
+	}
+
+	confirm := response(server, "ConnectionConfirm", -1, model.ClassOther, 0)
+	confirm.PacketIndex = 9
+	confirm.Identity = map[string]string{"rack": "0", "slot": "2"}
+
+	b := inventory.New()
+	b.Add(confirm)
+	b.Add(szl)
+
+	assets := byKey(b.Assets())
+	plc := assets["mac:00:1b:1b:aa:bb:cc"]
+
+	fields := map[string]model.Attribute{}
+	for _, at := range plc.Attributes {
+		fields[at.Field] = at
+	}
+
+	assert.Equal(t, "IM151-8 PN/DP CPU", fields["model"].Value)
+	assert.Equal(t, "6ES7 151-8AB01-0AB0", fields["order_number"].Value)
+	assert.Equal(t, "S C-C6TW74882012", fields["serial_number"].Value)
+	assert.Equal(t, "V3.2.6", fields["firmware_revision"].Value)
+	assert.Equal(t, "IM151-8-CPU", fields["name"].Value)
+	assert.Equal(t, "Siemens", plc.Vendor())
+	assert.Equal(t, "0", fields["rack"].Value)
+	assert.Equal(t, "2", fields["slot"].Value)
+
+	// A structured list outranks the generic fallback for an unmapped key.
+	assert.Greater(t, fields["serial_number"].Confidence, 60)
+	// And every field still points at the packet that proved it.
+	assert.Equal(t, uint64(69), fields["model"].Evidence.PacketIndex)
+	assert.Equal(t, uint64(9), fields["rack"].Evidence.PacketIndex)
+	assert.Equal(t, "ReadSZL", fields["model"].Evidence.Operation)
+
+	assert.Equal(t, model.RoleController, plc.Role.Name,
+		"a CPU that serves S7comm is a controller")
+}
+
+// During an S7 block download the CPU sends the jobs that fetch each block,
+// so the PDU direction inverts mid-session. The side an asset plays comes from
+// the port the session is served on, so the CPU stays the server throughout
+// and the programming device stays the client.
+func TestSessionRolesFollowTheServedPort(t *testing.T) {
+	const cpuMAC, stationMAC = "00:1b:1b:aa:bb:cc", "00:0c:29:11:22:33"
+	toCPU := model.Flow{
+		SrcMAC: stationMAC, DstMAC: cpuMAC,
+		SrcIP: "192.168.1.10", DstIP: "192.168.1.40",
+		SrcPort: 4185, DstPort: 102,
+		Transport: model.TransportTCP,
+	}
+
+	s7 := func(f model.Flow, dir model.Direction, op string, class model.Classification) model.Event {
+		return model.Event{
+			CaptureID: "cap", PacketIndex: 1, Timestamp: base, Flow: f,
+			Protocol: "s7comm", Direction: dir, Operation: op,
+			FunctionCode: 27, Class: class, ServerPort: 102,
+		}
+	}
+
+	b := inventory.New()
+	// The station asks for the download.
+	b.Add(s7(toCPU, model.DirRequest, "REQUEST_DOWNLOAD", model.ClassProgram))
+	// The CPU then sends jobs of its own to fetch each block.
+	b.Add(s7(toCPU.Reverse(), model.DirRequest, "DOWNLOAD_BLOCK", model.ClassProgram))
+	b.Add(s7(toCPU, model.DirResponse, "DOWNLOAD_BLOCK", model.ClassProgram))
+
+	assets := byKey(b.Assets())
+
+	cpu := assets["mac:"+cpuMAC]
+	require.Len(t, cpu.Protocols, 1, "the CPU is the server for the whole session")
+	assert.Equal(t, "server", cpu.Protocols[0].Side)
+	assert.Equal(t, model.RoleController, cpu.Role.Name)
+
+	station := assets["mac:"+stationMAC]
+	require.Len(t, station.Protocols, 1, "and the station is the client throughout")
+	assert.Equal(t, "client", station.Protocols[0].Side)
+	assert.Equal(t, model.RoleEngineering, station.Role.Name,
+		"the device that downloads a block is the engineering station")
+}

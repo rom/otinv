@@ -121,13 +121,7 @@ func (b *Builder) Add(e model.Event) {
 	// protocol usage, no identity, and so no role.
 	srcSide, dstSide := "", ""
 	if !e.Malformed {
-		switch e.Direction {
-		case model.DirRequest:
-			srcSide, dstSide = "client", "server"
-		case model.DirResponse:
-			srcSide, dstSide = "server", "client"
-		case model.DirUnknown:
-		}
+		srcSide, dstSide = sides(e)
 	}
 
 	b.observe(src, e, srcSide)
@@ -141,6 +135,33 @@ func (b *Builder) Add(e model.Event) {
 		case dstSide == "server":
 			b.enrich(dst, e)
 		}
+	}
+}
+
+// sides reports which endpoint of an event is the server and which the
+// client.
+//
+// The port the session is served on decides it, because a PDU's direction can
+// invert mid-session: during an S7 block download the CPU sends the jobs that
+// fetch each block, so the device would otherwise look like a client of
+// itself. Only when the port says nothing — both ends on the same port, or
+// none known — does the direction of this PDU decide.
+func sides(e model.Event) (src, dst string) {
+	port := e.ServerPort
+	switch {
+	case port != 0 && e.Flow.SrcPort == port && e.Flow.DstPort != port:
+		return "server", "client"
+	case port != 0 && e.Flow.DstPort == port && e.Flow.SrcPort != port:
+		return "client", "server"
+	}
+
+	switch e.Direction {
+	case model.DirRequest:
+		return "client", "server"
+	case model.DirResponse:
+		return "server", "client"
+	default:
+		return "", ""
 	}
 }
 
@@ -224,6 +245,23 @@ var identityTargets = map[string][]struct {
 	// Report Server ID is device specific free text that in practice carries
 	// the vendor, so it supports both fields at a lower confidence.
 	"report_server_id": {{"report_server_id", 75}, {"vendor", 70}},
+
+	// S7 CPUs answer an SZL read with their own type name, order number,
+	// serial number and firmware version. A device naming itself from a
+	// structured list is the best evidence there is, short of asking it
+	// actively, which this tool never does.
+	"model":             {{"model", 95}},
+	"serial_number":     {{"serial_number", 95}},
+	"firmware_revision": {{"firmware_revision", 95}},
+	"order_number":      {{"order_number", 95}},
+	// The station name and module name are what an engineer typed into the
+	// project, so they describe the installation rather than the hardware.
+	"plc_name":    {{"name", 85}},
+	"module_name": {{"module_name", 85}},
+	// Rack and slot come from the connection the CPU confirmed, so they say
+	// where in the chassis it answered.
+	"rack": {{"rack", 80}},
+	"slot": {{"slot", 80}},
 }
 
 func (b *Builder) enrich(k tupleKey, e model.Event) {
@@ -570,12 +608,20 @@ func (b *Builder) inferRole(a *model.Asset, ipsBehindMAC int) model.Role {
 		}
 	}
 
+	serves := map[string]bool{}
+	for _, p := range a.Protocols {
+		if p.Side == "server" {
+			serves[p.Protocol] = true
+		}
+	}
+
 	var (
 		served      []model.ProtocolUsage
 		polled      []model.ProtocolUsage
 		programmed  []model.ProtocolUsage
 		reasonsSrv  []string
 		reasonsClnt []string
+		reasonsProg []string
 	)
 	for _, p := range a.Protocols {
 		switch p.Side {
@@ -586,7 +632,17 @@ func (b *Builder) inferRole(a *model.Asset, ipsBehindMAC int) model.Role {
 		case "client":
 			polled = append(polled, p)
 			if p.Classes[model.ClassProgram] > 0 || p.Classes[model.ClassFirmware] > 0 {
-				programmed = append(programmed, p)
+				reasonsProg = append(reasonsProg, fmt.Sprintf(
+					"issues %s program or firmware operations (%d program, %d firmware)",
+					p.Protocol, p.Classes[model.ClassProgram], p.Classes[model.ClassFirmware]))
+				// Program operations only mark an engineering station when
+				// the device does not itself serve that protocol. During an
+				// S7 block download the CPU sends the jobs that fetch each
+				// block, so a controller issues program requests too; what
+				// distinguishes it is that it also answers them.
+				if !serves[p.Protocol] {
+					programmed = append(programmed, p)
+				}
 			}
 			reasonsClnt = append(reasonsClnt, fmt.Sprintf(
 				"issues %s requests (%d observed)", p.Protocol, p.Events))
@@ -594,22 +650,22 @@ func (b *Builder) inferRole(a *model.Asset, ipsBehindMAC int) model.Role {
 	}
 
 	switch {
-	case len(programmed) > 0:
-		reasons := make([]string, 0, len(programmed)+len(reasonsClnt))
-		for _, p := range programmed {
-			reasons = append(reasons, fmt.Sprintf(
-				"issues %s program or firmware operations (%d program, %d firmware)",
-				p.Protocol, p.Classes[model.ClassProgram], p.Classes[model.ClassFirmware]))
-		}
-		reasons = append(reasons, reasonsClnt...)
-		return model.Role{Name: model.RoleEngineering, Confidence: confidenceProgrammed, Reasons: reasons}
-
 	case len(served) > 0:
+		// CLAUDE.md defines a controller as the server of a control
+		// protocol, which is the most concrete thing an asset can be.
+		reasons := append([]string{}, reasonsSrv...)
+		reasons = append(reasons, reasonsProg...)
+		reasons = append(reasons, reasonsClnt...)
 		return model.Role{
 			Name:       model.RoleController,
 			Confidence: confidenceServedProtocol,
-			Reasons:    append(reasonsSrv, reasonsClnt...),
+			Reasons:    reasons,
 		}
+
+	case len(programmed) > 0:
+		reasons := append([]string{}, reasonsProg...)
+		reasons = append(reasons, reasonsClnt...)
+		return model.Role{Name: model.RoleEngineering, Confidence: confidenceProgrammed, Reasons: reasons}
 
 	case len(polled) > 0:
 		return model.Role{

@@ -15,6 +15,15 @@ func nullString(s string) any {
 	return s
 }
 
+// nullPort stores an unknown port as NULL rather than as zero, which is not a
+// port.
+func nullPort(port uint16) any {
+	if port == 0 {
+		return nil
+	}
+	return int64(port)
+}
+
 func nullUint16(p *uint16) any {
 	if p == nil {
 		return nil
