@@ -20,11 +20,13 @@ LDFLAGS := -s -w \
 	-X main.commit=$(COMMIT) \
 	-X main.buildDate=$(BUILD_DATE)
 
-.PHONY: all build generate test test-integration test-update fuzz lint fmt tidy ci clean
+.PHONY: all build generate test test-integration test-update fuzz lint fmt tidy ci verify-generated clean
 
 all: build
 
-build: generate
+# Building needs nothing but the Go toolchain: the generated *_templ.go files
+# are committed, so templ is only needed when a .templ file changes.
+build:
 	go build -trimpath -ldflags '$(LDFLAGS)' -o $(BIN) ./cmd/otinv
 
 # Regenerates the templ components. The generated *_templ.go files are
@@ -33,7 +35,10 @@ build: generate
 # The OUI table regeneration hooks in here once internal/oui exists.
 generate:
 	@command -v templ >/dev/null 2>&1 || { \
-		echo "templ not installed: go install github.com/a-h/templ/cmd/templ@$(TEMPL_VERSION)"; \
+		echo "templ is needed only when a .templ file changes; building and testing do not need it."; \
+		echo "To install it:"; \
+		echo "    go install github.com/a-h/templ/cmd/templ@$(TEMPL_VERSION)"; \
+		echo "    # then make sure \$$(go env GOPATH)/bin is on your PATH"; \
 		exit 1; }
 	templ generate
 
@@ -67,7 +72,17 @@ fmt:
 tidy:
 	go mod tidy
 
-ci: generate lint test
+# Everything a change has to pass, using only the Go toolchain and
+# golangci-lint. After editing a .templ file, run `make generate` as well; the
+# verify-generated target checks that the committed output is current.
+ci: lint test
+
+verify-generated: generate
+	@git diff --quiet -- '*_templ.go' || { \
+		echo "generated templ output is stale; commit the result of 'make generate'"; \
+		git diff --stat -- '*_templ.go'; \
+		exit 1; }
+	@echo "generated templ output is up to date"
 
 clean:
 	rm -rf bin
