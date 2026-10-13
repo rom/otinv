@@ -56,14 +56,7 @@ templ AssetTable(v AssetsView) {
 		} else {
 			<table>
 				<thead>
-					<tr>
-						<th>{ T(v.Page.Lang, "assets.address") }</th>
-						<th>{ T(v.Page.Lang, "assets.role") }</th>
-						<th>{ T(v.Page.Lang, "assets.vendor") }</th>
-						<th>{ T(v.Page.Lang, "assets.protocols") }</th>
-						<th class="num">{ T(v.Page.Lang, "assets.events") }</th>
-						<th>{ T(v.Page.Lang, "assets.seen") }</th>
-					</tr>
+					@SortableHeaders(v.Headers())
 				</thead>
 				<tbody>
 					for _, row := range v.Rows {

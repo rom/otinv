@@ -18,7 +18,10 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/enip"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/goose"  // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/iec104" // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/mms"    // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/modbus" // register the dissector
 	_ "github.com/rom/otinv/internal/dissect/s7comm" // register the dissector
 	"github.com/rom/otinv/internal/ingest"
@@ -57,6 +60,16 @@ func run(t *testing.T, path string) (*ingest.Result, []model.Event) {
 
 // The golden files pin the full decode of the public sample captures. Review
 // the diff before committing a regenerated file.
+//
+// enip_rockwell_session is not here either: its 791 events are one session
+// repeating itself, and TestENIPRockwellSessionFacts counts what it is for.
+//
+// iec61850_goose_interlocking is deliberately not here. Its 451 frames differ
+// from one another in a counter and a quality bit, so pinning them all would
+// add half a megabyte that nobody can read a diff of, and the two smaller
+// GOOSE captures and the GOOSE frames in iec61850_mms_reports already pin
+// every field. What that capture is for is the volume of state changes, and
+// TestGooseCaptureFacts counts those.
 func TestGolden(t *testing.T) {
 	root := repoRoot(t)
 	for _, name := range []string{
@@ -69,6 +82,20 @@ func TestGolden(t *testing.T) {
 		"s7comm_reading_plc_status",
 		"iec104_test_dissect",
 		"iec104_diverse_commands",
+		"iec61850_mms_reports",
+		"iec61850_mms_identify",
+		"iec61850_mms_write",
+		"iec61850_mms_program_control",
+		"iec61850_mms_download",
+		"iec61850_goose_ge_relay",
+		"iec61850_goose_minimal",
+		"enip_list_identity",
+		"enip_cip_start",
+		"enip_cip_stop",
+		"enip_cip_set_attribute",
+		"enip_cip_vendor_service",
+		"enip_cip_batch_request",
+		"enip_cip_batch_reply",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", name+".pcap"))
@@ -236,7 +263,7 @@ func tcpSegment(t *testing.T, srcPort, dstPort uint16, seq uint32, syn, ack bool
 		SrcIP:    []byte{10, 0, 0, 9},
 		DstIP:    []byte{10, 0, 0, 3},
 	}
-	if srcPort == 502 {
+	if srcPort == 502 || srcPort == 102 {
 		ip.SrcIP, ip.DstIP = ip.DstIP, ip.SrcIP
 		eth.SrcMAC, eth.DstMAC = eth.DstMAC, eth.SrcMAC
 	}
@@ -605,4 +632,71 @@ func TestStreamWithoutHandshakeKeepsPacketIndexes(t *testing.T) {
 	assert.Equal(t, model.DirRequest, events[1].Direction)
 	assert.True(t, events[0].Timestamp.Before(events[1].Timestamp),
 		"each event keeps the time of the packet it came from")
+}
+
+// ISO-on-TCP port 102 carries S7comm, S7comm-plus and IEC 61850 MMS, and all
+// three open with the same COTP connection request. A stream must not be bound
+// from that request, because the protocol a device is recorded as speaking
+// decides the role inferred for it.
+//
+// The connection request is held until a frame proves the protocol, and it
+// then has to keep the packet it travelled in: that packet is the evidence any
+// finding about the connection points at.
+func TestPort102BindsOnThePayloadNotTheConnection(t *testing.T) {
+	// A COTP connection request, then an S7comm job in the next segment.
+	connect := frame(t, "0300001611e00000000100c1020100c2020102c00109")
+	job := frame(t, "0300001902f08032010000ffff00080000f000000100010780")
+
+	res, events := run(t, writePcap(t, append(handshake102(t),
+		tcpSegment(t, 3082, 102, 1001, false, true, 0, connect),
+		tcpSegment(t, 102, 3082, 5001, false, true, 0,
+			frame(t, "0300001611d00001000300c00109c1020100c2020102")),
+		tcpSegment(t, 3082, 102, 1001+uint32(len(connect)), false, true, 0, job),
+	)))
+
+	require.Len(t, events, 2)
+	assert.Equal(t, "ConnectionRequest", events[0].Operation)
+	assert.Equal(t, "s7comm", events[0].Protocol)
+	assert.Equal(t, uint64(3), events[0].PacketIndex,
+		"the held connection request keeps the packet it arrived in")
+	assert.Equal(t, "SETUP_COMMUNICATION", events[1].Operation)
+	assert.Equal(t, uint64(5), events[1].PacketIndex)
+	assert.True(t, events[0].Timestamp.Before(events[1].Timestamp))
+
+	// The server's confirm is the limit of this: its direction answered once
+	// and then went quiet, so nothing ever proved what it was speaking and
+	// its one frame is counted as unrecognised instead of guessed at. A real
+	// session answers again, which is why the sample captures decode both.
+	assert.Equal(t, uint64(1), res.UnboundPayloads)
+}
+
+// A connection that opens and never says anything stays unattributed. Naming
+// one of the protocols on the port would be a guess, and the count of
+// unrecognised payloads is where it shows up instead.
+func TestPort102ConnectionWithNoPayloadIsNotAttributed(t *testing.T) {
+	res, events := run(t, writePcap(t, append(handshake102(t),
+		tcpSegment(t, 3082, 102, 1001, false, true, 0,
+			frame(t, "0300001611e00000000100c1020100c2020102c00109")),
+		tcpSegment(t, 102, 3082, 5001, false, true, 0,
+			frame(t, "0300001611d00001000300c00109c1020100c2020102")),
+	)))
+
+	assert.Empty(t, events, "nothing above the transport ever showed itself")
+	assert.Equal(t, uint64(2), res.UnboundPayloads, "one for each direction")
+	assert.Zero(t, res.BoundStreams)
+}
+
+func handshake102(t *testing.T) [][]byte {
+	t.Helper()
+	return [][]byte{
+		tcpSegment(t, 3082, 102, 1000, true, false, 0, nil),
+		tcpSegment(t, 102, 3082, 5000, true, true, 0, nil),
+	}
+}
+
+func frame(t *testing.T, s string) []byte {
+	t.Helper()
+	b, err := hex.DecodeString(s)
+	require.NoError(t, err, "test fixture is not valid hex")
+	return b
 }

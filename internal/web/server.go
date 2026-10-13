@@ -215,6 +215,12 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := clampInt(q.Get("limit"), assetPageSize, 1, 500)
 	offset := clampInt(q.Get("offset"), 0, 0, 1<<30)
+	// A column the store does not know how to order by is dropped rather than
+	// refused, so a stale or hand-edited link still shows the list.
+	order := parseSort(q.Get("sort"), q.Get("dir"))
+	if _, ok := store.AssetSortColumns[order.Column]; !ok {
+		order.Column = ""
+	}
 
 	ctx := r.Context()
 	assets, total, err := s.store.Assets(ctx, store.AssetQuery{
@@ -224,6 +230,8 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		Search:    filter.Search,
 		Limit:     limit,
 		Offset:    offset,
+		Sort:      order.Column,
+		Desc:      order.Desc,
 	})
 	if err != nil {
 		s.fail(w, r, "listing assets", err)
@@ -249,6 +257,7 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		Offset:    offset,
 		Limit:     limit,
 		Filter:    filter,
+		Sort:      order,
 		Roles:     roles,
 		Protocols: protocols,
 	}
@@ -319,7 +328,14 @@ func (s *Server) handleAsset(w http.ResponseWriter, r *http.Request) {
 		Page:   page,
 		Asset:  *asset,
 		Events: eventRows(*asset, events),
+		Sort:   parseSort(r.URL.Query().Get("sort"), r.URL.Query().Get("dir")),
 	}
+	// Each of the page's tables orders only by a column of its own, so one
+	// sort state can serve all four.
+	sortAttributes(view.Asset.Attributes, view.Sort)
+	sortAddresses(view.Asset.Addresses, view.Sort)
+	sortProtocols(view.Asset.Protocols, view.Sort)
+	sortEvents(view.Events, view.Sort)
 	s.render(w, r, templates.AssetPage(view))
 }
 
@@ -375,6 +391,17 @@ func eventDetail(e model.Event) string {
 		}
 		parts = append(parts, addr)
 	}
+	// Protocols that address objects by name rather than by number: an MMS
+	// object reference says more about what happened than any other field.
+	if v := e.Attrs["report_id"]; v != "" {
+		parts = append(parts, v)
+	} else if v := e.Attrs["object"]; v != "" {
+		obj := v
+		if e.Quantity != nil && *e.Quantity > 1 {
+			obj += " ×" + strconv.FormatUint(uint64(*e.Quantity), 10)
+		}
+		parts = append(parts, obj)
+	}
 	if v := e.Attrs["coil_state"]; v != "" {
 		parts = append(parts, v)
 	} else if v := e.Attrs["value"]; v != "" {
@@ -415,9 +442,12 @@ func (s *Server) handleCaptures(w http.ResponseWriter, r *http.Request) {
 
 	page := s.page(r, "captures")
 	page.Title = templates.T(page.Lang, "captures.title")
+	order := parseSort(r.URL.Query().Get("sort"), r.URL.Query().Get("dir"))
+	sortCaptures(rows, order)
 	s.render(w, r, templates.CapturesPage(templates.CapturesView{
 		Page:     page,
 		Captures: rows,
+		Sort:     order,
 	}))
 }
 

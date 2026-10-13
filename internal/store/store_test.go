@@ -3,6 +3,7 @@ package store_test
 import (
 	"context"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -494,4 +495,162 @@ func TestUpdateAndDeleteCapture(t *testing.T) {
 	n, err := s.CountEvents(ctx, p.ID)
 	require.NoError(t, err)
 	assert.Zero(t, n)
+}
+
+// sortableAssets are three assets that differ in every sortable column, so
+// that each column's order is distinguishable from the others.
+func sortableAssets() []model.Asset {
+	base := time.Unix(1093521694, 0).UTC()
+	return []model.Asset{
+		{
+			Key: "mac:aa:00:00:00:00:01", Label: "10.0.0.3",
+			Role:       model.Role{Name: model.RoleController, Confidence: 80},
+			Attributes: []model.Attribute{{Field: "vendor", Value: "Siemens", Confidence: 90}},
+			Protocols: []model.ProtocolUsage{
+				{Protocol: "s7comm", Side: "server", Events: 7},
+			},
+			Events: 7, FirstSeen: base, LastSeen: base.Add(3 * time.Hour),
+		},
+		{
+			Key: "mac:aa:00:00:00:00:02", Label: "10.0.0.20",
+			Role: model.Role{Name: model.RoleOperator, Confidence: 60},
+			Protocols: []model.ProtocolUsage{
+				{Protocol: "modbus", Side: "client", Events: 90},
+			},
+			Events: 90, FirstSeen: base, LastSeen: base.Add(time.Hour),
+		},
+		{
+			Key: "mac:aa:00:00:00:00:03", Label: "10.0.0.7",
+			Role:       model.Role{Name: model.RoleEngineering, Confidence: 70},
+			Attributes: []model.Attribute{{Field: "vendor", Value: "ABB", Confidence: 90}},
+			Protocols: []model.ProtocolUsage{
+				{Protocol: "goose", Side: "server", Events: 30},
+			},
+			Events: 30, FirstSeen: base, LastSeen: base.Add(2 * time.Hour),
+		},
+	}
+}
+
+// The asset list is paged, so its order has to be decided in SQL: sorting a
+// page after it has been read would sort the wrong fifty assets.
+func TestAssetQuerySortsEveryColumn(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+	require.NoError(t, s.SaveAssets(ctx, p.ID, sortableAssets()))
+
+	tests := []struct {
+		column string
+		asc    []string
+	}{
+		// The label, which is what the address column shows.
+		{column: "address", asc: []string{"10.0.0.20", "10.0.0.3", "10.0.0.7"}},
+		{column: "role", asc: []string{"10.0.0.7", "10.0.0.20", "10.0.0.3"}},
+		// An unknown vendor sorts last whichever way the column is read.
+		{column: "vendor", asc: []string{"10.0.0.7", "10.0.0.3", "10.0.0.20"}},
+		{column: "protocols", asc: []string{"10.0.0.7", "10.0.0.20", "10.0.0.3"}},
+		{column: "events", asc: []string{"10.0.0.3", "10.0.0.7", "10.0.0.20"}},
+		{column: "seen", asc: []string{"10.0.0.20", "10.0.0.7", "10.0.0.3"}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.column, func(t *testing.T) {
+			_, ok := store.AssetSortColumns[tc.column]
+			require.True(t, ok, "the column must be one the store will order by")
+
+			got, _, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Sort: tc.column})
+			require.NoError(t, err)
+			assert.Equal(t, tc.asc, labels(got), "ascending")
+
+			got, _, err = s.Assets(ctx, store.AssetQuery{
+				ProjectID: p.ID, Sort: tc.column, Desc: true,
+			})
+			require.NoError(t, err)
+			if tc.column == "vendor" {
+				// Reversing the column does not promote the unknown value:
+				// a missing vendor is not the largest one either.
+				assert.Equal(t, []string{"10.0.0.3", "10.0.0.7", "10.0.0.20"}, labels(got),
+					"descending, unknown last")
+				return
+			}
+			assert.Equal(t, reversed(tc.asc), labels(got), "descending")
+		})
+	}
+}
+
+// Without a sort the list keeps the order it is most useful in, and a column
+// the store does not know is ignored rather than refused.
+func TestAssetQueryDefaultAndUnknownSort(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+	require.NoError(t, s.SaveAssets(ctx, p.ID, sortableAssets()))
+
+	for _, sortColumn := range []string{"", "nonsense", "a.events); DROP TABLE assets --"} {
+		got, total, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Sort: sortColumn})
+		require.NoError(t, err, "sort %q", sortColumn)
+		assert.Equal(t, 3, total)
+		assert.Equal(t, []string{"10.0.0.20", "10.0.0.7", "10.0.0.3"}, labels(got),
+			"busiest first, for sort %q", sortColumn)
+	}
+}
+
+// Paging a sorted list has to be stable: without a tiebreaker two assets with
+// the same value could swap places between pages and one of them would never
+// be seen.
+func TestSortedPagingIsStable(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+
+	// Six assets that all share a role, so only the tiebreaker separates them.
+	assets := make([]model.Asset, 0, 6)
+	for i := range 6 {
+		assets = append(assets, model.Asset{
+			Key:    "mac:aa:00:00:00:00:0" + strconv.Itoa(i),
+			Label:  "10.0.0." + strconv.Itoa(i),
+			Role:   model.Role{Name: model.RoleController, Confidence: 80},
+			Events: 10,
+		})
+	}
+	require.NoError(t, s.SaveAssets(ctx, p.ID, assets))
+
+	var paged []string
+	for offset := 0; offset < 6; offset += 2 {
+		got, _, err := s.Assets(ctx, store.AssetQuery{
+			ProjectID: p.ID, Sort: "role", Limit: 2, Offset: offset,
+		})
+		require.NoError(t, err)
+		paged = append(paged, labels(got)...)
+	}
+	assert.Len(t, paged, 6)
+	assert.Len(t, dedupe(paged), 6, "every asset appears exactly once across the pages")
+}
+
+func labels(assets []model.Asset) []string {
+	out := make([]string, 0, len(assets))
+	for _, a := range assets {
+		out = append(out, a.Label)
+	}
+	return out
+}
+
+func reversed(xs []string) []string {
+	out := make([]string, 0, len(xs))
+	for i := len(xs) - 1; i >= 0; i-- {
+		out = append(out, xs[i])
+	}
+	return out
+}
+
+func dedupe(xs []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, x := range xs {
+		if !seen[x] {
+			seen[x] = true
+			out = append(out, x)
+		}
+	}
+	return out
 }

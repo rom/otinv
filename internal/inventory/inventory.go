@@ -13,7 +13,9 @@ package inventory
 import (
 	"context"
 	"fmt"
+	"net"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/rom/otinv/internal/model"
@@ -113,8 +115,14 @@ func (b *Builder) Add(e model.Event) {
 		vlan, hasVLAN = e.Flow.VLAN[0], true
 	}
 
-	src := tupleKey{mac: e.Flow.SrcMAC, ip: e.Flow.SrcIP, vlan: vlan, hasVLAN: hasVLAN}
-	dst := tupleKey{mac: e.Flow.DstMAC, ip: e.Flow.DstIP, vlan: vlan, hasVLAN: hasVLAN}
+	src := tupleKey{
+		mac: unicastMAC(e.Flow.SrcMAC), ip: unicastIP(e.Flow.SrcIP),
+		vlan: vlan, hasVLAN: hasVLAN,
+	}
+	dst := tupleKey{
+		mac: unicastMAC(e.Flow.DstMAC), ip: unicastIP(e.Flow.DstIP),
+		vlan: vlan, hasVLAN: hasVLAN,
+	}
 
 	// A frame that could not be decoded still proves these two hosts
 	// exchanged bytes, but says nothing about what either of them is: no
@@ -262,6 +270,21 @@ var identityTargets = map[string][]struct {
 	// where in the chassis it answered.
 	"rack": {{"rack", 80}},
 	"slot": {{"slot", 80}},
+
+	// An MMS device answers Identify with its vendor, model and revision,
+	// which is the same kind of structured self-description as an SZL read.
+	"revision": {{"firmware_revision", 90}},
+	// A CIP device states its ODVA device profile — what kind of thing it
+	// is — and the vendor identifier ODVA assigned its manufacturer. Both
+	// are the device's own answer about itself, which is the strongest
+	// evidence available without asking it anything.
+	"device_type": {{"device_type", 90}},
+	"vendor_id":   {{"vendor_id", 90}},
+	// In IEC 61850 the MMS domain is the logical device, which is the name
+	// the substation configuration gave this server. It is kept as its own
+	// field rather than as the asset's name, because one device commonly
+	// hosts several logical devices and none of them is the device.
+	"logical_device": {{"logical_device", 85}},
 }
 
 func (b *Builder) enrich(k tupleKey, e model.Event) {
@@ -401,6 +424,51 @@ func (b *Builder) gatewayMACs() map[string]bool {
 		}
 	}
 	return out
+}
+
+// unicastMAC drops a group address, which is never one device.
+//
+// A multicast or broadcast destination names a subscription, not a machine:
+// GOOSE and Sampled Values publish to 01:0c:cd:01:00:00 and its neighbours,
+// and ARP and the discovery protocols broadcast. An inventory that listed
+// those as assets would invent a device for every data set a substation
+// publishes.
+func unicastMAC(mac string) string {
+	// The group bit is the least significant bit of the first octet, which in
+	// the usual notation is the low bit of the second hex digit.
+	if len(mac) < 2 {
+		return mac
+	}
+	first, err := strconv.ParseUint(mac[:2], 16, 8)
+	if err != nil || first&0x01 == 0 {
+		return mac
+	}
+	return ""
+}
+
+// unicastIP drops an address that names a group of machines rather than one.
+//
+// The discovery protocols ask a whole segment at once: a CIP client finds
+// controllers by broadcasting ListIdentity to 255.255.255.255 on UDP 44818,
+// and mDNS and NTP use multicast the same way. The reply comes from one
+// device and is evidence about it; the question was addressed to nobody in
+// particular, and an asset for 255.255.255.255 would be an invention.
+//
+// A subnet directed broadcast cannot be recognised without knowing the mask,
+// so it is left alone: inventing a mask would be the worse guess.
+func unicastIP(addr string) string {
+	if addr == "" {
+		return ""
+	}
+	ip := net.ParseIP(addr)
+	switch {
+	case ip == nil:
+		return addr
+	case ip.IsMulticast(), ip.Equal(net.IPv4bcast), ip.IsUnspecified():
+		return ""
+	default:
+		return addr
+	}
 }
 
 // assetKey is the identity of an observed tuple: the MAC when it belongs to

@@ -11,12 +11,7 @@ templ CapturesPage(v CapturesView) {
 		} else {
 			<table>
 				<thead>
-					<tr>
-						<th>{ T(v.Page.Lang, "captures.file") }</th>
-						<th>{ T(v.Page.Lang, "captures.digest") }</th>
-						<th class="num">{ T(v.Page.Lang, "captures.packets") }</th>
-						<th>{ T(v.Page.Lang, "captures.range") }</th>
-					</tr>
+					@SortableHeaders(v.Headers())
 				</thead>
 				<tbody>
 					for _, c := range v.Captures {

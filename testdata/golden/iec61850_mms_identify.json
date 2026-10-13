@@ -1,0 +1,163 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2009-11-26T11:55:51.73011Z",
+    "flow": {
+      "src_mac": "08:00:27:36:39:da",
+      "dst_mac": "00:18:f3:eb:c3:d9",
+      "src_ip": "10.10.0.33",
+      "dst_ip": "10.10.0.30",
+      "src_port": 1068,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "initiate-Request",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "AARQ",
+      "application_context": "1.0.9506.2.3",
+      "called_ae_qualifier": "12",
+      "called_ap_title": "1.1.1.999.1",
+      "called_session_selector": "0x0001",
+      "calling_ae_qualifier": "12",
+      "calling_ap_title": "1.1.1.999",
+      "calling_session_selector": "0x0001",
+      "max_pdu_size": "65280",
+      "mms_version": "1",
+      "pdu": "initiate-Request",
+      "presentation": "connect",
+      "presentation_context": "1",
+      "session": "CONNECT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 2,
+    "ts": "2009-11-26T11:55:51.772317Z",
+    "flow": {
+      "src_mac": "00:18:f3:eb:c3:d9",
+      "dst_mac": "08:00:27:36:39:da",
+      "src_ip": "10.10.0.30",
+      "dst_ip": "10.10.0.33",
+      "src_port": 102,
+      "dst_port": 1068,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "initiate-Response",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "acse": "AARE",
+      "application_context": "1.0.9506.2.3",
+      "max_pdu_size": "49152",
+      "mms_version": "1",
+      "pdu": "initiate-Response",
+      "presentation": "connect",
+      "presentation_context": "1",
+      "responding_ae_qualifier": "12",
+      "responding_ap_title": "1.1.1.999.1",
+      "result": "accepted",
+      "session": "ACCEPT"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2009-11-26T11:55:51.77529Z",
+    "flow": {
+      "src_mac": "08:00:27:36:39:da",
+      "dst_mac": "00:18:f3:eb:c3:d9",
+      "src_ip": "10.10.0.33",
+      "dst_ip": "10.10.0.30",
+      "src_port": 1068,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "identify",
+    "function_code": 2,
+    "class": "discovery",
+    "transaction_id": 1,
+    "attrs": {
+      "invoke_id": "1",
+      "pdu": "confirmed-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "identify",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2009-11-26T11:55:51.783303Z",
+    "flow": {
+      "src_mac": "00:18:f3:eb:c3:d9",
+      "dst_mac": "08:00:27:36:39:da",
+      "src_ip": "10.10.0.30",
+      "dst_ip": "10.10.0.33",
+      "src_port": 102,
+      "dst_port": 1068,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "response",
+    "server_port": 102,
+    "operation": "identify",
+    "function_code": 2,
+    "class": "discovery",
+    "transaction_id": 1,
+    "identity": {
+      "model_name": "S61850 for PC",
+      "revision": "0.0.1",
+      "vendor_name": "INFO TECH"
+    },
+    "attrs": {
+      "invoke_id": "1",
+      "pdu": "confirmed-Response",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "identify",
+      "session": "DATA_TRANSFER"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 5,
+    "ts": "2009-11-26T11:55:51.785902Z",
+    "flow": {
+      "src_mac": "08:00:27:36:39:da",
+      "dst_mac": "00:18:f3:eb:c3:d9",
+      "src_ip": "10.10.0.33",
+      "dst_ip": "10.10.0.30",
+      "src_port": 1068,
+      "dst_port": 102,
+      "transport": "tcp"
+    },
+    "protocol": "mms",
+    "direction": "request",
+    "server_port": 102,
+    "operation": "status",
+    "function_code": 0,
+    "class": "read",
+    "transaction_id": 2,
+    "attrs": {
+      "invoke_id": "2",
+      "pdu": "confirmed-Request",
+      "presentation": "user-data",
+      "presentation_context": "3",
+      "service": "status",
+      "session": "DATA_TRANSFER"
+    }
+  }
+]

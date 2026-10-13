@@ -119,6 +119,37 @@ tbody tr:hover { background: var(--row-hover); }
 
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
+/* A sortable header is a link, so it keeps a link's keyboard behaviour: tab
+   to it, enter to sort. The arrow is drawn from aria-sort, which means the
+   indicator and what a screen reader announces cannot drift apart. */
+th.sortable { padding: 0; }
+
+th.sortable a {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.5rem 0.7rem;
+	color: inherit;
+	text-decoration: none;
+}
+
+th.sortable.num a { justify-content: flex-end; }
+th.sortable a:hover { color: var(--text); background: var(--row-hover); }
+th.sortable a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* The arrow sits after the label, and a faint one shows on hover which way a
+   first click will sort. */
+th.sortable a::after {
+	content: "↕";
+	font-size: 0.85em;
+	opacity: 0;
+}
+
+th.sortable a:hover::after, th.sortable a:focus-visible::after { opacity: 0.45; }
+th.sortable[aria-sort="ascending"] a::after { content: "↑"; opacity: 1; }
+th.sortable[aria-sort="descending"] a::after { content: "↓"; opacity: 1; }
+th.sortable[aria-sort="ascending"] a, th.sortable[aria-sort="descending"] a { color: var(--text); }
+
 a { color: var(--accent); }
 
 .sub { color: var(--muted); font-size: 0.82rem; }

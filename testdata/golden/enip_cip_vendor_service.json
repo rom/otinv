@@ -1,0 +1,34 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2009-01-14T21:25:15.77626Z",
+    "flow": {
+      "src_mac": "00:1d:09:99:b2:2c",
+      "dst_mac": "00:00:bc:2d:83:fe",
+      "src_ip": "192.168.10.105",
+      "dst_ip": "192.168.10.120",
+      "src_port": 1054,
+      "dst_port": 44818,
+      "transport": "tcp"
+    },
+    "protocol": "enip",
+    "direction": "request",
+    "server_port": 44818,
+    "operation": "Service_0x4c",
+    "function_code": 76,
+    "class": "other",
+    "transaction_id": 7244,
+    "attrs": {
+      "cip_class": "Class_0x0074",
+      "cip_class_id": "0x0074",
+      "cip_instance": "1",
+      "cip_path": "class=Class_0x008e,instance=1,class=Class_0x0074,instance=1",
+      "command": "SendUnitData",
+      "connection_id": "0x00076b01",
+      "item": "ConnectedData",
+      "service_scope": "vendor_specific",
+      "session_handle": "0x12020100"
+    }
+  }
+]

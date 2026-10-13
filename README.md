@@ -14,10 +14,11 @@ design and the complete protocol roadmap.
 
 ## Status
 
-This repository holds the first two slices of that design: the decode path
-(ingest, dissector registry, Modbus/TCP) and the storage and GUI path that
-makes a capture browsable. Both were developed test first against public
-sample captures.
+This repository holds the decode path (ingest, dissector registry and seven
+Tier 1 dissectors) and the storage and GUI path that makes a capture
+browsable. Everything was developed test first against public sample
+captures, each dissector cross-checked against an independent decode of the
+same bytes and fuzzed.
 
 | Component | State |
 |-----------|-------|
@@ -26,12 +27,16 @@ sample captures.
 | `internal/dissect/modbus` — Tier 1 Modbus/TCP | done |
 | `internal/dissect/dnp3` — Tier 1 DNP3, link/transport/application layers | done |
 | `internal/dissect/s7comm` — Tier 1 Siemens S7comm over ISO-on-TCP | done |
+| `internal/dissect/iec104` — Tier 1 IEC 60870-5-104, APCI and ASDU | done |
+| `internal/dissect/mms` — Tier 1 IEC 61850 MMS over the ISO stack | done |
+| `internal/dissect/goose` — Tier 1 IEC 61850 GOOSE, bound by EtherType | done |
+| `internal/dissect/enip` — Tier 1 EtherNet/IP and CIP, explicit, discovery and cyclic I/O | done |
 | `internal/store` — SQLite (pure Go), embedded migrations, batched event writes, asset queries | done |
 | `internal/inventory` — asset identity and merge, gateway detection, role inference, identity enrichment | done |
-| `internal/web` — GUI: asset list with server-side filtering and paging, asset detail, captures | done |
+| `internal/web` — GUI: asset list with server-side filtering, paging and sorting, asset detail, captures | done |
 | `cmd/otinv` — `analyze`, `serve`, `version` | done |
 | `internal/topology`, `internal/rules`, `internal/baseline`, `internal/export` | not started |
-| Remaining Tier 1/2/3 protocols (S7comm, IEC 104, MMS, GOOSE, CIP, …) | not started |
+| Remaining Tier 1 protocols (PROFINET DCP, OPC UA, BACnet/IP) and all of Tiers 2 and 3 | not started |
 
 The GUI has no authentication yet, so it binds to loopback and **refuses to
 start on any other address** rather than exposing OT data unprotected. Capture

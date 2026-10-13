@@ -1,0 +1,39 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2011-05-26T00:55:54.866952Z",
+    "flow": {
+      "src_mac": "00:17:a4:dd:98:1e",
+      "dst_mac": "01:0c:cd:01:00:01",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet",
+      "vlan": [
+        10
+      ]
+    },
+    "protocol": "goose",
+    "direction": "response",
+    "operation": "Retransmission",
+    "function_code": -1,
+    "class": "read",
+    "quantity": 10,
+    "attrs": {
+      "appid": "0x2000",
+      "conf_rev": "1",
+      "dat_set": "222",
+      "entries": "10",
+      "go_id": "333",
+      "gocb_ref": "111",
+      "sq_num": "1",
+      "st_num": "1",
+      "t": "2011-05-26T00:55:54.859Z",
+      "time_allowed_to_live_ms": "10000",
+      "time_quality": "accuracy_0_bits",
+      "values": "false,false,false,false,false,false,false,false,…"
+    }
+  }
+]

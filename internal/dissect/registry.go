@@ -22,9 +22,10 @@ type Health struct {
 }
 
 type registration struct {
-	d        Dissector
-	tcpPorts []uint16
-	udpPorts []uint16
+	d          Dissector
+	tcpPorts   []uint16
+	udpPorts   []uint16
+	etherTypes []uint16
 }
 
 // Registry holds the registered dissectors and tracks their parse health. A
@@ -62,6 +63,17 @@ func TCPPorts(ports ...uint16) RegisterOption {
 // UDPPorts declares the default UDP ports for a protocol.
 func UDPPorts(ports ...uint16) RegisterOption {
 	return func(r *registration) { r.udpPorts = append(r.udpPorts, ports...) }
+}
+
+// EtherTypes declares the EtherTypes a layer 2 protocol is carried under.
+//
+// Several industrial protocols have no port at all because they have no IP
+// layer: GOOSE, Sampled Values, PROFINET RT, EtherCAT, LLDP. An EtherType is
+// a stronger claim than a port — IEEE assigns each to one protocol, where a
+// port is only a convention several protocols share — so a dissector
+// registered for one is not asked to compete with heuristics.
+func EtherTypes(types ...uint16) RegisterOption {
+	return func(r *registration) { r.etherTypes = append(r.etherTypes, types...) }
 }
 
 // Register adds d to the default registry. It is meant for init() and panics on
@@ -148,6 +160,47 @@ func (r *Registry) Candidates(transport model.Transport, srcPort, dstPort uint16
 	return matched, others
 }
 
+// EtherTypeCandidates returns the dissectors registered for an EtherType, in
+// registration order.
+func (r *Registry) EtherTypeCandidates(etherType uint16) []Dissector {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var out []Dissector
+	for _, name := range r.order {
+		if containsPort(r.byName[name].etherTypes, etherType) {
+			out = append(out, r.byName[name].d)
+		}
+	}
+	return out
+}
+
+// SelectEtherType picks the dissector for a layer 2 frame.
+//
+// Unlike a port, an EtherType names one protocol, so a registered dissector
+// is accepted on any non-zero confidence and nothing unregistered is tried:
+// a frame under an EtherType nobody claims is not ours, however it looks.
+func (r *Registry) SelectEtherType(ctx *FlowContext, etherType uint16, payload []byte) (Dissector, int) {
+	if len(payload) == 0 {
+		return nil, 0
+	}
+	var best Dissector
+	bestScore := 0
+	for _, d := range r.EtherTypeCandidates(etherType) {
+		if s := r.Probe(d, ctx, payload); s > bestScore {
+			best, bestScore = d, s
+		}
+	}
+	return best, bestScore
+}
+
+// HasEtherType reports whether a protocol is registered for an EtherType.
+func (r *Registry) HasEtherType(name string, etherType uint16) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	reg, ok := r.byName[name]
+	return ok && containsPort(reg.etherTypes, etherType)
+}
+
 func containsPort(ports []uint16, p uint16) bool {
 	for _, q := range ports {
 		if q == p {
@@ -162,9 +215,15 @@ func containsPort(ports []uint16, p uint16) bool {
 // A port-matched dissector is accepted on any non-zero confidence, because the
 // port is already evidence. A dissector reached only by heuristics must score
 // at least minConfidence. Highest score wins; on a tie the port match wins.
-func (r *Registry) Select(ctx *FlowContext, payload []byte, minConfidence int) (Dissector, int) {
+//
+// The third return value asks the caller to wait. A port-matched dissector
+// that implements Deferring and says it cannot yet tell its protocol from the
+// others on its port is left out of the comparison; if that leaves no winner,
+// deferred is true and the caller should keep the bytes and try again rather
+// than treat the stream as unrecognised. See Deferring.
+func (r *Registry) Select(ctx *FlowContext, payload []byte, minConfidence int) (d Dissector, confidence int, deferred bool) {
 	if len(payload) == 0 {
-		return nil, 0
+		return nil, 0, false
 	}
 	if minConfidence <= 0 {
 		minConfidence = DefaultMinConfidence
@@ -173,20 +232,44 @@ func (r *Registry) Select(ctx *FlowContext, payload []byte, minConfidence int) (
 
 	var best Dissector
 	bestScore := 0
-	for _, d := range matched {
-		if s := r.Probe(d, ctx, payload); s > bestScore {
-			best, bestScore = d, s
+	for _, cand := range matched {
+		if r.defers(cand, payload) {
+			deferred = true
+			continue
+		}
+		if s := r.Probe(cand, ctx, payload); s > bestScore {
+			best, bestScore = cand, s
 		}
 	}
 	if best != nil {
-		return best, bestScore
+		return best, bestScore, false
 	}
-	for _, d := range others {
-		if s := r.Probe(d, ctx, payload); s > bestScore && s >= minConfidence {
-			best, bestScore = d, s
+	if deferred {
+		return nil, 0, true
+	}
+	for _, cand := range others {
+		if s := r.Probe(cand, ctx, payload); s > bestScore && s >= minConfidence {
+			best, bestScore = cand, s
 		}
 	}
-	return best, bestScore
+	return best, bestScore, false
+}
+
+// defers asks a Deferring dissector whether it wants to wait, recovering from
+// a panic the same way Probe does. A dissector that panics here is a bug and
+// is taken not to defer, so the stream is decided on the scores at hand.
+func (r *Registry) defers(d Dissector, payload []byte) (wait bool) {
+	dd, ok := d.(Deferring)
+	if !ok {
+		return false
+	}
+	defer func() {
+		if v := recover(); v != nil {
+			r.recordPanic(d.Name(), "ProbeDefers", v)
+			wait = false
+		}
+	}()
+	return dd.ProbeDefers(payload)
 }
 
 // Probe calls d.Probe, recovering from a panic and clamping the result to

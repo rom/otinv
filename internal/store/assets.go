@@ -19,6 +19,57 @@ type AssetQuery struct {
 	Search string
 	Limit  int
 	Offset int
+
+	// Sort names the column to order by, as AssetSortColumns spells it, and
+	// Desc the direction. An empty Sort keeps the default, which is the
+	// busiest assets first.
+	//
+	// The ordering belongs here rather than in the handler because the list
+	// is paged: sorting a page after it has been read would sort the wrong
+	// fifty assets.
+	Sort string
+	Desc bool
+}
+
+// AssetSortColumns maps a sortable column of the asset list to the SQL that
+// orders by it. Nothing outside this map can reach a query, which is what
+// keeps a column name taken from a URL out of the statement.
+//
+// Two of the six are not columns of the assets table. The vendor is
+// denormalised onto it already; the protocols are not, so they are summarised
+// per asset in the same order the list renders them, which keeps what the
+// sort does and what the reader sees in step.
+var AssetSortColumns = map[string]string{
+	"address":   "a.label",
+	"role":      "a.role",
+	"vendor":    "a.vendor",
+	"protocols": protocolSummary,
+	"events":    "a.events",
+	"seen":      "a.last_seen",
+}
+
+// protocolSummary is the sort key for the protocols column, built to match
+// what the list view shows. It is an expression rather than a stored column,
+// so it appears in the order clause only and the row scan is unchanged.
+const protocolSummary = `(SELECT group_concat(p.protocol || ' (' || p.side || ')')
+	FROM asset_protocols p WHERE p.asset_pk = a.id)`
+
+// assetOrder renders the ORDER BY clause for a query.
+//
+// A null vendor sorts last whichever way the column is read, because an
+// unknown value is not the smallest one, and the asset key breaks ties so
+// that paging is stable: without it two assets with the same event count
+// could swap places between pages and one of them would never be seen.
+func assetOrder(q AssetQuery) string {
+	expr, ok := AssetSortColumns[q.Sort]
+	if !ok {
+		return "a.events DESC, a.asset_key"
+	}
+	direction := "ASC"
+	if q.Desc {
+		direction = "DESC"
+	}
+	return "(" + expr + " IS NULL), " + expr + " " + direction + ", a.asset_key"
 }
 
 // SaveAssets replaces a project's inventory.
@@ -183,12 +234,14 @@ func (s *Store) Assets(ctx context.Context, q AssetQuery) ([]model.Asset, int, e
 	}
 	pageArgs := append(append([]any{}, args...), limit, max(q.Offset, 0))
 
-	//nolint:gosec // G202: only the filter clause and placeholders are concatenated
+	// The order clause comes from AssetSortColumns, so only SQL this package
+	// wrote can appear in it.
+	//nolint:gosec // G202: only the filter clause, the order clause and placeholders are concatenated
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT a.id, a.asset_key, a.label, a.is_gateway, a.role, a.role_confidence,
 		        a.role_reasons, a.macs, a.ips, a.vlans, a.events, a.first_seen, a.last_seen
 		 FROM assets a WHERE `+filter+`
-		 ORDER BY a.events DESC, a.asset_key
+		 ORDER BY `+assetOrder(q)+`
 		 LIMIT ? OFFSET ?`, pageArgs...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("store: listing assets: %w", err)

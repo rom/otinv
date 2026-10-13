@@ -7,6 +7,10 @@ COMMIT     ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 TEMPL_VERSION := v0.3.898
 
+# How long each fuzz target runs in `make fuzz`. Long enough to catch a
+# regression in a changed dissector, short enough to run on every change.
+FUZZTIME ?= 30s
+
 # One static binary, no libpcap: captures are read with pure Go.
 export CGO_ENABLED := 0
 
@@ -52,14 +56,15 @@ test-integration:
 test-update:
 	go test ./internal/ingest -update
 
-# Short fuzz run for every dissector that has a fuzz target.
+# Short fuzz run for every fuzz target in the tree. Go fuzzes one target per
+# run, so each is named in turn rather than matched by a pattern.
 fuzz:
 	@for pkg in $$(go list $(PKG)); do \
 		dir=$$(go list -f '{{.Dir}}' $$pkg); \
-		if grep -lq 'func Fuzz' $$dir/*_test.go 2>/dev/null; then \
-			echo "fuzzing $$pkg"; \
-			go test $$pkg -run '^$$' -fuzz 'Fuzz' -fuzztime 30s || exit 1; \
-		fi; \
+		for target in $$(sed -n 's/^func \(Fuzz[A-Za-z0-9_]*\)(.*/\1/p' $$dir/*_test.go 2>/dev/null | sort -u); do \
+			echo "fuzzing $$pkg $$target"; \
+			go test $$pkg -run '^$$$$' -fuzz "^$$target$$$$" -fuzztime $(FUZZTIME) || exit 1; \
+		done; \
 	done
 
 lint:

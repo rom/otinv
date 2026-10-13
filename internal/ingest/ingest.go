@@ -61,6 +61,11 @@ const (
 	// sentinel to itself, but a TCP sequence number is never negative.
 	noSequenceYet = -1
 
+	// maxL2Flows caps how many layer 2 flows keep their own state. A segment
+	// with more distinct publisher and multicast address pairs than this is
+	// not a substation bus, it is a crafted capture.
+	maxL2Flows = 4096
+
 	// bindDecisionBytes is how many bytes make a Probe verdict trustworthy.
 	// Below this a stream gets another chance as more data arrives.
 	bindDecisionBytes = 16
@@ -110,11 +115,14 @@ type Result struct {
 	BoundStreams    uint64 `json:"bound_streams"`
 	UnboundPayloads uint64 `json:"unbound_payloads"`
 	UDPDatagrams    uint64 `json:"udp_datagrams"`
-	Events          uint64 `json:"events"`
-	Malformed       uint64 `json:"malformed"`
-	Resyncs         uint64 `json:"resyncs"`
-	MissingBytes    uint64 `json:"missing_bytes"`
-	AbandonedSides  uint64 `json:"abandoned_stream_sides"`
+	// L2Frames counts frames handed to a dissector by EtherType rather than
+	// by port: the industrial protocols that run straight on Ethernet.
+	L2Frames       uint64 `json:"l2_frames"`
+	Events         uint64 `json:"events"`
+	Malformed      uint64 `json:"malformed"`
+	Resyncs        uint64 `json:"resyncs"`
+	MissingBytes   uint64 `json:"missing_bytes"`
+	AbandonedSides uint64 `json:"abandoned_stream_sides"`
 
 	// Health is the registry's parse health. The registry is process-wide by
 	// default, so these counters cover every capture it has seen.
@@ -206,7 +214,12 @@ func File(path string, opts Options) (*Result, error) {
 		sink(e)
 	}
 
-	fac := &factory{opts: &opts, res: res, sink: counted}
+	fac := &factory{
+		opts: &opts,
+		res:  res,
+		sink: counted,
+		l2:   map[l2key]*dissect.FlowContext{},
+	}
 	pool := reassembly.NewStreamPool(fac)
 	asm := reassembly.NewAssembler(pool)
 
@@ -249,10 +262,12 @@ func File(path string, opts Options) (*Result, error) {
 			dstMAC: pkt.dstMAC,
 			vlans:  pkt.vlans,
 		}
-		switch pkt.transport {
-		case layers.IPProtocolTCP:
+		switch {
+		case pkt.l2Payload != nil:
+			fac.handleFrame(pkt, actx)
+		case pkt.transport == layers.IPProtocolTCP:
 			asm.AssembleWithContext(pkt.netFlow, &dec.tcp, actx)
-		case layers.IPProtocolUDP:
+		case pkt.transport == layers.IPProtocolUDP:
 			res.UDPDatagrams++
 			fac.handleDatagram(pkt, &dec.udp, actx)
 		default:
@@ -333,6 +348,12 @@ type packetInfo struct {
 	transport      layers.IPProtocol
 	srcMAC, dstMAC string
 	vlans          []uint16
+
+	// etherType and l2Payload are set instead of netFlow and transport when
+	// the frame carries no IP layer and a dissector is registered for its
+	// EtherType.
+	etherType uint16
+	l2Payload []byte
 }
 
 // decoder decodes Ethernet through TCP/UDP into reused layer structs, so that
@@ -395,9 +416,12 @@ func (d *decoder) decode(data []byte) (*packetInfo, error) {
 		pkt.transport = d.ip6.NextHeader
 		payload = d.ip6.Payload
 	default:
-		// Industrial layer 2 protocols (GOOSE, EtherCAT, PROFINET RT) arrive
-		// here; they get their own dissectors in a later milestone.
-		return nil, nil
+		// Industrial layer 2 protocols arrive here: GOOSE, Sampled Values,
+		// PROFINET RT, EtherCAT. They carry no IP layer, so the frame itself
+		// is the flow and the EtherType is what names the protocol.
+		pkt.etherType = uint16(etherType)
+		pkt.l2Payload = payload
+		return pkt, nil
 	}
 
 	switch pkt.transport {
@@ -427,11 +451,25 @@ type assemblerCtx struct {
 // GetCaptureInfo implements reassembly.AssemblerContext.
 func (c *assemblerCtx) GetCaptureInfo() gopacket.CaptureInfo { return c.ci }
 
-// factory creates one tcpStream per TCP connection.
+// l2key identifies one layer 2 flow: a protocol carried straight on Ethernet
+// between two addresses, on a VLAN.
+type l2key struct {
+	src, dst  string
+	etherType uint16
+	vlan      uint16
+}
+
+// factory creates one tcpStream per TCP connection, and holds the layer 2
+// flows, which have no connection to hang state on.
 type factory struct {
 	opts *Options
 	res  *Result
 	sink func(model.Event)
+
+	// l2 holds one context per layer 2 flow, so that a dissector can track
+	// what a publisher sent last. GOOSE needs it: a state number that skips
+	// is only visible against the frame before it.
+	l2 map[l2key]*dissect.FlowContext
 }
 
 // New implements reassembly.StreamFactory.
@@ -458,12 +496,56 @@ func portOf(e gopacket.Endpoint) uint16 {
 	return binary.BigEndian.Uint16(raw)
 }
 
+// hold marks where in the bytes kept for a later call one packet's
+// contribution began.
+//
+// Reassembly has no per-byte provenance: a chunk is delivered with the context
+// of the packet that completed it. That is the right answer for a PDU split
+// across packets, which only became readable with the last of them, but not
+// for a PDU that arrived whole and was only kept because the stream's
+// protocol was still undecided. Those marks give each held PDU back the
+// packet it travelled in, which is what a finding has to point at.
+type hold struct {
+	offset int
+	index  uint64
+	ts     time.Time
+}
+
 // side is one direction of a stream.
 type side struct {
 	direction     model.Direction
 	ctx           *dissect.FlowContext
 	framingErrors int
 	abandoned     bool
+
+	// heldLen is how many bytes at the front of the next chunk were kept
+	// from earlier packets, and holds says which packet each stretch of them
+	// arrived in.
+	heldLen int
+	holds   []hold
+}
+
+// stamp sets the packet a PDU starting at off in the current chunk belongs to.
+func (sd *side) stamp(off int, curIndex uint64, curTime time.Time) {
+	if off >= sd.heldLen {
+		sd.ctx.PacketIndex, sd.ctx.Timestamp = curIndex, curTime
+		return
+	}
+	for i := len(sd.holds) - 1; i >= 0; i-- {
+		if sd.holds[i].offset <= off {
+			sd.ctx.PacketIndex, sd.ctx.Timestamp = sd.holds[i].index, sd.holds[i].ts
+			return
+		}
+	}
+	sd.ctx.PacketIndex, sd.ctx.Timestamp = curIndex, curTime
+}
+
+// release forgets the held bytes that have now been framed.
+func (sd *side) release(consumed int) {
+	if consumed >= sd.heldLen {
+		sd.heldLen = 0
+		sd.holds = nil
+	}
 }
 
 // tcpStream decodes both directions of one TCP connection.
@@ -529,11 +611,21 @@ func (s *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	data := sg.Fetch(available)
 
 	if s.bound == nil {
-		if !s.bind(flow, data, actx) {
+		bound, deferred := s.bind(flow, data, actx)
+		if !bound {
 			// A verdict on a handful of bytes is not worth much, so a short
-			// first chunk gets another look once more data arrives. Enough
-			// bytes with no match means this stream is not ours.
-			if s.tries < maxBindAttempts && len(data) < bindDecisionBytes {
+			// first chunk gets another look once more data arrives, and so
+			// does a stream whose candidates share a port and have not yet
+			// been handed what tells them apart. Enough bytes with no match
+			// means this stream is not ours.
+			retry := deferred || len(data) < bindDecisionBytes
+			if s.tries < maxBindAttempts && retry && len(data) <= dissect.MaxPDUSize {
+				if actx != nil {
+					sd.holds = append(sd.holds, hold{
+						offset: sd.heldLen, index: actx.index, ts: actx.ci.Timestamp,
+					})
+				}
+				sd.heldLen = len(data)
 				sg.KeepFrom(0)
 				return
 			}
@@ -576,8 +668,11 @@ func (s *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 // consumed. Whatever is left is an incomplete PDU to be kept for later.
 func (s *tcpStream) frame(sd *side, data []byte) int {
 	reg := s.f.opts.Registry
+	curIndex, curTime := sd.ctx.PacketIndex, sd.ctx.Timestamp
 	consumed := 0
+	defer func() { sd.release(consumed) }()
 	for consumed < len(data) {
+		sd.stamp(consumed, curIndex, curTime)
 		rest := data[consumed:]
 		n, err := reg.PDULen(s.bound, rest)
 		switch {
@@ -592,12 +687,14 @@ func (s *tcpStream) frame(sd *side, data []byte) int {
 			if sd.framingErrors >= maxFramingErrors {
 				sd.abandoned = true
 				s.f.res.AbandonedSides++
-				return len(data)
+				consumed = len(data)
+				return consumed
 			}
 			skip := s.resync(rest, sd.ctx)
 			s.f.res.Resyncs++
 			if skip <= 0 {
-				return len(data)
+				consumed = len(data)
+				return consumed
 			}
 			consumed += skip
 			continue
@@ -641,8 +738,10 @@ func (s *tcpStream) resync(buf []byte, ctx *dissect.FlowContext) int {
 	return 0
 }
 
-// bind picks the dissector for this stream from its first bytes.
-func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) bool {
+// bind picks the dissector for this stream from its first bytes. It reports
+// whether a dissector was bound, and if not, whether a candidate asked to be
+// shown more bytes before the stream is given up on.
+func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) (bound, deferred bool) {
 	s.tries++
 	probeCtx := &dissect.FlowContext{
 		CaptureID:  s.f.res.Capture.ID,
@@ -654,9 +753,9 @@ func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) bool 
 		probeCtx.PacketIndex = actx.index
 		probeCtx.Timestamp = actx.ci.Timestamp
 	}
-	d, score := s.f.opts.Registry.Select(probeCtx, data, s.f.opts.MinConfidence)
+	d, score, wait := s.f.opts.Registry.Select(probeCtx, data, s.f.opts.MinConfidence)
 	if d == nil {
-		return false
+		return false, wait
 	}
 	s.bound = d
 	s.f.res.BoundStreams++
@@ -664,7 +763,7 @@ func (s *tcpStream) bind(flow model.Flow, data []byte, actx *assemblerCtx) bool 
 		"protocol", d.Name(), "confidence", score,
 		"src", flow.SrcIP, "src_port", flow.SrcPort,
 		"dst", flow.DstIP, "dst_port", flow.DstPort)
-	return true
+	return true, false
 }
 
 // serverPort reports which side of the flow looks like the listening one.
@@ -724,7 +823,71 @@ func (s *tcpStream) framingErrorEvent(sd *side, err error) model.Event {
 
 // ReassemblyComplete implements reassembly.Stream.
 func (s *tcpStream) ReassemblyComplete(_ reassembly.AssemblerContext) bool {
+	for i := range s.sides {
+		if s.sides[i].heldLen > 0 {
+			// Bytes kept while the protocol of this direction was still
+			// undecided, on a direction that then said nothing more. A
+			// connection request on its own could be any of the protocols
+			// sharing its port, and naming one would be a guess, so they are
+			// counted as unrecognised rather than attributed or forgotten.
+			s.f.res.UnboundPayloads++
+		}
+	}
 	return true
+}
+
+// handleFrame dissects one layer 2 frame. A frame is one PDU, so there is no
+// framing step and nothing to reassemble.
+func (f *factory) handleFrame(pkt *packetInfo, actx *assemblerCtx) {
+	if len(pkt.l2Payload) == 0 {
+		f.res.NonIP++
+		return
+	}
+	flow := model.Flow{
+		SrcMAC:    pkt.srcMAC,
+		DstMAC:    pkt.dstMAC,
+		Transport: model.TransportEthernet,
+		VLAN:      pkt.vlans,
+	}
+
+	key := l2key{src: pkt.srcMAC, dst: pkt.dstMAC, etherType: pkt.etherType}
+	if len(pkt.vlans) > 0 {
+		key.vlan = pkt.vlans[0]
+	}
+	ctx, known := f.l2[key]
+	switch {
+	case known:
+	case len(f.l2) < maxL2Flows:
+		ctx = &dissect.FlowContext{
+			CaptureID: f.res.Capture.ID,
+			Direction: model.DirUnknown,
+		}
+		f.l2[key] = ctx
+	default:
+		// More distinct layer 2 flows than any real segment carries. Keep
+		// decoding, but without per-flow state, rather than letting a crafted
+		// capture grow the table without bound.
+		ctx = &dissect.FlowContext{
+			CaptureID: f.res.Capture.ID,
+			Direction: model.DirUnknown,
+		}
+		f.res.UnboundPayloads++
+	}
+	ctx.Flow = flow
+	ctx.PacketIndex = actx.index
+	ctx.Timestamp = actx.ci.Timestamp
+
+	d, _ := f.opts.Registry.SelectEtherType(ctx, pkt.etherType, pkt.l2Payload)
+	if d == nil {
+		// No dissector claims this EtherType.
+		f.res.NonIP++
+		return
+	}
+	f.res.L2Frames++
+	events, _ := f.opts.Registry.Parse(d, ctx, pkt.l2Payload)
+	for _, e := range events {
+		f.sink(e)
+	}
 }
 
 // handleDatagram dissects one UDP datagram. Datagram protocols are
@@ -750,7 +913,9 @@ func (f *factory) handleDatagram(pkt *packetInfo, udp *layers.UDP, actx *assembl
 		Timestamp:   actx.ci.Timestamp,
 		Direction:   model.DirUnknown,
 	}
-	d, _ := f.opts.Registry.Select(ctx, udp.Payload, f.opts.MinConfidence)
+	// A datagram is self-contained, so there is nothing to wait for: a
+	// candidate that would defer simply does not match here.
+	d, _, _ := f.opts.Registry.Select(ctx, udp.Payload, f.opts.MinConfidence)
 	if d == nil {
 		f.res.UnboundPayloads++
 		return
