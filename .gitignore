@@ -1,0 +1,18 @@
+# Build output
+/bin/
+
+# Large public datasets used only by integration tests (see CLAUDE.md "Test data")
+/datasets/
+
+# Local runtime config and project databases
+/otinv.yaml
+*.db
+*.db-wal
+*.db-shm
+
+# Go test/build leftovers
+*.test
+*.out
+coverage.*
+
+.DS_Store

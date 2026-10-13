@@ -1,0 +1,16 @@
+# otinv configuration. Copy to otinv.yaml and adjust.
+#
+# otinv is strictly passive: nothing in this file can make the tool send
+# packets or connect to analysed hosts.
+
+# Extra ports to consider for a protocol, in addition to its defaults.
+# Dissectors also run heuristic detection (Probe), so a protocol on a
+# non-standard port is still found without being listed here.
+protocols:
+  modbus:
+    extra_ports: [5020, 10502]
+
+# Minimum Probe confidence (0-100) required to bind a dissector to a stream
+# when the port does not match a known default.
+probe:
+  min_confidence: 70
