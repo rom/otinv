@@ -4,28 +4,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rom/otinv/internal/dissect/ber"
 	"github.com/rom/otinv/internal/model"
 )
 
 // Decoding of what an MMS service names and reports: the objects it addresses,
 // the identity a device gives of itself, and the error a server answers with.
 
-// Limits on the strings taken off the wire.
-const (
-	// maxNameLen caps an MMS Identifier. The standard allows 32 octets and
-	// IEC 61850 object references run longer; 128 covers the longest
-	// reference a substation configuration produces without letting a
-	// crafted frame put a kilobyte of text into an event.
-	maxNameLen = 128
-
-	// maxOIDLen caps an object identifier's encoded length.
-	maxOIDLen = 32
-
-	// maxListedNames caps how many object names one event lists. A read of a
-	// whole data set addresses dozens; the operation is what the event is
-	// for, and the flow view holds the detail.
-	maxListedNames = 8
-)
+// maxListedNames caps how many object names one event lists. A read of a
+// whole data set addresses dozens; the operation is what the event is for,
+// and the flow view holds the detail.
+const maxListedNames = 8
 
 // objectName renders an MMS ObjectName (ISO 9506-2). The three forms say where
 // the object lives: in the device as a whole, inside one of its domains, or
@@ -34,28 +23,28 @@ const (
 // In IEC 61850 the domain is the logical device, which is the name an engineer
 // gave the device in the substation configuration, and the item is the rest of
 // the reference — logical node, functional constraint, data object, attribute.
-func objectName(t tlv, bud *budget) (name, domain, item string, ok bool) {
+func objectName(t ber.TLV, bud *ber.Budget) (name, domain, item string, ok bool) {
 	switch {
-	case t.ctx(0) && !t.constructed:
+	case t.Ctx(0) && !t.Constructed:
 		// vmd-specific: one identifier, scoped to the whole device.
-		if s, good := t.text(); good {
+		if s, good := t.Text(); good {
 			return s, "", s, true
 		}
-	case t.ctx(1) && t.constructed:
+	case t.Ctx(1) && t.Constructed:
 		// domain-specific: the domain and the item within it.
-		kids, _ := t.descend(bud)
-		if len(kids) != 2 || kids[0].constructed || kids[1].constructed {
+		kids, _ := t.Descend(bud)
+		if len(kids) != 2 || kids[0].Constructed || kids[1].Constructed {
 			return "", "", "", false
 		}
-		d, okd := kids[0].text()
-		i, oki := kids[1].text()
+		d, okd := kids[0].Text()
+		i, oki := kids[1].Text()
 		if !okd || !oki {
 			return "", "", "", false
 		}
 		return d + "/" + i, d, i, true
-	case t.ctx(2) && !t.constructed:
+	case t.Ctx(2) && !t.Constructed:
 		// aa-specific: scoped to this association only.
-		if s, good := t.text(); good {
+		if s, good := t.Text(); good {
 			return s, "", s, true
 		}
 	}
@@ -68,14 +57,14 @@ func objectName(t tlv, bud *budget) (name, domain, item string, ok bool) {
 // text, because a write carries the value it writes right next to the name it
 // writes to, and a visible string in a data value is not an object name. Each
 // service is entered only where its definition puts names.
-func addressed(pdu uint32, svc uint32, body tlv, bud *budget) (names []string, domain, item string) {
+func addressed(pdu uint32, svc uint32, body ber.TLV, bud *ber.Budget) (names []string, domain, item string) {
 	// Only a request and an unsolicited report name what they act on. A
 	// response carries results, and reading its first element as a name turns
 	// a vendor string in an Identify reply into an object that does not exist.
 	if pdu != pduConfirmedRequest && pdu != pduUnconfirmed {
 		return nil, "", ""
 	}
-	add := func(t tlv) {
+	add := func(t ber.TLV) {
 		n, d, i, ok := objectName(t, bud)
 		if !ok {
 			return
@@ -91,7 +80,7 @@ func addressed(pdu uint32, svc uint32, body tlv, bud *budget) (names []string, d
 	switch {
 	case pdu == pduUnconfirmed:
 		// InformationReport and friends open with the access specification.
-		kids, _ := body.descend(bud)
+		kids, _ := body.Descend(bud)
 		if len(kids) > 0 {
 			walkAccessSpec(kids[0], bud, add)
 		}
@@ -100,8 +89,8 @@ func addressed(pdu uint32, svc uint32, body tlv, bud *budget) (names []string, d
 		// Read-Request tags its access specification, so the alternative the
 		// client chose sits one level further in than in a write, where the
 		// specification is untagged.
-		if spec, ok := body.find(bud, 1); ok {
-			alts, _ := spec.descend(bud)
+		if spec, ok := body.Find(bud, 1); ok {
+			alts, _ := spec.Descend(bud)
 			for _, alt := range alts {
 				walkAccessSpec(alt, bud, add)
 			}
@@ -110,14 +99,14 @@ func addressed(pdu uint32, svc uint32, body tlv, bud *budget) (names []string, d
 	case svc == svcWrite:
 		// Write-Request leaves its access specification untagged, so it is
 		// the first element; everything after it is the data being written.
-		kids, _ := body.descend(bud)
+		kids, _ := body.Descend(bud)
 		if len(kids) > 0 {
 			walkAccessSpec(kids[0], bud, add)
 		}
 
 	case svc == svcGetVariableAccessAttributes:
 		// A CHOICE of a name or an address.
-		if n, ok := body.find(bud, 0); ok {
+		if n, ok := body.Find(bud, 0); ok {
 			walkObjectName(n, bud, add)
 		}
 
@@ -125,11 +114,11 @@ func addressed(pdu uint32, svc uint32, body tlv, bud *budget) (names []string, d
 		// Every other service that names something puts a single identifier
 		// or object name first: a program invocation, a domain, a semaphore,
 		// a file. Some put it in the service element itself.
-		if !body.constructed {
-			add(tlv{class: classContext, number: 0, value: body.value})
+		if !body.Constructed {
+			add(ber.TLV{Class: ber.ClassContext, Number: 0, Value: body.Value})
 			break
 		}
-		kids, _ := body.descend(bud)
+		kids, _ := body.Descend(bud)
 		if len(kids) > 0 {
 			walkObjectName(kids[0], bud, add)
 		}
@@ -164,20 +153,20 @@ var domainServices = map[uint32]bool{
 
 // walkAccessSpec enters a VariableAccessSpecification, which is either a list
 // of variable specifications or the name of a stored list.
-func walkAccessSpec(spec tlv, bud *budget, add func(tlv)) {
+func walkAccessSpec(spec ber.TLV, bud *ber.Budget, add func(ber.TLV)) {
 	switch {
-	case spec.ctx(0) && spec.constructed:
+	case spec.Ctx(0) && spec.Constructed:
 		// listOfVariable: a sequence of specifications, each wrapping a name.
-		entries, _ := spec.descend(bud)
+		entries, _ := spec.Descend(bud)
 		for _, e := range entries {
-			kids, _ := e.descend(bud)
+			kids, _ := e.Descend(bud)
 			for _, k := range kids {
-				if k.ctx(0) {
+				if k.Ctx(0) {
 					walkObjectName(k, bud, add)
 				}
 			}
 		}
-	case spec.ctx(1):
+	case spec.Ctx(1):
 		// variableListName: the name of a list the server holds.
 		walkObjectName(spec, bud, add)
 	}
@@ -185,14 +174,14 @@ func walkAccessSpec(spec tlv, bud *budget, add func(tlv)) {
 
 // walkObjectName accepts either an ObjectName or the VariableSpecification
 // CHOICE that wraps one.
-func walkObjectName(t tlv, bud *budget, add func(tlv)) {
+func walkObjectName(t ber.TLV, bud *ber.Budget, add func(ber.TLV)) {
 	if _, _, _, ok := objectName(t, bud); ok {
 		add(t)
 		return
 	}
 	// A variableSpecification [0] holding a name [0], or a variableListName
 	// [1] holding the ObjectName CHOICE.
-	kids, _ := t.descend(bud)
+	kids, _ := t.Descend(bud)
 	for _, k := range kids {
 		if _, _, _, ok := objectName(k, bud); ok {
 			add(k)
@@ -204,20 +193,20 @@ func walkObjectName(t tlv, bud *budget, add func(tlv)) {
 // identify reads an Identify-Response, which is how an MMS device names
 // itself: the one place in the protocol where it says what it is without
 // being asked anything beyond "what are you".
-func identify(body tlv, bud *budget) map[string]string {
-	kids, _ := body.descend(bud)
+func identify(body ber.TLV, bud *ber.Budget) map[string]string {
+	kids, _ := body.Descend(bud)
 	out := map[string]string{}
 	for _, k := range kids {
-		s, ok := k.text()
+		s, ok := k.Text()
 		if !ok {
 			continue
 		}
 		switch {
-		case k.ctx(0):
+		case k.Ctx(0):
 			out["vendor_name"] = s
-		case k.ctx(1):
+		case k.Ctx(1):
 			out["model_name"] = s
-		case k.ctx(2):
+		case k.Ctx(2):
 			out["revision"] = s
 		}
 	}
@@ -234,19 +223,19 @@ func identify(body tlv, bud *budget) map[string]string {
 // own reference, which names the logical device and the report. It is the
 // most useful thing a passive observer gets from report traffic, since a
 // server pushing reports never has to be asked anything.
-func reportID(body tlv, bud *budget) string {
-	kids, _ := body.descend(bud)
+func reportID(body ber.TLV, bud *ber.Budget) string {
+	kids, _ := body.Descend(bud)
 	for _, k := range kids {
-		if !k.ctx(0) || !k.constructed {
+		if !k.Ctx(0) || !k.Constructed {
 			continue
 		}
-		results, _ := k.descend(bud)
+		results, _ := k.Descend(bud)
 		if len(results) == 0 {
 			return ""
 		}
 		// visible-string [10] of the Data CHOICE.
-		if first := results[0]; first.ctx(10) {
-			if s, ok := first.text(); ok {
+		if first := results[0]; first.Ctx(10) {
+			if s, ok := first.Text(); ok {
 				return s
 			}
 		}
@@ -290,31 +279,31 @@ var errorCodes = map[uint32]map[int64]string{
 // kind of refusal it was, and within the access class the code separates "no
 // such object" from "you may not have it", which is the difference between a
 // misconfigured client and one reaching for what it should not.
-func serviceError(body tlv, bud *budget) string {
-	class, ok := body.find(bud, 0)
+func serviceError(body ber.TLV, bud *ber.Budget) string {
+	class, ok := body.Find(bud, 0)
 	if !ok {
 		return ""
 	}
 	alt := class
-	if class.constructed {
-		kids, _ := class.descend(bud)
+	if class.Constructed {
+		kids, _ := class.Descend(bud)
 		if len(kids) == 0 {
 			return ""
 		}
 		alt = kids[0]
 	}
-	if alt.class != classContext {
+	if alt.Class != ber.ClassContext {
 		return ""
 	}
-	name, known := errorClasses[alt.number]
+	name, known := errorClasses[alt.Number]
 	if !known {
-		name = "errorClass" + utoa(alt.number)
+		name = "errorClass" + utoa(alt.Number)
 	}
-	code, hasCode := alt.integer()
+	code, hasCode := alt.Integer()
 	if !hasCode {
 		return name
 	}
-	if table, ok := errorCodes[alt.number]; ok {
+	if table, ok := errorCodes[alt.Number]; ok {
 		if label, ok := table[code]; ok {
 			return name + "/" + label
 		}
@@ -324,19 +313,19 @@ func serviceError(body tlv, bud *budget) string {
 
 // initiateDetail records what the two ends agreed the association may carry.
 // The negotiated PDU size is the one number that bounds everything above it.
-func initiateDetail(ev *model.Event, body tlv, bud *budget) {
-	kids, _ := body.descend(bud)
+func initiateDetail(ev *model.Event, body ber.TLV, bud *ber.Budget) {
+	kids, _ := body.Descend(bud)
 	for _, k := range kids {
 		switch {
-		case k.ctx(0):
-			if v, ok := k.integer(); ok {
+		case k.Ctx(0):
+			if v, ok := k.Integer(); ok {
 				setAttr(ev, "max_pdu_size", strconv.FormatInt(v, 10))
 			}
-		case k.ctx(4) && k.constructed:
-			detail, _ := k.descend(bud)
+		case k.Ctx(4) && k.Constructed:
+			detail, _ := k.Descend(bud)
 			for _, d := range detail {
-				if d.ctx(0) {
-					if v, ok := d.integer(); ok {
+				if d.Ctx(0) {
+					if v, ok := d.Integer(); ok {
 						setAttr(ev, "mms_version", strconv.FormatInt(v, 10))
 					}
 				}

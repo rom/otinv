@@ -3,6 +3,8 @@ package mms
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/rom/otinv/internal/dissect/ber"
 )
 
 // The layers between COTP and MMS: the ISO 8327-1 session layer, the ISO 8823
@@ -123,7 +125,7 @@ func looksLikePresentation(b []byte) bool {
 	if b[0] != 0x31 && b[0] != 0x61 {
 		return false
 	}
-	_, err := readOne(b)
+	_, err := ber.ReadOne(b)
 	return err == nil
 }
 
@@ -145,26 +147,26 @@ type pdv struct {
 // it carries. The connect PDUs wrap theirs in a SET of negotiation
 // parameters; a transfer sends them on their own (ISO 8823, clause 8).
 func decodePresentation(b []byte) (string, []pdv, error) {
-	top, err := readOne(b)
+	top, err := ber.ReadOne(b)
 	if err != nil {
 		return "", nil, fmt.Errorf("%w: %s", errPresentation, err.Error())
 	}
-	bud := newBudget()
+	bud := ber.NewBudget()
 
 	switch {
-	case top.class == classApplication && top.number == 1:
+	case top.Class == ber.ClassApplication && top.Number == 1:
 		return "user-data", collectPDVs(top, bud), nil
 
-	case top.class == classUniversal && top.number == tagSet:
+	case top.Class == ber.ClassUniversal && top.Number == ber.TagSet:
 		// CP-type, CPA-type or CPR-type: the connect, accept and reject PDUs.
-		params, _ := top.descend(bud)
+		params, _ := top.Descend(bud)
 		for _, p := range params {
-			if !p.ctx(2) {
+			if !p.Ctx(2) {
 				continue
 			}
-			kids, _ := p.descend(bud)
+			kids, _ := p.Descend(bud)
 			for _, k := range kids {
-				if k.class == classApplication && k.number == 1 {
+				if k.Class == ber.ClassApplication && k.Number == 1 {
 					return "connect", collectPDVs(k, bud), nil
 				}
 			}
@@ -172,25 +174,25 @@ func decodePresentation(b []byte) (string, []pdv, error) {
 		return "connect", nil, nil
 
 	default:
-		return top.tag(), nil, fmt.Errorf("%w: unexpected element %s", errPresentation, top.tag())
+		return top.Tag(), nil, fmt.Errorf("%w: unexpected element %s", errPresentation, top.Tag())
 	}
 }
 
 // collectPDVs walks a fully-encoded-data element.
-func collectPDVs(fed tlv, bud *budget) []pdv {
-	lists, _ := fed.descend(bud)
+func collectPDVs(fed ber.TLV, bud *ber.Budget) []pdv {
+	lists, _ := fed.Descend(bud)
 	out := make([]pdv, 0, len(lists))
 	for _, list := range lists {
-		kids, _ := list.descend(bud)
+		kids, _ := list.Descend(bud)
 		entry := pdv{context: -1}
 		for _, k := range kids {
 			switch {
-			case k.class == classUniversal && k.number == tagInteger:
-				if v, ok := k.integer(); ok {
+			case k.Class == ber.ClassUniversal && k.Number == ber.TagInteger:
+				if v, ok := k.Integer(); ok {
 					entry.context = v
 				}
-			case k.class == classContext && k.number <= 2:
-				entry.data = k.value
+			case k.Class == ber.ClassContext && k.Number <= 2:
+				entry.data = k.Value
 			}
 		}
 		if entry.data != nil {
@@ -218,73 +220,73 @@ var acseResults = map[int64]string{
 
 // decodeACSE reads an association control APDU, if that is what b holds.
 func decodeACSE(b []byte) (association, bool) {
-	top, err := readOne(b)
-	if err != nil || top.class != classApplication {
+	top, err := ber.ReadOne(b)
+	if err != nil || top.Class != ber.ClassApplication {
 		return association{}, false
 	}
-	name, ok := acseNames[top.number]
+	name, ok := acseNames[top.Number]
 	if !ok {
 		return association{}, false
 	}
 
 	out := association{name: name, attrs: map[string]string{}}
-	bud := newBudget()
-	fields, _ := top.descend(bud)
+	bud := ber.NewBudget()
+	fields, _ := top.Descend(bud)
 	for _, f := range fields {
-		if f.class != classContext {
+		if f.Class != ber.ClassContext {
 			continue
 		}
 		switch {
-		case f.number == 1:
+		case f.Number == 1:
 			// The application context names what will be spoken over the
 			// association, which for IEC 61850 is always the MMS context.
 			setOID(out.attrs, "application_context", f, bud)
 
-		case f.number == 2 && (top.number == 0 || top.number == 2 || top.number == 3):
+		case f.Number == 2 && (top.Number == 0 || top.Number == 2 || top.Number == 3):
 			// AARQ names the called application process here; the release
 			// PDUs have no field 2, so only an AARQ reaches this.
 			setOID(out.attrs, "called_ap_title", f, bud)
-		case f.number == 2 && top.number == 1:
+		case f.Number == 2 && top.Number == 1:
 			if v, ok := innerInt(f, bud); ok {
 				out.attrs["result"] = resultName(v)
 			}
 
-		case f.number == 3 && top.number == 0:
+		case f.Number == 3 && top.Number == 0:
 			if v, ok := innerInt(f, bud); ok {
 				out.attrs["called_ae_qualifier"] = strconv.FormatInt(v, 10)
 			}
-		case f.number == 4 && top.number == 1:
+		case f.Number == 4 && top.Number == 1:
 			setOID(out.attrs, "responding_ap_title", f, bud)
-		case f.number == 5 && top.number == 1:
+		case f.Number == 5 && top.Number == 1:
 			if v, ok := innerInt(f, bud); ok {
 				out.attrs["responding_ae_qualifier"] = strconv.FormatInt(v, 10)
 			}
 
-		case f.number == 6 && top.number == 0:
+		case f.Number == 6 && top.Number == 0:
 			setOID(out.attrs, "calling_ap_title", f, bud)
-		case f.number == 7 && top.number == 0:
+		case f.Number == 7 && top.Number == 0:
 			if v, ok := innerInt(f, bud); ok {
 				out.attrs["calling_ae_qualifier"] = strconv.FormatInt(v, 10)
 			}
 
-		case f.number == 11:
+		case f.Number == 11:
 			// The authentication mechanism the client chose.
-			if s, ok := f.oid(); ok {
+			if s, ok := f.OID(); ok {
 				out.attrs["authentication_mechanism"] = s
 			}
-		case f.number == 12:
+		case f.Number == 12:
 			// The authentication value itself. IEC 61850 sends a password
 			// here in the clear, so the fact that one was sent is recorded
 			// and the value deliberately is not: this tool must not become
 			// the place a captured password ends up stored and rendered.
 			out.attrs["authentication"] = "password"
 
-		case f.number == 29:
-			if s, ok := f.text(); ok {
+		case f.Number == 29:
+			if s, ok := f.Text(); ok {
 				out.attrs["implementation"] = s
 			}
 
-		case f.number == 30:
+		case f.Number == 30:
 			out.inner = userInformation(f, bud)
 		}
 	}
@@ -300,13 +302,13 @@ func resultName(v int64) string {
 
 // userInformation pulls the embedded PDU out of an ACSE user-information
 // field, which is a sequence of EXTERNALs.
-func userInformation(f tlv, bud *budget) []byte {
-	externals, _ := f.descend(bud)
+func userInformation(f ber.TLV, bud *ber.Budget) []byte {
+	externals, _ := f.Descend(bud)
 	for _, ext := range externals {
-		kids, _ := ext.descend(bud)
+		kids, _ := ext.Descend(bud)
 		for _, k := range kids {
-			if k.class == classContext && k.number <= 2 {
-				return k.value
+			if k.Class == ber.ClassContext && k.Number <= 2 {
+				return k.Value
 			}
 		}
 	}
@@ -314,15 +316,15 @@ func userInformation(f tlv, bud *budget) []byte {
 }
 
 // setOID records an object identifier held inside a CHOICE wrapper.
-func setOID(attrs map[string]string, key string, f tlv, bud *budget) {
-	if s, ok := f.oid(); ok && !f.constructed {
+func setOID(attrs map[string]string, key string, f ber.TLV, bud *ber.Budget) {
+	if s, ok := f.OID(); ok && !f.Constructed {
 		attrs[key] = s
 		return
 	}
-	kids, _ := f.descend(bud)
+	kids, _ := f.Descend(bud)
 	for _, k := range kids {
-		if k.class == classUniversal && k.number == tagOID {
-			if s, ok := k.oid(); ok {
+		if k.Class == ber.ClassUniversal && k.Number == ber.TagOID {
+			if s, ok := k.OID(); ok {
 				attrs[key] = s
 				return
 			}
@@ -331,13 +333,13 @@ func setOID(attrs map[string]string, key string, f tlv, bud *budget) {
 }
 
 // innerInt reads an integer held inside a CHOICE wrapper.
-func innerInt(f tlv, bud *budget) (int64, bool) {
-	if !f.constructed {
-		return f.integer()
+func innerInt(f ber.TLV, bud *ber.Budget) (int64, bool) {
+	if !f.Constructed {
+		return f.Integer()
 	}
-	kids, _ := f.descend(bud)
+	kids, _ := f.Descend(bud)
 	for _, k := range kids {
-		if v, ok := k.integer(); ok {
+		if v, ok := k.Integer(); ok {
 			return v, true
 		}
 	}

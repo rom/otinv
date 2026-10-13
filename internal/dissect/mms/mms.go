@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/rom/otinv/internal/dissect"
+	"github.com/rom/otinv/internal/dissect/ber"
 	"github.com/rom/otinv/internal/model"
 )
 
@@ -170,7 +171,7 @@ func (d *Dissector) Probe(_ *dissect.FlowContext, payload []byte) int {
 func payloadScore(data []byte) int {
 	if isMMSPDUTag(data[0]) {
 		// MMS with no session, presentation or association layer at all.
-		if _, err := readOne(data); err == nil {
+		if _, err := ber.ReadOne(data); err == nil {
 			return 95
 		}
 		return 70
@@ -356,7 +357,7 @@ func decodePDV(ev model.Event, data []byte) ([]model.Event, error) {
 
 // decodeMMS decodes one MMS PDU.
 func decodeMMS(ev model.Event, data []byte) ([]model.Event, error) {
-	top, err := readOne(data)
+	top, err := ber.ReadOne(data)
 	if err != nil {
 		if ev.Operation == "" {
 			ev.Operation = "MMS"
@@ -364,17 +365,17 @@ func decodeMMS(ev model.Event, data []byte) ([]model.Event, error) {
 		return []model.Event{malformed(ev, err.Error())},
 			fmt.Errorf("%w: %s", dissect.ErrMalformed, err.Error())
 	}
-	if top.class != classContext {
-		msg := fmt.Sprintf("MMS PDU opens with %s, not a context tag", top.tag())
+	if top.Class != ber.ClassContext {
+		msg := fmt.Sprintf("MMS PDU opens with %s, not a context tag", top.Tag())
 		if ev.Operation == "" {
 			ev.Operation = "MMS"
 		}
 		return []model.Event{malformed(ev, msg)}, fmt.Errorf("%w: %s", dissect.ErrMalformed, msg)
 	}
 
-	kind, known := pduNames[top.number]
+	kind, known := pduNames[top.Number]
 	if !known {
-		kind = "pdu" + utoa(top.number)
+		kind = "pdu" + utoa(top.Number)
 	}
 	ev.Operation = kind
 	setAttr(&ev, "pdu", kind)
@@ -382,8 +383,8 @@ func decodeMMS(ev model.Event, data []byte) ([]model.Event, error) {
 		addAnomaly(&ev, "unknown_pdu_kind")
 	}
 
-	bud := newBudget()
-	switch top.number {
+	bud := ber.NewBudget()
+	switch top.Number {
 	case pduConfirmedRequest, pduConfirmedResponse, pduUnconfirmed:
 		describeService(&ev, top, bud)
 	case pduConfirmedError:
@@ -393,7 +394,7 @@ func decodeMMS(ev model.Event, data []byte) ([]model.Event, error) {
 	case pduReject:
 		describeReject(&ev, top, bud)
 	case pduCancelRequest, pduCancelResponse:
-		if v, ok := top.integer(); ok {
+		if v, ok := top.Integer(); ok {
 			ev.TransactionID = model.Ptr(uint32(v))
 			setAttr(&ev, "invoke_id", strconv.FormatInt(v, 10))
 		}
@@ -403,42 +404,42 @@ func decodeMMS(ev model.Event, data []byte) ([]model.Event, error) {
 
 // describeService names the service a confirmed or unconfirmed PDU carries and
 // the objects it addresses.
-func describeService(ev *model.Event, top tlv, bud *budget) {
-	kids, complete := top.descend(bud)
+func describeService(ev *model.Event, top ber.TLV, bud *ber.Budget) {
+	kids, complete := top.Descend(bud)
 	if !complete {
 		addAnomaly(ev, "truncated_pdu")
 	}
 	for _, k := range kids {
-		if k.class == classUniversal && k.number == tagInteger {
-			if v, ok := k.integer(); ok && v >= 0 {
+		if k.Class == ber.ClassUniversal && k.Number == ber.TagInteger {
+			if v, ok := k.Integer(); ok && v >= 0 {
 				ev.TransactionID = model.Ptr(uint32(v))
 				setAttr(ev, "invoke_id", strconv.FormatInt(v, 10))
 			}
 			continue
 		}
-		if k.class != classContext {
+		if k.Class != ber.ClassContext {
 			continue
 		}
 
-		info := service(k.number)
-		if top.number == pduUnconfirmed {
-			info = unconfirmedService(k.number)
+		info := service(k.Number)
+		if top.Number == pduUnconfirmed {
+			info = unconfirmedService(k.Number)
 		}
 		ev.Operation = info.name
 		ev.Class = info.class
 		setAttr(ev, "service", info.name)
-		if k.number <= maxServiceTag {
-			ev.FunctionCode = int(k.number)
+		if k.Number <= maxServiceTag {
+			ev.FunctionCode = int(k.Number)
 		} else {
 			// BER lets a context tag run to five figures, and the function
 			// code column is where every other protocol's single-octet code
 			// is shown. A number that cannot be a service is reported as
 			// what it is rather than presented as one.
-			setAttr(ev, "service_tag", strconv.FormatUint(uint64(k.number), 10))
+			setAttr(ev, "service_tag", strconv.FormatUint(uint64(k.Number), 10))
 			addAnomaly(ev, "service_tag_out_of_range")
 		}
 
-		names, domain, item := addressed(top.number, k.number, k, bud)
+		names, domain, item := addressed(top.Number, k.Number, k, bud)
 		if len(names) > 0 {
 			setAttr(ev, "object", names[0])
 			if len(names) > 1 {
@@ -459,11 +460,11 @@ func describeService(ev *model.Event, top tlv, bud *budget) {
 		}
 
 		switch {
-		case k.number == svcIdentify && top.number == pduConfirmedResponse:
+		case k.Number == svcIdentify && top.Number == pduConfirmedResponse:
 			for field, value := range identify(k, bud) {
 				setIdentity(ev, field, value)
 			}
-		case top.number == pduUnconfirmed && k.number == 0:
+		case top.Number == pduUnconfirmed && k.Number == 0:
 			if id := reportID(k, bud); id != "" {
 				setAttr(ev, "report_id", id)
 				if device, _, found := strings.Cut(id, "/"); found && device != "" {
@@ -476,18 +477,18 @@ func describeService(ev *model.Event, top tlv, bud *budget) {
 }
 
 // describeError records the refusal a server answered with.
-func describeError(ev *model.Event, top tlv, bud *budget) {
-	kids, _ := top.descend(bud)
+func describeError(ev *model.Event, top ber.TLV, bud *ber.Budget) {
+	kids, _ := top.Descend(bud)
 	for _, k := range kids {
 		switch {
-		case k.ctx(0):
+		case k.Ctx(0):
 			// A confirmed error tags its invoke id, where a request and a
 			// response leave theirs untagged.
-			if v, ok := k.integer(); ok && v >= 0 {
+			if v, ok := k.Integer(); ok && v >= 0 {
 				ev.TransactionID = model.Ptr(uint32(v))
 				setAttr(ev, "invoke_id", strconv.FormatInt(v, 10))
 			}
-		case k.ctx(2):
+		case k.Ctx(2):
 			if msg := serviceError(k, bud); msg != "" {
 				ev.Exception = msg
 				setAttr(ev, "error", msg)
@@ -498,22 +499,22 @@ func describeError(ev *model.Event, top tlv, bud *budget) {
 
 // describeReject records a PDU the peer would not look at, which is a
 // disagreement about the protocol rather than a refused request.
-func describeReject(ev *model.Event, top tlv, bud *budget) {
-	kids, _ := top.descend(bud)
+func describeReject(ev *model.Event, top ber.TLV, bud *ber.Budget) {
+	kids, _ := top.Descend(bud)
 	for _, k := range kids {
-		if k.class == classUniversal && k.number == tagInteger {
-			if v, ok := k.integer(); ok && v >= 0 {
+		if k.Class == ber.ClassUniversal && k.Number == ber.TagInteger {
+			if v, ok := k.Integer(); ok && v >= 0 {
 				ev.TransactionID = model.Ptr(uint32(v))
 				setAttr(ev, "invoke_id", strconv.FormatInt(v, 10))
 			}
 			continue
 		}
-		if k.class != classContext {
+		if k.Class != ber.ClassContext {
 			continue
 		}
-		name, known := rejectReasons[k.number]
+		name, known := rejectReasons[k.Number]
 		if !known {
-			name = "reason" + utoa(k.number)
+			name = "reason" + utoa(k.Number)
 		}
 		ev.Exception = "reject/" + name
 		setAttr(ev, "error", ev.Exception)

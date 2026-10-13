@@ -203,7 +203,7 @@ func unconfirmedService(tag uint32) serviceInfo {
 }
 
 // errorClasses names the ServiceError errorClass CHOICE (ISO 9506-2). The
-// class is the part worth reporting: it says whether the request was refused
+// The class is the part worth reporting: it says whether the request was refused
 // because the object does not exist, because the client may not have it, or
 // because the device is in no state to answer.
 var errorClasses = map[uint32]string{
