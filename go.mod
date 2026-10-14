@@ -1,6 +1,6 @@
 module github.com/rom/otinv
 
-go 1.25.0
+go 1.26.9
 
 require (
 	github.com/gopacket/gopacket v1.6.1

@@ -16,7 +16,7 @@ scanning or polling. Any feature that would require active interaction is out of
 scope — do not add it, not even behind a flag.
 
 ## Tech stack
-- Go 1.23+, modules, `CGO_ENABLED=0` (no libpcap dependency)
+- Go 1.26+, modules, `CGO_ENABLED=0` (no libpcap dependency)
 - Packet decoding: `github.com/gopacket/gopacket` (maintained fork) with `pcapgo`
   for pcap/pcapng reading; `tcpassembly`/`reassembly` for TCP streams
 - Storage: SQLite via `modernc.org/sqlite` (pure Go), one DB file per project
