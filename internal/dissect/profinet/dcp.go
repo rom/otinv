@@ -341,6 +341,12 @@ func (d *Dissector) describeBlock(ev *model.Event, option, suboption uint8,
 			setAttr(ev, "gateway", ipString(body[8:12]))
 			if ev.Direction == model.DirResponse {
 				setIdentity(ev, "reported_address", ipString(body[0:4]))
+				// A netmask cannot be read off an address, so a station
+				// stating its own is the only way a passive observer learns
+				// where one subnet ends: it is what the topology groups by
+				// instead of assuming a prefix.
+				setIdentity(ev, "reported_netmask", ipString(body[4:8]))
+				setIdentity(ev, "reported_gateway", ipString(body[8:12]))
 			}
 		}
 

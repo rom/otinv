@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/rom/otinv/internal/model"
+	"github.com/rom/otinv/internal/topology"
 )
 
 // DefaultGatewayIPThreshold is how many distinct IP addresses behind one MAC
@@ -288,8 +289,13 @@ var identityTargets = map[string][]struct {
 	// supervisor — and its vendor and device identifiers. A device stating
 	// its own role is better evidence than any amount of traffic watching.
 	"station_name": {{"name", 90}},
-	"device_role":  {{"device_role", 90}},
-	"device_id":    {{"device_id", 85}},
+	// The netmask and default gateway a station states are facts about the
+	// network it is on rather than about the device, which is exactly what
+	// the topology needs to group a subnet without assuming a prefix.
+	"reported_netmask": {{"netmask", 60}},
+	"reported_gateway": {{"gateway_address", 60}},
+	"device_role":      {{"device_role", 90}},
+	"device_id":        {{"device_id", 85}},
 	// A BACnet device answers a read of its device object with the name an
 	// engineer gave it, where it is installed, and what software it runs.
 	// The answer echoes the property it is for, so this arrives without any
@@ -424,6 +430,10 @@ func (b *Builder) Assets() []model.Asset {
 		a.Protocols = buildProtocols(ac.protocols)
 		a.Attributes = buildAttributes(ac.attrs)
 		a.Role = b.inferRole(a, len(b.macIPs[firstOf(a.MACs)]))
+		// A level needs the whole inventory, so Rebuild places the assets
+		// once they are all built. Until then nothing is placed, which is
+		// not the same as being placed at level 0.
+		a.Level = model.Level{Value: model.LevelUnknown}
 		out = append(out, *a)
 	}
 
@@ -829,6 +839,20 @@ func Rebuild(ctx context.Context, src EventSource, dst AssetSink, projectID int6
 	}
 
 	assets := b.Assets()
+	// The Purdue placement reads the finished inventory: an asset nothing was
+	// observed about is placed by the subnet its neighbours are in, which
+	// cannot be decided one asset at a time (CLAUDE.md, "inferred from role +
+	// subnet").
+	index := make(map[string]int, len(assets))
+	for i := range assets {
+		index[assets[i].Key] = i
+	}
+	for key, level := range topology.AssignLevels(assets) {
+		if i, ok := index[key]; ok {
+			assets[i].Level = level
+		}
+	}
+
 	if err := dst.SaveAssets(ctx, projectID, assets); err != nil {
 		return nil, fmt.Errorf("inventory: saving assets: %w", err)
 	}

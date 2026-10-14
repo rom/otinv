@@ -154,7 +154,9 @@ func (s *Store) CountEventsBy(ctx context.Context, projectID int64, dimension, p
 var assetDimensions = map[string]string{
 	"role":   "role",
 	"vendor": "COALESCE(NULLIF(vendor, ''), '')",
-	// The Purdue level joins this map when internal/topology assigns one.
+	// An asset nothing placed is a bucket of its own rather than a gap: how
+	// much of a plant could not be placed is worth seeing.
+	"level": "COALESCE(CAST(purdue_level AS TEXT), '" + LevelUnplaced + "')",
 }
 
 // CountAssetsBy groups the inventory by one of its columns.

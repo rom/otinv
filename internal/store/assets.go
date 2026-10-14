@@ -5,16 +5,27 @@ import (
 	"database/sql"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/rom/otinv/internal/model"
 )
+
+// assetColumns is the asset row as every query selects it, so that the scan
+// and the statements cannot drift apart.
+const assetColumns = `a.id, a.asset_key, a.label, a.is_gateway, a.role, a.role_confidence,
+	a.role_reasons, a.macs, a.ips, a.vlans, a.events, a.first_seen, a.last_seen,
+	a.purdue_level, a.purdue_confidence, a.purdue_reasons`
 
 // AssetQuery selects and pages the asset list.
 type AssetQuery struct {
 	ProjectID int64
 	Role      string
 	Protocol  string
+	// Level selects one Purdue level, as LevelFilter spells it: a number, or
+	// "unknown" for the assets nothing placed. An empty value selects every
+	// level, which is not the same as selecting the unplaced ones.
+	Level string
 	// Search matches the label, the inferred vendor and any observed address.
 	Search string
 	Limit  int
@@ -42,6 +53,7 @@ type AssetQuery struct {
 var AssetSortColumns = map[string]string{
 	"address":   "a.label",
 	"role":      "a.role",
+	"level":     "a.purdue_level",
 	"vendor":    "a.vendor",
 	"protocols": protocolSummary,
 	"events":    "a.events",
@@ -117,15 +129,21 @@ func insertAsset(ctx context.Context, tx *sql.Tx, projectID int64, a model.Asset
 	if err != nil {
 		return fmt.Errorf("store: encoding asset vlans: %w", err)
 	}
+	levelReasons, err := marshalJSON(a.Level.Reasons)
+	if err != nil {
+		return fmt.Errorf("store: encoding level reasons: %w", err)
+	}
 
 	res, err := tx.ExecContext(ctx,
 		`INSERT INTO assets
 			(project_id, asset_key, label, is_gateway, role, role_confidence,
-			 role_reasons, vendor, macs, ips, vlans, events, first_seen, last_seen)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			 role_reasons, vendor, macs, ips, vlans, events, first_seen, last_seen,
+			 purdue_level, purdue_confidence, purdue_reasons)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		projectID, a.Key, a.Label, a.IsGateway, string(a.Role.Name), a.Role.Confidence,
 		reasons, nullString(a.Vendor()), macs, ips, vlans, a.Events,
-		a.FirstSeen.UTC().UnixNano(), a.LastSeen.UTC().UnixNano())
+		a.FirstSeen.UTC().UnixNano(), a.LastSeen.UTC().UnixNano(),
+		nullLevel(a.Level), a.Level.Confidence, levelReasons)
 	if err != nil {
 		return fmt.Errorf("store: inserting asset %s: %w", a.Key, err)
 	}
@@ -197,6 +215,21 @@ func assetFilter(q AssetQuery) (string, []any) {
 			"EXISTS (SELECT 1 FROM asset_protocols p WHERE p.asset_pk = a.id AND p.protocol = ?)")
 		args = append(args, q.Protocol)
 	}
+	switch q.Level {
+	case "":
+	case LevelUnplaced:
+		where = append(where, "a.purdue_level IS NULL")
+	default:
+		// A level that is not a number matches nothing rather than every
+		// asset, so a hand-edited URL cannot widen the filter.
+		level, err := strconv.Atoi(q.Level)
+		if err != nil {
+			where = append(where, "0")
+		} else {
+			where = append(where, "a.purdue_level = ?")
+			args = append(args, level)
+		}
+	}
 	if q.Search != "" {
 		like := "%" + q.Search + "%"
 		where = append(where, `(
@@ -238,8 +271,7 @@ func (s *Store) Assets(ctx context.Context, q AssetQuery) ([]model.Asset, int, e
 	// wrote can appear in it.
 	//nolint:gosec // G202: only the filter clause, the order clause and placeholders are concatenated
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT a.id, a.asset_key, a.label, a.is_gateway, a.role, a.role_confidence,
-		        a.role_reasons, a.macs, a.ips, a.vlans, a.events, a.first_seen, a.last_seen
+		`SELECT `+assetColumns+`
 		 FROM assets a WHERE `+filter+`
 		 ORDER BY `+assetOrder(q)+`
 		 LIMIT ? OFFSET ?`, pageArgs...)
@@ -264,8 +296,7 @@ func (s *Store) Assets(ctx context.Context, q AssetQuery) ([]model.Asset, int, e
 // such asset.
 func (s *Store) Asset(ctx context.Context, projectID int64, key string) (*model.Asset, error) {
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT a.id, a.asset_key, a.label, a.is_gateway, a.role, a.role_confidence,
-		        a.role_reasons, a.macs, a.ips, a.vlans, a.events, a.first_seen, a.last_seen
+		`SELECT `+assetColumns+`
 		 FROM assets a WHERE a.project_id = ? AND a.asset_key = ?`,
 		projectID, key)
 	if err != nil {
@@ -297,13 +328,25 @@ func scanAssets(rows *sql.Rows) ([]model.Asset, map[int64]*model.Asset, error) {
 			reasons          []byte
 			macs, ips, vlans []byte
 			first, last      int64
+			level            sql.NullInt64
+			levelReasons     []byte
 		)
 		if err := rows.Scan(&pk, &a.Key, &a.Label, &a.IsGateway, &role, &a.Role.Confidence,
-			&reasons, &macs, &ips, &vlans, &a.Events, &first, &last); err != nil {
+			&reasons, &macs, &ips, &vlans, &a.Events, &first, &last,
+			&level, &a.Level.Confidence, &levelReasons); err != nil {
 			_ = rows.Close()
 			return nil, nil, fmt.Errorf("store: scanning asset: %w", err)
 		}
 		a.Role.Name = model.RoleName(role)
+		// A NULL level is an asset nothing placed, which is not level 0.
+		a.Level.Value = model.LevelUnknown
+		if level.Valid {
+			a.Level.Value = int(level.Int64)
+		}
+		if err := unmarshalJSON(levelReasons, &a.Level.Reasons); err != nil {
+			_ = rows.Close()
+			return nil, nil, fmt.Errorf("store: decoding level reasons: %w", err)
+		}
 		a.FirstSeen = time.Unix(0, first).UTC()
 		a.LastSeen = time.Unix(0, last).UTC()
 		if err := unmarshalJSON(reasons, &a.Role.Reasons); err != nil {
@@ -455,6 +498,55 @@ func (s *Store) AssetProtocols(ctx context.Context, projectID int64) ([]string, 
 		`SELECT DISTINCT p.protocol FROM asset_protocols p
 		 JOIN assets a ON a.id = p.asset_pk
 		 WHERE a.project_id = ? ORDER BY p.protocol`, projectID)
+}
+
+// LevelUnplaced is how a filter asks for the assets no level was inferred
+// for. It is not a level, so it cannot be a number.
+const LevelUnplaced = "unknown"
+
+// AssetLevels lists the Purdue levels present in a project, for the filter
+// panel. The unplaced assets come back as LevelUnplaced, last.
+func (s *Store) AssetLevels(ctx context.Context, projectID int64) ([]string, error) {
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT purdue_level, COUNT(*) FROM assets WHERE project_id = ?
+		 GROUP BY purdue_level ORDER BY purdue_level`, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("store: reading levels: %w", err)
+	}
+	var (
+		out      []string
+		unplaced bool
+	)
+	for rows.Next() {
+		var (
+			level sql.NullInt64
+			count int64
+		)
+		if err := rows.Scan(&level, &count); err != nil {
+			_ = rows.Close()
+			return nil, fmt.Errorf("store: reading levels: %w", err)
+		}
+		if !level.Valid {
+			unplaced = true
+			continue
+		}
+		out = append(out, strconv.FormatInt(level.Int64, 10))
+	}
+	if err := closeRows(rows); err != nil {
+		return nil, fmt.Errorf("store: reading levels: %w", err)
+	}
+	if unplaced {
+		out = append(out, LevelUnplaced)
+	}
+	return out, nil
+}
+
+// nullLevel writes an unplaced level as NULL, because level 0 is a level.
+func nullLevel(l model.Level) any {
+	if !l.Known() {
+		return nil
+	}
+	return int64(l.Value)
 }
 
 // AssetRoles lists the roles present in a project, for the filter panel.

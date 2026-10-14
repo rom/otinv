@@ -104,12 +104,16 @@ func TestIdentifyReplyCarriesTheStationsOwnDescription(t *testing.T) {
 	assert.Equal(t, model.ClassDiscovery, ev.Class)
 	assert.Equal(t, model.DirResponse, ev.Direction)
 	assert.Equal(t, map[string]string{
-		"station_name":     "X208-BORD",
-		"model":            "INC",
-		"vendor_id":        "42",
-		"vendor_name":      "Siemens",
-		"device_id":        "0x0a01",
-		"device_role":      "io_device",
+		"station_name": "X208-BORD",
+		"model":        "INC",
+		"vendor_id":    "42",
+		"vendor_name":  "Siemens",
+		"device_id":    "0x0a01",
+		"device_role":  "io_device",
+		// A netmask cannot be read off an address, so a station stating its
+		// own is how the topology learns where its subnet ends.
+		"reported_netmask": "255.255.255.0",
+		"reported_gateway": "192.168.0.1",
 		"reported_address": "192.168.0.6",
 	}, ev.Identity)
 	assert.Equal(t, "192.168.0.6", ev.Attrs["ip_address"])
