@@ -16,6 +16,7 @@ import (
 
 	"github.com/rom/otinv/internal/model"
 	"github.com/rom/otinv/internal/store"
+	"github.com/rom/otinv/internal/web"
 	"github.com/rom/otinv/internal/web/templates"
 )
 
@@ -455,3 +456,118 @@ func csrfOf(t *testing.T, rec *httptest.ResponseRecorder) (string, *http.Cookie)
 }
 
 var _ = filepath.Join
+
+// serveWith builds a server with options, which is how the flags of
+// `otinv serve` are exercised.
+func serveWith(t *testing.T, opts web.Options) (http.Handler, *store.Store, model.Project) {
+	t.Helper()
+	ctx := context.Background()
+
+	s, err := store.Open(ctx, filepath.Join(t.TempDir(), "project.db"))
+	require.NoError(t, err)
+	t.Cleanup(func() { assert.NoError(t, s.Close()) })
+
+	project, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+	require.NoError(t, s.SaveAssets(ctx, project.ID, sampleAssets()))
+
+	opts.Store = s
+	opts.Project = project
+	srv, err := web.New(opts)
+	require.NoError(t, err)
+	return srv.Handler(), s, project
+}
+
+// --read-only shows the configuration and refuses to change it.
+func TestReadOnlyServerRefusesToSaveSettings(t *testing.T) {
+	h, s, project := serveWith(t, web.Options{ReadOnly: true})
+
+	rec := get(t, h, "/settings", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+	assert.Contains(t, body, "read-only")
+	assert.Contains(t, body, "<fieldset disabled>", "the form is shown, disabled")
+	assert.NotContains(t, body, `value="save"`, "no button offers a save that would be refused")
+	assert.NotContains(t, body, `value="reset"`)
+
+	// A hand-made post with a valid token is refused all the same: the
+	// disabled form is a courtesy, the server is the rule.
+	token, cookie := csrfOf(t, rec)
+	rec = post(t, h, url.Values{
+		"csrf":                 {token},
+		"action":               {"save"},
+		templates.SettingTheme: {"dark"},
+	}, cookie)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+
+	stored, err := s.Settings(context.Background(), project.ID)
+	require.NoError(t, err)
+	assert.Empty(t, stored, "nothing was written")
+}
+
+func TestReadWriteServerStillSavesSettings(t *testing.T) {
+	h, _, _ := serveWith(t, web.Options{})
+
+	rec := get(t, h, "/settings", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Body.String(), `value="save"`)
+	assert.NotContains(t, rec.Body.String(), "<fieldset disabled>")
+
+	token, cookie := csrfOf(t, rec)
+	rec = post(t, h, url.Values{
+		"csrf":                 {token},
+		"action":               {"save"},
+		templates.SettingTheme: {"dark"},
+	}, cookie)
+	assert.Equal(t, http.StatusSeeOther, rec.Code)
+}
+
+// --lang decides the language of a project that has none stored, and nothing
+// more: a stored setting and an explicit ?lang= both still win.
+func TestServerLanguageFallback(t *testing.T) {
+	swedish := func(body string) bool { return strings.Contains(body, "Översikt") }
+
+	h, s, project := serveWith(t, web.Options{Lang: "sv"})
+	assert.True(t, swedish(get(t, h, "/dashboard", nil).Body.String()))
+
+	// The browser asking for English does not override the flag.
+	assert.True(t, swedish(get(t, h, "/dashboard",
+		map[string]string{"Accept-Language": "en-GB,en;q=0.9"}).Body.String()))
+
+	// A link that names its language does.
+	assert.False(t, swedish(get(t, h, "/dashboard?lang=en", nil).Body.String()))
+
+	// And so does a stored setting.
+	require.NoError(t, s.SaveSettings(context.Background(), project.ID,
+		map[string]string{templates.SettingLang: "en"}))
+	assert.False(t, swedish(get(t, h, "/dashboard", nil).Body.String()))
+}
+
+// Without the flag the browser decides, as before.
+func TestServerLanguageFollowsTheBrowserByDefault(t *testing.T) {
+	h, _, _ := serveWith(t, web.Options{})
+
+	body := get(t, h, "/dashboard", map[string]string{"Accept-Language": "sv-SE,sv;q=0.9"}).Body.String()
+	assert.Contains(t, body, "Översikt")
+
+	body = get(t, h, "/dashboard", nil).Body.String()
+	assert.Contains(t, body, "Dashboard")
+}
+
+func TestServerRefusesAnUnknownLanguage(t *testing.T) {
+	ctx := context.Background()
+	s, err := store.Open(ctx, filepath.Join(t.TempDir(), "project.db"))
+	require.NoError(t, err)
+	defer func() { assert.NoError(t, s.Close()) }()
+
+	_, err = web.New(web.Options{Store: s, Lang: "de"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no UI language")
+	assert.Contains(t, err.Error(), "en, sv")
+
+	// A tag with a region is still the language it names.
+	for _, tag := range []string{"sv", "SV", "sv-SE", "en-GB"} {
+		_, err := web.New(web.Options{Store: s, Lang: tag})
+		require.NoError(t, err, tag)
+	}
+}

@@ -16,11 +16,14 @@ templ SettingsPage(v SettingsView) {
 		if v.Saved {
 			<p class="notice">{ T(v.Page.Lang, "settings.saved") }</p>
 		}
+		if v.ReadOnly {
+			<p class="notice warn">{ T(v.Page.Lang, "settings.readonly") }</p>
+		}
 		<p class="caption">{ T(v.Page.Lang, "settings.scope") }</p>
 		<form class="settings" method="post" action="/settings">
 			<input type="hidden" name="csrf" value={ v.CSRF }/>
 			for _, group := range v.Groups {
-				<fieldset>
+				<fieldset disabled?={ v.ReadOnly }>
 					<legend>{ T(v.Page.Lang, group.Label) }</legend>
 					for _, row := range group.Settings {
 						<div class="setting">
@@ -65,12 +68,14 @@ templ SettingsPage(v SettingsView) {
 					}
 				</fieldset>
 			}
-			<div class="actions">
-				<button type="submit" name="action" value="save">{ T(v.Page.Lang, "settings.save") }</button>
-				<button type="submit" name="action" value="reset" class="secondary">
-					{ T(v.Page.Lang, "settings.reset") }
-				</button>
-			</div>
+			if !v.ReadOnly {
+				<div class="actions">
+					<button type="submit" name="action" value="save">{ T(v.Page.Lang, "settings.save") }</button>
+					<button type="submit" name="action" value="reset" class="secondary">
+						{ T(v.Page.Lang, "settings.reset") }
+					</button>
+				</div>
+			}
 		</form>
 		<section class="panel">
 			<h2>{ T(v.Page.Lang, "settings.about") }</h2>
@@ -87,6 +92,10 @@ templ SettingsPage(v SettingsView) {
 					<tr>
 						<th scope="row">{ T(v.Page.Lang, "settings.listen") }</th>
 						<td class="mono">{ v.Listen }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "settings.mode") }</th>
+						<td>{ T(v.Page.Lang, v.ModeLabel()) }</td>
 					</tr>
 					<tr>
 						<th scope="row">{ T(v.Page.Lang, "settings.schema") }</th>

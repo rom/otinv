@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,12 +32,19 @@ import (
 
 func newAnalyzeCommand() *cobra.Command {
 	var (
-		configPath string
-		asJSON     bool
-		withEvents bool
-		project    string
-		dbPath     string
-		reingest   bool
+		configPath    string
+		asJSON        bool
+		withEvents    bool
+		maxEvents     int
+		project       string
+		dbPath        string
+		reingest      bool
+		minConfidence int
+		extraPorts    []string
+		only          []string
+		outPath       string
+		quiet         bool
+		skipInventory bool
 	)
 
 	cmd := &cobra.Command{
@@ -54,22 +62,59 @@ func newAnalyzeCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if cmd.Flags().Changed("min-confidence") {
+				if minConfidence < 1 || minConfidence > 100 {
+					return fmt.Errorf("analyze: --min-confidence must be between 1 and 100, not %d",
+						minConfidence)
+				}
+				cfg.Probe.MinConfidence = minConfidence
+			}
+			if maxEvents < 0 {
+				return fmt.Errorf("analyze: --max-events cannot be negative (%d); 0 means every event",
+					maxEvents)
+			}
+
+			opts := analyzeOptions{
+				cfg:        cfg,
+				registry:   dissect.Default(),
+				asJSON:     asJSON,
+				withEvents: withEvents || maxEvents > 0,
+				maxEvents:  maxEvents,
+				quiet:      quiet,
+			}
+			if len(only) > 0 {
+				if opts.registry, err = opts.registry.Subset(splitList(only)...); err != nil {
+					return fmt.Errorf("analyze: --only: %w", err)
+				}
+			}
+			if opts.extraPorts, err = extraTCPPorts(cfg, extraPorts, opts.registry); err != nil {
+				return err
+			}
+
+			out, closeOut, err := openOutput(outPath, cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+			defer func() { _ = closeOut() }()
 
 			if project == "" {
 				for i, path := range args {
-					if i > 0 {
-						if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
+					if i > 0 && !quiet {
+						if _, err := fmt.Fprintln(out); err != nil {
 							return err
 						}
 					}
-					if err := analyze(cmd.OutOrStdout(), path, cfg, asJSON, withEvents); err != nil {
+					if err := analyze(out, path, opts); err != nil {
 						return err
 					}
 				}
-				return nil
+				return closeOut()
 			}
-			return analyzeIntoProject(cmd.Context(), cmd.OutOrStdout(), args, cfg,
-				project, dbPath, reingest, asJSON, withEvents)
+			if err := analyzeIntoProject(cmd.Context(), out, args, opts,
+				project, dbPath, reingest, skipInventory); err != nil {
+				return err
+			}
+			return closeOut()
 		},
 	}
 
@@ -77,19 +122,118 @@ func newAnalyzeCommand() *cobra.Command {
 		"configuration file (default "+DefaultConfigPath+" when present)")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "emit the report as JSON")
 	cmd.Flags().BoolVar(&withEvents, "events", false, "include every decoded event in the JSON report")
+	cmd.Flags().IntVar(&maxEvents, "max-events", 0,
+		"include at most this many events in the JSON report (implies --events; 0 means every event)")
 	cmd.Flags().StringVarP(&project, "project", "p", "",
 		"store the results in this project instead of only printing them")
 	cmd.Flags().StringVar(&dbPath, "db", "",
 		"project database file (default <project>.otinv.db)")
 	cmd.Flags().BoolVar(&reingest, "reingest", false,
 		"replace a capture that was already ingested into this project")
+	cmd.Flags().IntVar(&minConfidence, "min-confidence", dissect.DefaultMinConfidence,
+		"confidence a heuristic must reach to claim a stream on an unknown port (1-100)")
+	cmd.Flags().StringArrayVar(&extraPorts, "extra-port", nil,
+		"extra port for a protocol, as name=port; repeatable, and name=port,port is allowed")
+	cmd.Flags().StringArrayVar(&only, "only", nil,
+		"dissect with these protocols alone; repeatable, and a comma separated list is allowed")
+	cmd.Flags().StringVarP(&outPath, "out", "o", "", "write the report to this file instead of stdout")
+	cmd.Flags().BoolVarP(&quiet, "quiet", "q", false,
+		"leave out the per-capture report; with --project, print its summary alone")
+	cmd.Flags().BoolVar(&skipInventory, "skip-inventory", false,
+		"store the events without rebuilding the asset inventory")
 	return cmd
+}
+
+// analyzeOptions is what the flags and the configuration file agree on for
+// one run.
+type analyzeOptions struct {
+	cfg        *Config
+	registry   *dissect.Registry
+	extraPorts map[string][]uint16
+	asJSON     bool
+	withEvents bool
+	maxEvents  int
+	quiet      bool
+}
+
+// ingestOptions renders the parts of a run that ingest needs.
+func (o analyzeOptions) ingestOptions(captureID string, sink func(model.Event)) ingest.Options {
+	return ingest.Options{
+		CaptureID:     captureID,
+		Registry:      o.registry,
+		MinConfidence: o.cfg.Probe.MinConfidence,
+		ExtraTCPPorts: o.extraPorts,
+		Sink:          sink,
+	}
+}
+
+// keepEvent reports whether one more event belongs in the JSON report.
+func (o analyzeOptions) keepEvent(have int) bool {
+	return o.withEvents && (o.maxEvents == 0 || have < o.maxEvents)
+}
+
+// extraTCPPorts merges the configuration file's extra ports with the ones
+// --extra-port added. A name no dissector answers to is an error rather than
+// a silently ignored flag, and so is a name left out by --only.
+func extraTCPPorts(cfg *Config, specs []string, registry *dissect.Registry) (map[string][]uint16, error) {
+	merged := map[string][]uint16{}
+	for name, ports := range cfg.ExtraTCPPorts() {
+		if _, ok := registry.Lookup(name); !ok {
+			continue // another protocol's section, or one --only left out
+		}
+		merged[name] = append(merged[name], ports...)
+	}
+
+	for _, spec := range specs {
+		name, portList, ok := strings.Cut(spec, "=")
+		name = strings.TrimSpace(name)
+		if !ok || name == "" {
+			return nil, fmt.Errorf("analyze: --extra-port %q is not name=port", spec)
+		}
+		if _, known := registry.Lookup(name); !known {
+			return nil, fmt.Errorf("analyze: --extra-port %q: no dissector named %q "+
+				"(otinv protocols lists them)", spec, name)
+		}
+		for _, raw := range strings.Split(portList, ",") {
+			raw = strings.TrimSpace(raw)
+			if raw == "" {
+				continue
+			}
+			port, err := strconv.ParseUint(raw, 10, 16)
+			if err != nil || port == 0 {
+				return nil, fmt.Errorf("analyze: --extra-port %q: %q is not a port between 1 and 65535",
+					spec, raw)
+			}
+			if !containsUint16(merged[name], uint16(port)) {
+				merged[name] = append(merged[name], uint16(port))
+			}
+		}
+	}
+
+	if len(merged) == 0 {
+		return nil, nil
+	}
+	return merged, nil
+}
+
+// splitList flattens repeated flags that also accept a comma separated list,
+// so --only modbus,dnp3 and --only modbus --only dnp3 mean the same thing.
+func splitList(values []string) []string {
+	var out []string
+	for _, value := range values {
+		for _, part := range strings.Split(value, ",") {
+			if part = strings.TrimSpace(part); part != "" {
+				out = append(out, part)
+			}
+		}
+	}
+	return out
 }
 
 // analyzeIntoProject ingests captures into a project database and rebuilds its
 // inventory from everything the project holds.
-func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, cfg *Config,
-	project, dbPath string, reingest, asJSON, withEvents bool,
+func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, opts analyzeOptions,
+	project, dbPath string, reingest, skipInventory bool,
 ) error {
 	db, err := store.Open(ctx, projectDBPath(project, dbPath))
 	if err != nil {
@@ -103,33 +247,48 @@ func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, cfg 
 	}
 
 	for i, path := range paths {
-		if i > 0 {
+		if i > 0 && !opts.quiet {
 			if _, err := fmt.Fprintln(out); err != nil {
 				return err
 			}
 		}
-		if err := ingestCapture(ctx, out, db, p, path, cfg, reingest, asJSON, withEvents); err != nil {
+		if err := ingestCapture(ctx, out, db, p, path, opts, reingest); err != nil {
 			return err
 		}
 	}
 
-	assets, err := inventory.Rebuild(ctx, db, db, p.ID)
-	if err != nil {
-		return err
+	assets := 0
+	if skipInventory {
+		// The events are stored; the inventory is whatever the last rebuild
+		// left behind, and saying so is better than reporting a count that
+		// this run did not produce.
+		slog.Info("skipping the inventory rebuild", "project", p.Name)
+	} else {
+		rebuilt, err := inventory.Rebuild(ctx, db, db, p.ID)
+		if err != nil {
+			return err
+		}
+		assets = len(rebuilt)
 	}
 	events, err := db.CountEvents(ctx, p.ID)
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(out,
-		"\nproject %q: %d assets from %d stored events in %s\nbrowse with: otinv serve --project %s\n",
-		p.Name, len(assets), events, db.Path(), p.Name)
-	return err
+	p2 := &printer{w: out}
+	if skipInventory {
+		p2.printf("\nproject %q: %d stored events in %s (inventory not rebuilt)\n",
+			p.Name, events, db.Path())
+	} else {
+		p2.printf("\nproject %q: %d assets from %d stored events in %s\n",
+			p.Name, assets, events, db.Path())
+	}
+	p2.printf("browse with: otinv serve --project %s\n", p.Name)
+	return p2.err
 }
 
 func ingestCapture(ctx context.Context, out io.Writer, db *store.Store, p model.Project,
-	path string, cfg *Config, reingest, asJSON, withEvents bool,
+	path string, opts analyzeOptions, reingest bool,
 ) error {
 	digest, size, err := ingest.Fingerprint(path)
 	if err != nil {
@@ -165,25 +324,19 @@ func ingestCapture(ctx context.Context, out io.Writer, db *store.Store, p model.
 		writeErr error
 	)
 
-	res, err := ingest.File(path, ingest.Options{
-		CaptureID:     digest[:12],
-		Registry:      dissect.Default(),
-		MinConfidence: cfg.Probe.MinConfidence,
-		ExtraTCPPorts: cfg.ExtraTCPPorts(),
-		Sink: func(e model.Event) {
-			if writeErr != nil {
-				return
-			}
-			if err := w.Add(ctx, e); err != nil {
-				writeErr = err
-				return
-			}
-			if withEvents {
-				events = append(events, e)
-			}
-			record(servers, e)
-		},
-	})
+	res, err := ingest.File(path, opts.ingestOptions(digest[:12], func(e model.Event) {
+		if writeErr != nil {
+			return
+		}
+		if err := w.Add(ctx, e); err != nil {
+			writeErr = err
+			return
+		}
+		if opts.keepEvent(len(events)) {
+			events = append(events, e)
+		}
+		record(servers, e)
+	}))
 	if err != nil {
 		return err
 	}
@@ -198,12 +351,23 @@ func ingestCapture(ctx context.Context, out io.Writer, db *store.Store, p model.
 	}
 
 	rep := report{Result: res, Servers: sortedServers(servers), Events: events}
-	if asJSON {
+	return writeReport(out, &rep, opts)
+}
+
+// writeReport writes one capture's report, unless --quiet asked for silence.
+func writeReport(out io.Writer, rep *report, opts analyzeOptions) error {
+	if opts.quiet {
+		return nil
+	}
+	if opts.asJSON {
 		enc := json.NewEncoder(out)
 		enc.SetIndent("", "  ")
-		return enc.Encode(rep)
+		if err := enc.Encode(rep); err != nil {
+			return fmt.Errorf("writing the report: %w", err)
+		}
+		return nil
 	}
-	return writeText(out, &rep)
+	return writeText(out, rep)
 }
 
 // projectDBPath keeps one database file per project unless told otherwise.
@@ -245,32 +409,22 @@ type serverReport struct {
 	Events     int               `json:"events"`
 }
 
-func analyze(out io.Writer, path string, cfg *Config, asJSON, withEvents bool) error {
+func analyze(out io.Writer, path string, opts analyzeOptions) error {
 	servers := map[string]*serverReport{}
 	var events []model.Event
 
-	res, err := ingest.File(path, ingest.Options{
-		Registry:      dissect.Default(),
-		MinConfidence: cfg.Probe.MinConfidence,
-		ExtraTCPPorts: cfg.ExtraTCPPorts(),
-		Sink: func(e model.Event) {
-			if withEvents {
-				events = append(events, e)
-			}
-			record(servers, e)
-		},
-	})
+	res, err := ingest.File(path, opts.ingestOptions("", func(e model.Event) {
+		if opts.keepEvent(len(events)) {
+			events = append(events, e)
+		}
+		record(servers, e)
+	}))
 	if err != nil {
 		return err
 	}
 
 	rep := report{Result: res, Servers: sortedServers(servers), Events: events}
-	if asJSON {
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(rep)
-	}
-	return writeText(out, &rep)
+	return writeReport(out, &rep, opts)
 }
 
 // record folds one event into the per-endpoint view.

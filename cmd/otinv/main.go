@@ -5,8 +5,11 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
+	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -26,7 +29,11 @@ func main() {
 }
 
 func newRootCommand() *cobra.Command {
-	var verbose bool
+	var (
+		verbose   bool
+		logLevel  string
+		logFormat string
+	)
 
 	root := &cobra.Command{
 		Use:   "otinv",
@@ -37,40 +44,105 @@ func newRootCommand() *cobra.Command {
 			"hosts and never fingerprints them actively.",
 		SilenceUsage:  true,
 		SilenceErrors: false,
-		PersistentPreRun: func(_ *cobra.Command, _ []string) {
-			slog.SetDefault(newLogger(verbose))
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			// -v is the short way to say --log-level debug; an explicit level
+			// wins, so --log-level warn is not overridden by a stray -v.
+			if verbose && !cmd.Flags().Changed("log-level") {
+				logLevel = "debug"
+			}
+			logger, err := newLogger(os.Stderr, logLevel, logFormat)
+			if err != nil {
+				return err
+			}
+			slog.SetDefault(logger)
+			return nil
 		},
 	}
-	root.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "log at debug level")
 
-	root.AddCommand(newAnalyzeCommand(), newServeCommand(), newVersionCommand())
+	root.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false,
+		"log at debug level (same as --log-level debug)")
+	root.PersistentFlags().StringVar(&logLevel, "log-level", "info",
+		"log level: debug, info, warn or error")
+	root.PersistentFlags().StringVar(&logFormat, "log-format", "auto",
+		"log format: auto, text or json (auto is text on a terminal, JSON when redirected)")
+
+	root.AddCommand(
+		newAnalyzeCommand(),
+		newServeCommand(),
+		newExportCommand(),
+		newProtocolsCommand(),
+		newVersionCommand(),
+	)
 	return root
 }
 
-// newLogger logs text to a terminal and JSON everywhere else, so that piped
-// output stays machine readable.
-func newLogger(verbose bool) *slog.Logger {
-	level := slog.LevelInfo
-	if verbose {
-		level = slog.LevelDebug
+// newLogger builds the process logger. The default format logs text to a
+// terminal and JSON everywhere else, so that redirected output stays machine
+// readable (CLAUDE.md, "Logging").
+func newLogger(w *os.File, levelName, formatName string) (*slog.Logger, error) {
+	level, err := parseLevel(levelName)
+	if err != nil {
+		return nil, err
 	}
 	opts := &slog.HandlerOptions{Level: level}
 
-	if info, err := os.Stderr.Stat(); err == nil && info.Mode()&os.ModeCharDevice != 0 {
-		return slog.New(slog.NewTextHandler(os.Stderr, opts))
+	switch strings.ToLower(strings.TrimSpace(formatName)) {
+	case "text":
+		return slog.New(slog.NewTextHandler(w, opts)), nil
+	case "json":
+		return slog.New(slog.NewJSONHandler(w, opts)), nil
+	case "", "auto":
+		if isTerminal(w) {
+			return slog.New(slog.NewTextHandler(w, opts)), nil
+		}
+		return slog.New(slog.NewJSONHandler(w, opts)), nil
+	default:
+		return nil, fmt.Errorf("--log-format %q is not auto, text or json", formatName)
 	}
-	return slog.New(slog.NewJSONHandler(os.Stderr, opts))
+}
+
+func parseLevel(name string) (slog.Level, error) {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "debug":
+		return slog.LevelDebug, nil
+	case "", "info":
+		return slog.LevelInfo, nil
+	case "warn", "warning":
+		return slog.LevelWarn, nil
+	case "error":
+		return slog.LevelError, nil
+	default:
+		return 0, fmt.Errorf("--log-level %q is not debug, info, warn or error", name)
+	}
+}
+
+func isTerminal(f *os.File) bool {
+	info, err := f.Stat()
+	return err == nil && info.Mode()&os.ModeCharDevice != 0
 }
 
 func newVersionCommand() *cobra.Command {
-	return &cobra.Command{
+	var short bool
+
+	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print version information",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			_, err := fmt.Fprintf(cmd.OutOrStdout(), "otinv %s (commit %s, built %s)\n",
-				version, commit, buildDate)
-			return err
+			return writeVersion(cmd.OutOrStdout(), short)
 		},
 	}
+	cmd.Flags().BoolVar(&short, "short", false, "print the version alone, for scripts")
+	return cmd
+}
+
+func writeVersion(out io.Writer, short bool) error {
+	if short {
+		_, err := fmt.Fprintln(out, version)
+		return err
+	}
+	p := &printer{w: out}
+	p.printf("otinv %s (commit %s, built %s)\n", version, commit, buildDate)
+	p.printf("%s %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	return p.err
 }

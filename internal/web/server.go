@@ -34,21 +34,43 @@ const DefaultAddr = "127.0.0.1:8080"
 // maxAssetEvents is how many of an asset's events the detail page shows.
 const maxAssetEvents = 100
 
+// DefaultShutdownTimeout is how long a shutdown waits for requests in flight.
+const DefaultShutdownTimeout = 5 * time.Second
+
 // Options configures the server.
 type Options struct {
 	Store   *store.Store
 	Project model.Project
 	Addr    string
 	Logger  *slog.Logger
+
+	// ReadOnly refuses every state-changing request. The GUI has no accounts
+	// yet, so anyone who can reach it can change a project's settings; this
+	// is what `serve --read-only` offers when a project is being shown
+	// rather than worked on.
+	ReadOnly bool
+
+	// Lang is the UI language to use when the project has no stored language
+	// setting. It is a fallback, not an override: a stored setting and an
+	// explicit ?lang= both still win. An empty value leaves the choice to the
+	// browser's Accept-Language header.
+	Lang string
+
+	// ShutdownTimeout bounds how long a shutdown waits for requests in
+	// flight. Zero means DefaultShutdownTimeout.
+	ShutdownTimeout time.Duration
 }
 
 // Server serves the GUI for one project.
 type Server struct {
-	store   *store.Store
-	project model.Project
-	addr    string
-	log     *slog.Logger
-	mux     *http.ServeMux
+	store    *store.Store
+	project  model.Project
+	addr     string
+	log      *slog.Logger
+	mux      *http.ServeMux
+	readOnly bool
+	lang     templates.Lang
+	shutdown time.Duration
 }
 
 // New builds a server.
@@ -66,15 +88,31 @@ func New(opts Options) (*Server, error) {
 	if opts.Logger == nil {
 		opts.Logger = slog.Default()
 	}
+	if opts.ShutdownTimeout <= 0 {
+		opts.ShutdownTimeout = DefaultShutdownTimeout
+	}
 	if err := checkAddr(opts.Addr); err != nil {
 		return nil, err
 	}
 
+	var lang templates.Lang
+	if opts.Lang != "" {
+		valid, ok := templates.ValidLang(opts.Lang)
+		if !ok {
+			return nil, fmt.Errorf("web: no UI language %q; the GUI ships with %s",
+				opts.Lang, templates.LangList())
+		}
+		lang = valid
+	}
+
 	s := &Server{
-		store:   opts.Store,
-		project: opts.Project,
-		addr:    opts.Addr,
-		log:     opts.Logger,
+		store:    opts.Store,
+		project:  opts.Project,
+		addr:     opts.Addr,
+		log:      opts.Logger,
+		readOnly: opts.ReadOnly,
+		lang:     lang,
+		shutdown: opts.ShutdownTimeout,
 	}
 	s.routes()
 	return s, nil
@@ -108,6 +146,9 @@ func checkAddr(addr string) error {
 
 // Addr is the address the server binds to.
 func (s *Server) Addr() string { return s.addr }
+
+// ReadOnly reports whether state-changing requests are refused.
+func (s *Server) ReadOnly() bool { return s.readOnly }
 
 // Handler returns the routed, wrapped handler.
 func (s *Server) Handler() http.Handler { return secureHeaders(s.mux) }
@@ -164,7 +205,7 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), s.shutdown)
 		defer cancel()
 		return srv.Shutdown(shutdownCtx)
 	case err := <-errCh:
@@ -222,7 +263,14 @@ func (s *Server) page(r *http.Request, nav string) templates.PageView {
 	if explicit := r.URL.Query().Get("lang"); explicit != "" {
 		lang = templates.ParseLang(explicit, "")
 	} else if _, ok := stored[templates.SettingLang]; !ok {
-		lang = templates.ParseLang("", r.Header.Get("Accept-Language"))
+		// Nothing is stored, so the command line decides, and the browser
+		// only when it did not: `serve --lang sv` means this project is read
+		// in Swedish whoever opens it.
+		if s.lang != "" {
+			lang = s.lang
+		} else {
+			lang = templates.ParseLang("", r.Header.Get("Accept-Language"))
+		}
 	}
 
 	return templates.PageView{

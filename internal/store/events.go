@@ -172,6 +172,43 @@ func (s *Store) EachEvent(ctx context.Context, projectID int64, fn func(model.Ev
 	return nil
 }
 
+// EachEventMatching streams the events a query selects, in insertion order.
+//
+// The table views page their results and cap how many rows one query can
+// return; an export has to be able to ask for every event, so this one has no
+// cap of its own and streams rather than collecting, which keeps the memory it
+// needs independent of the project's size. A positive Limit stops early;
+// Offset, Sort and Desc belong to the paged views and are ignored here.
+func (s *Store) EachEventMatching(ctx context.Context, q EventQuery, fn func(model.Event) error) error {
+	where, args := q.where()
+	//nolint:gosec // G202: only clauses and placeholders are concatenated here
+	query := `SELECT ` + selectEventColumns + ` FROM events WHERE ` + joinAnd(where) + ` ORDER BY id`
+	if q.Limit > 0 {
+		query += ` LIMIT ?`
+		args = append(args, q.Limit)
+	}
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("store: reading events: %w", err)
+	}
+	for rows.Next() {
+		e, err := scanEvent(rows)
+		if err != nil {
+			_ = rows.Close()
+			return err
+		}
+		if err := fn(e); err != nil {
+			_ = rows.Close()
+			return err
+		}
+	}
+	if err := closeRows(rows); err != nil {
+		return fmt.Errorf("store: reading events: %w", err)
+	}
+	return nil
+}
+
 // EventQuery selects, filters and orders events for a view.
 type EventQuery struct {
 	ProjectID int64

@@ -37,7 +37,7 @@ scope — do not add it, not even behind a flag.
 
 ## Repository layout
 ```
-cmd/otinv/                main.go — cobra root: analyze, serve, export, version
+cmd/otinv/                main.go — cobra root: analyze, serve, export, protocols, version
 internal/
   ingest/                 pcap/pcapng reader, L2–L4 decode, VLAN/QinQ, reassembly
   dissect/                registry + Dissector interface

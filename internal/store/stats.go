@@ -414,11 +414,10 @@ func (s *Store) Flows(ctx context.Context, q FlowQuery) ([]Flow, int, error) {
 	return out, total, nil
 }
 
-// classOrder is the order the class columns are selected and scanned in.
-var classOrder = []model.Classification{
-	model.ClassRead, model.ClassWrite, model.ClassControl, model.ClassProgram,
-	model.ClassFirmware, model.ClassDiagnostic, model.ClassDiscovery, model.ClassOther,
-}
+// classOrder is the order the class columns are selected and scanned in. It
+// is the shared presentation order, so a flow's columns line up with what the
+// GUI and the exports show.
+var classOrder = model.Classifications
 
 // classSumsSQL counts each classification within a group, so that a flow
 // carrying one write among a thousand reads says so.

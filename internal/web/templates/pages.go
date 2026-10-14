@@ -376,6 +376,18 @@ type SettingsView struct {
 	DatabasePath string
 	Listen       string
 	SchemaVer    int
+	// ReadOnly mirrors serve --read-only: the form is shown, disabled, so
+	// that a reader can see how the GUI is configured without being offered
+	// a save that the server would refuse.
+	ReadOnly bool
+}
+
+// ModeLabel names the catalogue key for the serving mode.
+func (v SettingsView) ModeLabel() string {
+	if v.ReadOnly {
+		return "settings.mode.readonly"
+	}
+	return "settings.mode.readwrite"
 }
 
 // NewSettingsView groups the definitions for rendering.

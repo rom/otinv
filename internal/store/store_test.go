@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"strconv"
 	"testing"
@@ -653,4 +654,60 @@ func dedupe(xs []string) []string {
 		}
 	}
 	return out
+}
+
+// An export asks for every event a filter matches, not a page of them.
+func TestEachEventMatchingStreamsWithoutAPageCap(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+	capturePK, _, err := s.SaveCapture(ctx, p.ID, capture("cc33"))
+	require.NoError(t, err)
+
+	w := s.NewEventWriter(p.ID, capturePK)
+	const total = 1500 // more than the paged views ever return at once
+	for i := range total {
+		e := sampleEvents()[0]
+		e.PacketIndex = uint64(i + 1)
+		if i%3 == 0 {
+			e.Class = model.ClassWrite
+			e.Operation = "WriteSingleCoil"
+		}
+		require.NoError(t, w.Add(ctx, e))
+	}
+	require.NoError(t, w.Close(ctx))
+
+	count := func(q store.EventQuery) []model.Event {
+		var got []model.Event
+		require.NoError(t, s.EachEventMatching(ctx, q, func(e model.Event) error {
+			got = append(got, e)
+			return nil
+		}))
+		return got
+	}
+
+	all := count(store.EventQuery{ProjectID: p.ID})
+	require.Len(t, all, total)
+	for i, e := range all {
+		assert.Equal(t, uint64(i+1), e.PacketIndex, "insertion order")
+	}
+
+	writes := count(store.EventQuery{ProjectID: p.ID, Class: "write"})
+	assert.Len(t, writes, 500)
+
+	limited := count(store.EventQuery{ProjectID: p.ID, Limit: 7})
+	assert.Len(t, limited, 7)
+
+	none := count(store.EventQuery{ProjectID: p.ID, Protocol: "dnp3"})
+	assert.Empty(t, none)
+
+	// An error from the callback stops the stream and reaches the caller.
+	stop := errors.New("stop")
+	seen := 0
+	err = s.EachEventMatching(ctx, store.EventQuery{ProjectID: p.ID}, func(model.Event) error {
+		seen++
+		return stop
+	})
+	require.ErrorIs(t, err, stop)
+	assert.Equal(t, 1, seen)
 }

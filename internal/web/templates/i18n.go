@@ -163,6 +163,10 @@ var catalogue = map[string]map[Lang]string{
 	"settings.listen":              {LangEN: "Listening on", LangSV: "Lyssnar på"},
 	"settings.schema":              {LangEN: "Schema version", LangSV: "Schemaversion"},
 	"settings.passive":             {LangEN: "otinv never sends packets, so nothing here can reach an analysed device.", LangSV: "otinv skickar aldrig paket, så inget här kan nå en analyserad enhet."},
+	"settings.readonly":            {LangEN: "This GUI was started read-only (otinv serve --read-only), so the settings cannot be changed from here.", LangSV: "Detta gränssnitt startades skrivskyddat (otinv serve --read-only), så inställningarna kan inte ändras härifrån."},
+	"settings.mode":                {LangEN: "Mode", LangSV: "Läge"},
+	"settings.mode.readonly":       {LangEN: "Read-only", LangSV: "Skrivskyddat"},
+	"settings.mode.readwrite":      {LangEN: "Read and write", LangSV: "Läs och skriv"},
 	"settings.on":                  {LangEN: "On", LangSV: "På"},
 	"settings.off":                 {LangEN: "Off", LangSV: "Av"},
 	"settings.group.appearance":    {LangEN: "Appearance", LangSV: "Utseende"},
@@ -271,4 +275,27 @@ func normaliseLang(tag string) Lang {
 	default:
 		return ""
 	}
+}
+
+// SupportedLangs lists the languages the GUI ships with, the default first.
+var SupportedLangs = []Lang{LangEN, LangSV}
+
+// ValidLang reads a language tag a user typed, reporting whether the GUI has
+// a catalogue for it.
+//
+// ParseLang falls back to English, which is right for a browser header but
+// wrong for a command line flag: `--lang de` should say that the language is
+// not one of the two rather than quietly serve English.
+func ValidLang(tag string) (Lang, bool) {
+	l := normaliseLang(tag)
+	return l, l != ""
+}
+
+// LangList renders the supported languages for a help string.
+func LangList() string {
+	parts := make([]string, 0, len(SupportedLangs))
+	for _, l := range SupportedLangs {
+		parts = append(parts, string(l))
+	}
+	return strings.Join(parts, ", ")
 }

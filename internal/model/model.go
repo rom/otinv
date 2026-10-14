@@ -23,6 +23,14 @@ const (
 	ClassOther      Classification = "other"
 )
 
+// Classifications lists the classifications in the order reports, charts and
+// exports present them: what changes a device first, what only observes it
+// last.
+var Classifications = []Classification{
+	ClassRead, ClassWrite, ClassControl, ClassProgram,
+	ClassFirmware, ClassDiagnostic, ClassDiscovery, ClassOther,
+}
+
 // Valid reports whether c is one of the defined classifications.
 func (c Classification) Valid() bool {
 	switch c {

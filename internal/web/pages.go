@@ -575,6 +575,7 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 	view.DatabasePath = s.store.Path()
 	view.Listen = s.addr
 	view.SchemaVer = schema
+	view.ReadOnly = s.readOnly
 	s.render(w, r, templates.SettingsPage(view))
 }
 
@@ -586,6 +587,14 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 // this server. CLAUDE.md asks for a CSRF token on every state-changing
 // request, and this is that.
 func (s *Server) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
+	if s.readOnly {
+		// Started with --read-only, so nothing a browser sends can change
+		// this project. The form is disabled in the page too; this is the
+		// server making sure of it.
+		s.log.Warn("refused a settings post on a read-only server", "remote", r.RemoteAddr)
+		http.Error(w, "this GUI is read-only", http.StatusForbidden)
+		return
+	}
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad form", http.StatusBadRequest)
 		return

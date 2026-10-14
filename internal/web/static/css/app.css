@@ -332,6 +332,14 @@ button.secondary { background: var(--panel); border-color: var(--border); color:
 	margin: 0 0 var(--gap);
 }
 
+.notice.warn { background: var(--warn-bg); color: var(--warn-text); }
+
+/* A disabled fieldset still has to be readable: it is how a read-only GUI
+   shows the configuration it is serving with. */
+.settings fieldset[disabled] { opacity: 0.85; }
+
+.settings fieldset[disabled] .choice { cursor: not-allowed; }
+
 .tabs { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: var(--gap); }
 
 .tab {
