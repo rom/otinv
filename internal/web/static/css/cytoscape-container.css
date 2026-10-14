@@ -1,0 +1,10 @@
+/* The one rule Cytoscape injects as a stylesheet of its own at runtime, which
+   a strict `style-src 'self'` refuses. Serving it from here instead keeps the
+   behaviour identical and the console free of policy violations.
+
+   The topology page links this file with the id the library looks for
+   (`__________cytoscape_stylesheet`), so the library finds a stylesheet
+   already present and injects nothing. If a future version renames that id,
+   the only consequence is that the refusal comes back in the console; the
+   rule below still applies, because the page links this file either way. */
+.__________cytoscape_container { position: relative; }

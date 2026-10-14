@@ -83,6 +83,11 @@ func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, "counting assets by vendor", err)
 		return
 	}
+	byLevel, err := s.store.CountAssetsBy(ctx, s.project.ID, "level")
+	if err != nil {
+		s.fail(w, r, "counting assets by level", err)
+		return
+	}
 
 	view.Protocols = templates.NewBars(templates.T(lang, "chart.protocols"),
 		buckets(byProtocol), nil, func(label string) string {
@@ -103,6 +108,12 @@ func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	view.Roles = templates.NewBars(templates.T(lang, "chart.roles"),
 		roleBuckets(lang, byRole), nil, func(label string) string {
 			return "/assets?role=" + url.QueryEscape(roleKey(lang, label))
+		})
+	// The levels are stored as numbers, so the bars are labelled here and the
+	// link keeps the number the asset list filters on.
+	view.Levels = templates.NewBars(templates.T(lang, "chart.levels"),
+		levelBuckets(lang, byLevel), nil, func(label string) string {
+			return "/assets?level=" + url.QueryEscape(levelKey(lang, label))
 		})
 	view.Vendors = templates.NewBars(templates.T(lang, "chart.vendors"),
 		buckets(byVendor), nil, func(label string) string {
@@ -767,6 +778,29 @@ func roleBuckets(lang templates.Lang, bs []store.Bucket) []templates.Bucket {
 		})
 	}
 	return out
+}
+
+// levelBuckets labels the Purdue levels for a chart.
+func levelBuckets(lang templates.Lang, bs []store.Bucket) []templates.Bucket {
+	out := make([]templates.Bucket, 0, len(bs))
+	for _, b := range bs {
+		out = append(out, templates.Bucket{
+			Label: templates.LevelLabel(lang, b.Label),
+			Count: b.Count,
+		})
+	}
+	return out
+}
+
+// levelKey recovers the level behind a translated label, so that a bar links
+// to the filter it stands for.
+func levelKey(lang templates.Lang, label string) string {
+	for _, level := range []string{"0", "1", "2", "3", "4", templates.LevelUnplaced} {
+		if templates.LevelLabel(lang, level) == label {
+			return level
+		}
+	}
+	return label
 }
 
 // roleKey recovers the role behind a translated label.

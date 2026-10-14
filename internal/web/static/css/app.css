@@ -661,3 +661,113 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 	main { padding: 0.75rem; }
 	.topbar nav { margin-left: 0; }
 }
+
+/* ---------------------------------------------------------------------------
+   Topology
+   ---------------------------------------------------------------------------
+   Two pictures of one graph: the Cytoscape canvas, and the SVG the server
+   draws for the export and for a browser with no scripting. The canvas is
+   hidden until the island has drawn something, so the page never shows an
+   empty box where a network should be. */
+
+.topo-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap);
+	margin: var(--gap) 0 0.4rem;
+}
+
+.topo-toolbar .legend { padding-top: 0; }
+.topo-toolbar .toolbar-actions { display: flex; gap: 0.4rem; margin-left: auto; }
+
+.button-link {
+	display: inline-block;
+	padding: 0.3rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--panel);
+	color: var(--text);
+	text-decoration: none;
+	font-size: 0.85rem;
+}
+
+.button-link:hover { border-color: var(--accent); color: var(--accent); }
+
+/* A class that sets display beats the browser's own rule for [hidden], so a
+   hidden toolbar action would otherwise still be drawn. */
+[hidden] { display: none !important; }
+
+/* A swatch for a node kind rather than a classification: the shapes in the
+   graph are colour-coded the same way. */
+.swatch.node-swatch { border-radius: 50%; background: var(--accent); }
+.swatch.node-swatch.kind-gateway { background: var(--c-discovery); border-radius: 2px; }
+.swatch.node-swatch.kind-group { background: var(--c-diagnostic); border-radius: 2px; }
+.swatch.node-swatch.kind-unknown { background: var(--c-other); }
+
+.topo-graph {
+	position: relative;
+	height: 32rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--panel);
+}
+
+:root[data-chart-size="short"] .topo-graph { height: 24rem; }
+:root[data-chart-size="tall"] .topo-graph { height: 42rem; }
+
+
+/* The hover box follows the pointer inside the canvas; it is positioned by
+   the island, which is the one thing that knows where the pointer is. */
+.topo-tip {
+	position: absolute;
+	z-index: 2;
+	max-width: 22rem;
+	padding: 0.35rem 0.55rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--panel);
+	color: var(--text);
+	font-size: 0.8rem;
+	pointer-events: none;
+	box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
+.topo-static { margin: var(--gap) 0 0; overflow-x: auto; }
+.topo-static figcaption { color: var(--muted); font-size: 0.82rem; margin-bottom: 0.3rem; }
+
+.topo-svg { max-width: 100%; height: auto; }
+
+.topo-band line { stroke: var(--border); stroke-width: 1; }
+.topo-band-label { font-size: 13px; fill: var(--muted); }
+.topo-node-label { font-size: 11px; text-anchor: middle; fill: var(--text); }
+
+.topo-node circle { fill: var(--accent); stroke: var(--panel); stroke-width: 2; }
+.topo-node.kind-gateway circle { fill: var(--c-discovery); }
+.topo-node.kind-group circle { fill: var(--c-diagnostic); }
+.topo-node.kind-unknown circle { fill: var(--c-other); }
+
+.topo-edge { stroke: var(--c-other); stroke-width: 1.5; fill: none; }
+.topo-edge.class-read { stroke: var(--c-read); }
+.topo-edge.class-write { stroke: var(--c-write); stroke-width: 2.5; }
+.topo-edge.class-control { stroke: var(--c-control); stroke-width: 2.5; }
+.topo-edge.class-program { stroke: var(--c-program); stroke-width: 2.5; }
+.topo-edge.class-firmware { stroke: var(--c-firmware); stroke-width: 2.5; }
+.topo-edge.class-diagnostic { stroke: var(--c-diagnostic); }
+.topo-edge.class-discovery { stroke: var(--c-discovery); }
+/* An undirected edge is one where nothing said which side was listening. */
+.topo-edge.undirected { stroke-dasharray: 5 4; }
+
+@media (max-width: 720px) {
+	.topo-graph { height: 24rem; }
+	.topo-toolbar .toolbar-actions { margin-left: 0; }
+}
+
+/* Two rules that libraries would otherwise inject as a stylesheet of their
+   own at runtime, which `style-src 'self'` refuses. Keeping them here means
+   the GUI behaves identically with no policy violation to explain away. */
+
+/* htmx's loading indicators (htmx-config above turns its injection off). */
+.htmx-indicator { opacity: 0; }
+.htmx-request .htmx-indicator { opacity: 1; transition: opacity 200ms ease-in; }
+.htmx-request.htmx-indicator { opacity: 1; transition: opacity 200ms ease-in; }

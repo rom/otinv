@@ -2,6 +2,8 @@ package web_test
 
 import (
 	"context"
+	"encoding/json"
+	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -570,4 +572,244 @@ func TestServerRefusesAnUnknownLanguage(t *testing.T) {
 		_, err := web.New(web.Options{Store: s, Lang: tag})
 		require.NoError(t, err, tag)
 	}
+}
+
+// The topology view: the graph the island fetches, the picture the server
+// draws, and the filters that narrow both.
+
+// topologyGraph is the JSON shape the island consumes. It is declared here
+// rather than imported so that a change to the wire format has to be made
+// twice, once on each side.
+type topologyGraph struct {
+	Nodes []struct {
+		ID        string   `json:"id"`
+		Label     string   `json:"label"`
+		Kind      string   `json:"kind"`
+		Role      string   `json:"role"`
+		Level     int      `json:"level"`
+		LevelNote string   `json:"level_note"`
+		Subnet    string   `json:"subnet"`
+		Protocols []string `json:"protocols"`
+		Href      string   `json:"href"`
+		Context   bool     `json:"context"`
+		Events    int64    `json:"events"`
+	} `json:"nodes"`
+	Edges []struct {
+		ID       string           `json:"id"`
+		Src      string           `json:"src"`
+		Dst      string           `json:"dst"`
+		Protocol string           `json:"protocol"`
+		Class    string           `json:"class"`
+		Classes  map[string]int64 `json:"classes"`
+		Events   int64            `json:"events"`
+		Directed bool             `json:"directed"`
+		Href     string           `json:"href"`
+	} `json:"edges"`
+	Levels []struct {
+		Level int      `json:"level"`
+		Nodes []string `json:"nodes"`
+	} `json:"levels"`
+	Subnets []struct {
+		CIDR  string   `json:"cidr"`
+		Nodes []string `json:"nodes"`
+	} `json:"subnets"`
+	Truncated string `json:"truncated"`
+}
+
+func graphOf(t *testing.T, h http.Handler, target string) topologyGraph {
+	t.Helper()
+	rec := get(t, h, target, nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "application/json; charset=utf-8", rec.Header().Get("Content-Type"))
+	assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"),
+		"OT data must not linger in a cache")
+
+	var g topologyGraph
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &g))
+	return g
+}
+
+func TestTopologyGraphIsBuiltFromTheStoredFlows(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	sampleTraffic(t, s, project)
+
+	g := graphOf(t, h, "/topology.json")
+
+	nodes := map[string]int{}
+	for i, n := range g.Nodes {
+		nodes[n.ID] = i
+	}
+	require.Contains(t, nodes, "mac:00:02:b3:ce:70:51")
+	require.Contains(t, nodes, "mac:00:20:78:00:62:0d")
+
+	plc := g.Nodes[nodes["mac:00:02:b3:ce:70:51"]]
+	assert.Equal(t, "10.0.0.3", plc.Label)
+	assert.Equal(t, "device", plc.Kind)
+	assert.Equal(t, 1, plc.Level)
+	assert.Equal(t, "serves modbus (32 operations observed)", plc.LevelNote)
+	assert.Equal(t, "10.0.0.0/24", plc.Subnet)
+	assert.Equal(t, "/assets/mac:00:02:b3:ce:70:51", plc.Href)
+
+	// The multicast address a GOOSE publication is sent to is a subscription,
+	// not a device, and nothing answers from it.
+	var group string
+	for _, n := range g.Nodes {
+		if n.Kind == "group" {
+			group = n.ID
+		}
+	}
+	assert.Equal(t, "01:0c:cd:01:00:00", group)
+
+	// The modbus conversation is one edge from the client to the server,
+	// whichever direction the aggregate happened to hold.
+	var modbus *struct {
+		ID       string           `json:"id"`
+		Src      string           `json:"src"`
+		Dst      string           `json:"dst"`
+		Protocol string           `json:"protocol"`
+		Class    string           `json:"class"`
+		Classes  map[string]int64 `json:"classes"`
+		Events   int64            `json:"events"`
+		Directed bool             `json:"directed"`
+		Href     string           `json:"href"`
+	}
+	for i := range g.Edges {
+		if g.Edges[i].Protocol == "modbus" {
+			modbus = &g.Edges[i]
+		}
+	}
+	require.NotNil(t, modbus)
+	assert.Equal(t, "mac:00:20:78:00:62:0d", modbus.Src, "the client is the source of the edge")
+	assert.Equal(t, "mac:00:02:b3:ce:70:51", modbus.Dst)
+	assert.True(t, modbus.Directed)
+	assert.Equal(t, "control", modbus.Class, "one control command decides the edge, not four reads")
+	// Both directions are one edge, so the four requests and the answer that
+	// came back are counted together.
+	assert.EqualValues(t, 5, modbus.Classes["read"])
+	assert.Contains(t, modbus.Href, "protocol=modbus")
+
+	levels := map[int]int{}
+	for _, l := range g.Levels {
+		levels[l.Level] = len(l.Nodes)
+	}
+	assert.Equal(t, 1, levels[1])
+	assert.Equal(t, 1, levels[2])
+	assert.Empty(t, g.Truncated)
+}
+
+func TestTopologyFiltersNarrowTheGraph(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	sampleTraffic(t, s, project)
+
+	// One protocol: only the conversations that carried it.
+	g := graphOf(t, h, "/topology.json?protocol=goose")
+	for _, e := range g.Edges {
+		assert.Equal(t, "goose", e.Protocol)
+	}
+
+	// One classification: the Modbus edge survives on its control command.
+	g = graphOf(t, h, "/topology.json?class=control")
+	require.NotEmpty(t, g.Edges)
+	for _, e := range g.Edges {
+		assert.Equal(t, "control", e.Class)
+	}
+
+	// A threshold drops the quiet conversations.
+	g = graphOf(t, h, "/topology.json?min=100")
+	assert.Empty(t, g.Edges, "nothing in the sample carries a hundred events")
+
+	// A level selects devices, and the devices they talk to are drawn as
+	// context rather than hidden: a selection with no counterpart says
+	// nothing about what it does.
+	g = graphOf(t, h, "/topology.json?level=1")
+	byID := map[string]bool{}
+	for _, n := range g.Nodes {
+		byID[n.ID] = n.Context
+	}
+	require.Contains(t, byID, "mac:00:02:b3:ce:70:51")
+	assert.False(t, byID["mac:00:02:b3:ce:70:51"], "the selected device is not context")
+	require.Contains(t, byID, "mac:00:20:78:00:62:0d")
+	assert.True(t, byID["mac:00:20:78:00:62:0d"], "its peer is drawn as context")
+
+	// A search that matches nothing leaves an empty graph rather than the
+	// whole project.
+	g = graphOf(t, h, "/topology.json?q=203.0.113.9")
+	assert.Empty(t, g.Nodes)
+}
+
+func TestTopologyPageDrawsAPictureAndSaysWhatItRestsOn(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	sampleTraffic(t, s, project)
+
+	rec := get(t, h, "/topology", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+
+	// The server-drawn picture is on the page whether or not a script ever
+	// runs, with a band per level.
+	assert.Contains(t, body, "<svg")
+	assert.Contains(t, body, "topo-node")
+	assert.Contains(t, body, "Level 1 — basic control")
+	assert.Contains(t, body, "Level 2 — supervisory")
+
+	// The island and the library it needs, and nothing else loading them.
+	assert.Contains(t, body, `src="/static/vendor/cytoscape.min.js"`)
+	assert.Contains(t, body, `src="/static/topology.js"`)
+	assert.Contains(t, body, `id="__________cytoscape_stylesheet"`)
+	assert.Contains(t, body, `data-graph="/topology.json`)
+
+	// The level summary and the cross-level panel, which is the rule this
+	// view exists to make visible.
+	assert.Contains(t, body, "Flows that skip a level")
+	assert.Contains(t, body, "No flow skips a level.")
+
+	// And the export, which is a server route rather than a library.
+	assert.Contains(t, body, `href="/topology.svg`)
+}
+
+func TestTopologyPictureIsAStandaloneSVG(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	sampleTraffic(t, s, project)
+
+	rec := get(t, h, "/topology.svg", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "image/svg+xml; charset=utf-8", rec.Header().Get("Content-Type"))
+
+	body := rec.Body.String()
+	assert.Contains(t, body, `xmlns="http://www.w3.org/2000/svg"`)
+	assert.Contains(t, body, "<style>", "a saved picture carries its own colours")
+	assert.NotContains(t, body, "templ.Raw", "the stylesheet must be rendered, not printed")
+	assert.Contains(t, body, "10.0.0.3")
+
+	var doc any
+	require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &doc), "the export must be valid XML")
+}
+
+// A device's level is an inference, so the asset page shows the reasoning and
+// links to where a level means something.
+func TestAssetPageShowsItsLevelAndWhy(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+
+	rec := get(t, h, "/assets/mac:00:02:b3:ce:70:51", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+	assert.Contains(t, body, "Level 1 — basic control")
+	assert.Contains(t, body, "Why this level")
+	assert.Contains(t, body, "serves modbus (32 operations observed)")
+	assert.Contains(t, body, `href="/topology?level=1"`)
+}
+
+func TestAssetListFiltersByLevel(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+
+	body := get(t, h, "/assets", nil).Body.String()
+	assert.Contains(t, body, "Level 1 — basic control")
+	assert.Contains(t, body, "Level 2 — supervisory")
+
+	body = get(t, h, "/assets?level=1", nil).Body.String()
+	assert.Contains(t, body, "10.0.0.3")
+	assert.NotContains(t, body, "10.0.0.57")
+
+	body = get(t, h, "/assets?level=unknown", nil).Body.String()
+	assert.Contains(t, body, "No assets match this filter.")
 }

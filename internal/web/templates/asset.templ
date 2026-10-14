@@ -15,7 +15,28 @@ templ AssetPage(v AssetView) {
 		<p class="role">
 			{ RoleLabel(v.Page.Lang, v.Asset.Role.Name) }
 			<span class="sub">{ T(v.Page.Lang, "asset.confidence") } { ConfidenceLabel(v.Asset.Role.Confidence) }</span>
+			·
+			<a href={ templ.SafeURL(LevelHref(v.Asset.Level)) }>
+				{ LevelLabel(v.Page.Lang, LevelValue(v.Asset.Level.Value)) }
+			</a>
+			if v.Asset.Level.Known() {
+				<span class="sub">
+					{ T(v.Page.Lang, "asset.confidence") } { ConfidenceLabel(v.Asset.Level.Confidence) }
+				</span>
+			}
 		</p>
+		if len(v.Asset.Level.Reasons) > 0 {
+			<section>
+				<h2>{ T(v.Page.Lang, "asset.level_reasons") }</h2>
+				<ul>
+					for _, reason := range v.Asset.Level.Reasons {
+						<li>{ reason }</li>
+					}
+				</ul>
+			</section>
+		} else if !v.Asset.Level.Known() {
+			<p class="caption">{ T(v.Page.Lang, "asset.level_unplaced") }</p>
+		}
 		if len(v.Asset.Role.Reasons) > 0 {
 			<section>
 				<h2>{ T(v.Page.Lang, "asset.role_reasons") }</h2>

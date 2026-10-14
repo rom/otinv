@@ -42,6 +42,10 @@ func sampleAssets() []model.Asset {
 				Name: model.RoleController, Confidence: 80,
 				Reasons: []string{"serves modbus (32 operations observed)"},
 			},
+			Level: model.Level{
+				Value: 1, Confidence: 80,
+				Reasons: []string{"serves modbus (32 operations observed)"},
+			},
 			Attributes: []model.Attribute{{
 				Field: "vendor", Value: "Wingpath Limited", Confidence: 70,
 				Source: "modbus_ReportServerID",
@@ -65,6 +69,10 @@ func sampleAssets() []model.Asset {
 			Role: model.Role{
 				Name: model.RoleOperator, Confidence: 60,
 				Reasons: []string{"issues modbus requests (38 observed)"},
+			},
+			Level: model.Level{
+				Value: 2, Confidence: 65,
+				Reasons: []string{"polls modbus devices (38 operations observed)"},
 			},
 			Protocols: []model.ProtocolUsage{{
 				Protocol: "modbus", Side: "client", Events: 38,
@@ -531,10 +539,10 @@ func TestAssetListColumnsAreSortable(t *testing.T) {
 	rec := get(t, h, "/assets", nil)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := rec.Body.String()
-	for _, column := range []string{"address", "role", "vendor", "protocols", "events", "seen"} {
+	for _, column := range []string{"address", "role", "level", "vendor", "protocols", "events", "seen"} {
 		assert.Contains(t, body, "sort="+column, "the %s column must offer a sort link", column)
 	}
-	assert.Equal(t, 6, strings.Count(body, `aria-sort="none"`))
+	assert.Equal(t, 7, strings.Count(body, `aria-sort="none"`))
 
 	// Each column, once sorted, says which way it is sorted and offers the
 	// other way. The counts and timestamps start at the largest, because that
@@ -555,7 +563,7 @@ func TestAssetListColumnsAreSortable(t *testing.T) {
 			require.Equal(t, http.StatusOK, rec.Code)
 			body := rec.Body.String()
 			assert.Contains(t, body, tc.direction)
-			assert.Equal(t, 5, strings.Count(body, `aria-sort="none"`),
+			assert.Equal(t, 6, strings.Count(body, `aria-sort="none"`),
 				"only the sorted column claims a direction")
 			assert.Contains(t, body, tc.toggle, "the header must offer the other direction")
 		})
