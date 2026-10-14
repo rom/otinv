@@ -50,6 +50,8 @@
       "device_role": "io_device",
       "model": "INC",
       "reported_address": "192.168.0.6",
+      "reported_gateway": "192.168.0.1",
+      "reported_netmask": "255.255.255.0",
       "station_name": "X208-BORD",
       "vendor_id": "42",
       "vendor_name": "Siemens"

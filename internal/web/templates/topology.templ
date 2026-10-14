@@ -1,0 +1,374 @@
+package templates
+
+import "strconv"
+
+// TopologyPage draws the network: devices in Purdue bands, the conversations
+// between them, and what each inference rests on.
+//
+// The graph arrives twice. The interactive one is a Cytoscape island that
+// fetches the same JSON this page links to; the static one is drawn here by
+// the server and is both the no-script fallback and the SVG export. The
+// island replaces nothing until it has drawn something, so a page with no
+// scripting still shows the network.
+templ TopologyPage(v TopologyView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "topology.title") }</h1>
+		<p class="caption">{ T(v.Page.Lang, "topology.intro") }</p>
+		<form class="filters" method="get" action="/topology">
+			<input
+				type="search"
+				name="q"
+				value={ v.Filter.Search }
+				placeholder={ T(v.Page.Lang, "topology.search") }
+				aria-label={ T(v.Page.Lang, "topology.search") }
+			/>
+			<label>
+				{ T(v.Page.Lang, "topology.protocol") }
+				<select name="protocol">
+					<option value="">{ T(v.Page.Lang, "topology.all") }</option>
+					for _, proto := range v.Protocols {
+						if proto == v.Filter.Protocol {
+							<option value={ proto } selected>{ ProtocolLabel(proto) }</option>
+						} else {
+							<option value={ proto }>{ ProtocolLabel(proto) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "topology.class") }
+				<select name="class">
+					<option value="">{ T(v.Page.Lang, "topology.all") }</option>
+					for _, class := range v.Classes {
+						if class == v.Filter.Class {
+							<option value={ class } selected>{ ClassLabel(v.Page.Lang, class) }</option>
+						} else {
+							<option value={ class }>{ ClassLabel(v.Page.Lang, class) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "topology.level") }
+				<select name="level">
+					<option value="">{ T(v.Page.Lang, "topology.all") }</option>
+					for _, level := range v.Levels {
+						if level == v.Filter.Level {
+							<option value={ level } selected>{ LevelLabel(v.Page.Lang, level) }</option>
+						} else {
+							<option value={ level }>{ LevelLabel(v.Page.Lang, level) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "topology.min_events") }
+				<input
+					type="number"
+					name="min"
+					min="0"
+					value={ v.Filter.MinEventsValue() }
+					aria-label={ T(v.Page.Lang, "topology.min_events") }
+				/>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "topology.layout") }
+				<select name="layout">
+					for _, layout := range Layouts {
+						if layout == v.Filter.Layout {
+							<option value={ layout } selected>
+								{ T(v.Page.Lang, "topology.layout."+layout) }
+							</option>
+						} else {
+							<option value={ layout }>{ T(v.Page.Lang, "topology.layout."+layout) }</option>
+						}
+					}
+				</select>
+			</label>
+			<button type="submit">{ T(v.Page.Lang, "topology.filter") }</button>
+			<a class="button-link" href="/topology">{ T(v.Page.Lang, "topology.reset") }</a>
+		</form>
+		<p class="count">
+			{ Count(v.Theme, int64(v.Nodes)) } { T(v.Page.Lang, "topology.nodes") }
+			·
+			{ Count(v.Theme, int64(v.Edges)) } { T(v.Page.Lang, "topology.edges") }
+			if v.Truncated != "" {
+				<span class="sub warn">· { v.Truncated }</span>
+			}
+		</p>
+		if v.Nodes == 0 {
+			<p class="empty">{ T(v.Page.Lang, "topology.empty") }</p>
+		} else {
+			<div class="topo-toolbar">
+				@ClassLegend(v.Page)
+				<ul class="legend kinds">
+					for _, kind := range []string{"device", "gateway", "group", "unknown"} {
+						<li>
+							<span class={ "swatch node-swatch kind-" + kind }></span>
+							{ T(v.Page.Lang, "topology.kind."+kind) }
+						</li>
+					}
+				</ul>
+				<span class="toolbar-actions">
+					<button type="button" id="topo-fit" class="secondary" hidden>
+						{ T(v.Page.Lang, "topology.fit") }
+					</button>
+					<a id="topo-png" class="button-link" hidden download="topology.png" href="#">
+						{ T(v.Page.Lang, "topology.export_png") }
+					</a>
+					<a class="button-link" download="topology.svg" href={ templ.SafeURL(v.PictureHref) }>
+						{ T(v.Page.Lang, "topology.export_svg") }
+					</a>
+				</span>
+			</div>
+			if v.Filter.Active() {
+				<p class="caption">{ T(v.Page.Lang, "topology.context") }</p>
+			}
+			// Hidden until the island has a graph to put in it: a browser with
+			// no scripting must not be shown an empty box where a network
+			// should be. The server's picture below carries the view until
+			// then, and is hidden once this one is drawn.
+			<div
+				id="topo-graph"
+				class="topo-graph"
+				hidden
+				data-graph={ v.GraphHref }
+				data-layout={ v.Filter.Layout }
+				data-levels={ v.LevelLabels }
+			></div>
+			<figure id="topo-static" class="topo-static">
+				<figcaption>{ T(v.Page.Lang, "topology.static") }</figcaption>
+				@TopologyPicture(v)
+			</figure>
+			<noscript>
+				<p class="caption">{ T(v.Page.Lang, "topology.noscript") }</p>
+			</noscript>
+		}
+		if len(v.LevelRows) > 0 {
+			<section class="panel">
+				<h2>{ T(v.Page.Lang, "topology.level") }</h2>
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">{ T(v.Page.Lang, "topology.level") }</th>
+							<th scope="col" class="num">{ T(v.Page.Lang, "topology.nodes") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range v.LevelRows {
+							<tr>
+								<td>
+									<a href={ templ.SafeURL(row.Href) }>{ row.Label }</a>
+									if row.Active {
+										<span class="chip">{ T(v.Page.Lang, "topology.filter") }</span>
+									}
+								</td>
+								<td class="num">{ Count(v.Theme, int64(row.Count)) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</section>
+		}
+		if len(v.SubnetRows) > 0 {
+			<section class="panel">
+				<h2>{ T(v.Page.Lang, "topology.subnets") }</h2>
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">{ T(v.Page.Lang, "topology.subnets") }</th>
+							<th scope="col" class="num">{ T(v.Page.Lang, "topology.nodes") }</th>
+							<th scope="col">{ T(v.Page.Lang, "asset.source") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range v.SubnetRows {
+							<tr>
+								<td class="mono">{ row.CIDR }</td>
+								<td class="num">{ Count(v.Theme, int64(row.Count)) }</td>
+								<td>
+									if row.Observed {
+										{ T(v.Page.Lang, "topology.observed_mask") }
+									} else {
+										<span class="sub">{ T(v.Page.Lang, "topology.assumed_mask") }</span>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</section>
+		}
+		<section class="panel">
+			<h2>{ T(v.Page.Lang, "topology.cross_level") }</h2>
+			<p class="caption">{ T(v.Page.Lang, "topology.cross_level.help") }</p>
+			if len(v.CrossLevel) == 0 {
+				<p class="empty">{ T(v.Page.Lang, "topology.cross_level.none") }</p>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">{ T(v.Page.Lang, "flows.source") }</th>
+							<th scope="col">{ T(v.Page.Lang, "flows.destination") }</th>
+							<th scope="col">{ T(v.Page.Lang, "topology.level") }</th>
+							<th scope="col">{ T(v.Page.Lang, "topology.protocol") }</th>
+							<th scope="col">{ T(v.Page.Lang, "topology.class") }</th>
+							<th scope="col" class="num">{ T(v.Page.Lang, "topology.events") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range v.CrossLevel {
+							<tr class="row-exception">
+								<td>{ row.Src }</td>
+								<td>{ row.Dst }</td>
+								<td>{ row.Levels }</td>
+								<td>{ ProtocolLabel(row.Protocol) }</td>
+								<td>
+									<span class={ "tag class-" + row.Class }>
+										{ ClassLabel(v.Page.Lang, row.Class) }
+									</span>
+								</td>
+								<td class="num">
+									<a href={ templ.SafeURL(row.Href) }>
+										{ Count(v.Theme, row.Events) }
+									</a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</section>
+		// The id is the one Cytoscape looks for before injecting a stylesheet
+		// of its own; finding it, the library injects nothing, and a strict
+		// style-src has nothing to refuse. See the file itself.
+		<link
+			rel="stylesheet"
+			id="__________cytoscape_stylesheet"
+			href="/static/css/cytoscape-container.css"
+		/>
+		// Both scripts are deferred, so they run in this order once the page
+		// is parsed: the library first, then the island that uses it. Neither
+		// is loaded by any other view, because 435 kB of graph library has no
+		// business on a page showing a table.
+		<script src="/static/vendor/cytoscape.min.js" defer></script>
+		<script src="/static/topology.js" defer></script>
+	}
+}
+
+// TopologyPicture is the server-drawn graph: level bands, devices and the
+// conversations between them. It is the whole of the view when scripting is
+// off, and the SVG the export link hands over.
+templ TopologyPicture(v TopologyView) {
+	if v.Picture.TooLarge {
+		<p class="caption">{ T(v.Page.Lang, "topology.too_large") }</p>
+	} else if v.Picture.Count == 0 {
+		<p class="empty">{ T(v.Page.Lang, "topology.empty") }</p>
+	} else {
+		<svg
+			class="topo-svg"
+			viewBox={ v.Picture.Dimensions() }
+			width={ v.Picture.WidthPx() }
+			height={ v.Picture.HeightPx() }
+			role="img"
+			aria-label={ T(v.Page.Lang, "topology.title") }
+		>
+			for _, row := range v.Picture.Rows {
+				<g class="topo-band">
+					<line x1="0" x2={ v.Picture.WidthPx() } y1={ row.RowY() } y2={ row.RowY() }></line>
+					<text x="8" y={ row.LabelY() } class="topo-band-label">
+						{ row.Label }
+						({ strconv.Itoa(row.Count) })
+					</text>
+				</g>
+			}
+			for _, edge := range v.Picture.Edges {
+				<line
+					class={ edge.CSS() }
+					x1={ edge.SX() }
+					y1={ edge.SY() }
+					x2={ edge.EX() }
+					y2={ edge.EY() }
+				>
+					<title>{ edge.Title }</title>
+				</line>
+			}
+			for _, node := range v.Picture.Nodes {
+				<g class={ node.CSS() }>
+					<circle cx={ node.CX() } cy={ node.CY() } r={ node.Radius() }>
+						<title>{ node.Title }</title>
+					</circle>
+					<text x={ node.CX() } y={ node.LabelY() } class="topo-node-label">
+						{ node.Label }
+					</text>
+				</g>
+			}
+		</svg>
+	}
+}
+
+// exportStyle is the stylesheet the exported SVG carries, so that the file
+// stands alone: a saved picture cannot reach the GUI's own stylesheet, and a
+// picture whose colours mean nothing is not worth saving.
+//
+// It is a compile-time constant with nothing interpolated into it. templ.Raw
+// is used because CSS text inside <style> must not be HTML-escaped; no
+// packet-derived value ever travels through here (CLAUDE.md: never bypass
+// escaping for packet data).
+const exportStyle = `
+text { font-family: ui-sans-serif, system-ui, sans-serif; fill: #1b1f24; }
+.topo-band line { stroke: #d7dce3; stroke-width: 1; }
+.topo-band-label { font-size: 13px; fill: #5b636e; }
+.topo-node-label { font-size: 11px; text-anchor: middle; fill: #1b1f24; }
+.topo-node circle { fill: #5b8def; stroke: #ffffff; stroke-width: 2; }
+.topo-node.kind-gateway circle { fill: #8d99ae; }
+.topo-node.kind-group circle { fill: #45b6ac; }
+.topo-node.kind-unknown circle { fill: #b8bfc9; }
+.topo-edge { stroke: #b8bfc9; stroke-width: 1.5; fill: none; }
+.topo-edge.class-read { stroke: #5b8def; }
+.topo-edge.class-write { stroke: #e8a33d; stroke-width: 2.5; }
+.topo-edge.class-control { stroke: #d9544f; stroke-width: 2.5; }
+.topo-edge.class-program { stroke: #9b51e0; stroke-width: 2.5; }
+.topo-edge.class-firmware { stroke: #c2185b; stroke-width: 2.5; }
+.topo-edge.class-diagnostic { stroke: #45b6ac; }
+.topo-edge.class-discovery { stroke: #8d99ae; }
+.topo-edge.undirected { stroke-dasharray: 5 4; }
+`
+
+// TopologyFile is the SVG export: the same picture as the fallback, as a
+// standalone document with its own styles and an XML namespace.
+templ TopologyFile(v TopologyView) {
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox={ v.Picture.Dimensions() }
+		width={ v.Picture.WidthPx() }
+		height={ v.Picture.HeightPx() }
+		role="img"
+	>
+		<title>{ T(v.Page.Lang, "topology.title") + " · " + v.Page.Project }</title>
+		// templ treats the contents of a style element as literal text, so
+		// the stylesheet is emitted as raw markup instead. It is a
+		// compile-time constant; nothing from a packet reaches it.
+		@templ.Raw("<style>" + exportStyle + "</style>")
+		<rect x="0" y="0" width={ v.Picture.WidthPx() } height={ v.Picture.HeightPx() } fill="#ffffff"></rect>
+		for _, row := range v.Picture.Rows {
+			<g class="topo-band">
+				<line x1="0" x2={ v.Picture.WidthPx() } y1={ row.RowY() } y2={ row.RowY() }></line>
+				<text x="8" y={ row.LabelY() } class="topo-band-label">{ row.Label }</text>
+			</g>
+		}
+		for _, edge := range v.Picture.Edges {
+			<line class={ edge.CSS() } x1={ edge.SX() } y1={ edge.SY() } x2={ edge.EX() } y2={ edge.EY() }>
+				<title>{ edge.Title }</title>
+			</line>
+		}
+		for _, node := range v.Picture.Nodes {
+			<g class={ node.CSS() }>
+				<circle cx={ node.CX() } cy={ node.CY() } r={ node.Radius() }>
+					<title>{ node.Title }</title>
+				</circle>
+				<text x={ node.CX() } y={ node.LabelY() } class="topo-node-label">{ node.Label }</text>
+			</g>
+		}
+	</svg>
+}

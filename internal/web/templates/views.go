@@ -29,6 +29,9 @@ type AssetsFilter struct {
 	Search   string
 	Role     string
 	Protocol string
+	// Level is a Purdue level as the store spells it: a number, or
+	// "unknown" for the assets nothing placed.
+	Level string
 }
 
 // Sort is a table's sort state, and like the filters it round-trips through
@@ -113,6 +116,7 @@ type AssetRow struct {
 	Label     string
 	Vendor    string
 	Role      model.RoleName
+	Level     model.Level
 	Addresses []string
 	Protocols []string
 	Events    uint64
@@ -131,6 +135,7 @@ type AssetsView struct {
 	Sort      Sort
 	Roles     []string
 	Protocols []string
+	Levels    []string
 }
 
 // Headers are the asset list's column headers. The list is paged in the
@@ -141,6 +146,7 @@ func (v AssetsView) Headers() []SortHeaderView {
 	return sortHeaders([]SortColumn{
 		{Key: "address", Label: T(lang, "assets.address")},
 		{Key: "role", Label: T(lang, "assets.role")},
+		{Key: "level", Label: T(lang, "topology.level")},
 		{Key: "vendor", Label: T(lang, "assets.vendor")},
 		{Key: "protocols", Label: T(lang, "assets.protocols")},
 		{Key: "events", Label: T(lang, "assets.events"), Numeric: true},
@@ -386,6 +392,9 @@ func (v AssetsView) listURL(offset int, s Sort) string {
 	}
 	if v.Filter.Protocol != "" {
 		q.Set("protocol", v.Filter.Protocol)
+	}
+	if v.Filter.Level != "" {
+		q.Set("level", v.Filter.Level)
 	}
 	if s.Column != "" {
 		q.Set("sort", s.Column)

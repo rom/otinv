@@ -35,6 +35,7 @@ type DashboardView struct {
 	Tiles      []StatTile
 	Protocols  BarsView
 	Roles      BarsView
+	Levels     BarsView
 	Vendors    BarsView
 	Classes    ProportionView
 	Timeline   TimelineView
@@ -669,6 +670,7 @@ func NavItems(lang Lang) []NavItem {
 	return []NavItem{
 		{Key: "dashboard", Label: T(lang, "nav.dashboard"), Href: "/dashboard"},
 		{Key: "assets", Label: T(lang, "nav.assets"), Href: "/assets"},
+		{Key: "topology", Label: T(lang, "nav.topology"), Href: "/topology"},
 		{Key: "flows", Label: T(lang, "nav.flows"), Href: "/flows"},
 		{Key: "matrix", Label: T(lang, "nav.matrix"), Href: "/matrix"},
 		{Key: "events", Label: T(lang, "nav.events"), Href: "/events"},

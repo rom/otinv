@@ -253,6 +253,9 @@ func sampleAssets() []model.Asset {
 				Name: model.RoleController, Confidence: 80,
 				Reasons: []string{"serves modbus"},
 			},
+			// Unplaced on purpose: an asset saved with no level inference
+			// must come back with none, rather than reading as level 0.
+			Level: model.Level{Value: model.LevelUnknown},
 			Attributes: []model.Attribute{{
 				Field: "vendor", Value: "Wingpath Limited", Confidence: 70,
 				Source: "modbus_report_server_id",
@@ -710,4 +713,93 @@ func TestEachEventMatchingStreamsWithoutAPageCap(t *testing.T) {
 	})
 	require.ErrorIs(t, err, stop)
 	assert.Equal(t, 1, seen)
+}
+
+// A Purdue level round-trips with its evidence, and an unplaced asset comes
+// back unplaced rather than at level 0.
+func TestAssetLevelRoundTripAndFilter(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+
+	assets := []model.Asset{
+		{
+			Key: "plc", Label: "10.0.0.3", IPs: []string{"10.0.0.3"},
+			Role:   model.Role{Name: model.RoleController, Confidence: 80},
+			Level:  model.Level{Value: 1, Confidence: 80, Reasons: []string{"serves modbus"}},
+			Events: 100, FirstSeen: time.Unix(0, 0).UTC(), LastSeen: time.Unix(0, 0).UTC(),
+		},
+		{
+			Key: "hmi", Label: "10.0.0.57", IPs: []string{"10.0.0.57"},
+			Role:   model.Role{Name: model.RoleOperator, Confidence: 60},
+			Level:  model.Level{Value: 2, Confidence: 65},
+			Events: 50, FirstSeen: time.Unix(0, 0).UTC(), LastSeen: time.Unix(0, 0).UTC(),
+		},
+		{
+			Key: "field", Label: "10.0.0.9", IPs: []string{"10.0.0.9"},
+			Role:   model.Role{Name: model.RoleUnknown},
+			Level:  model.Level{Value: 0, Confidence: 30, Reasons: []string{"overridden"}},
+			Events: 10, FirstSeen: time.Unix(0, 0).UTC(), LastSeen: time.Unix(0, 0).UTC(),
+		},
+		{
+			Key: "gw", Label: "10.0.0.1", IPs: []string{"10.0.0.1"}, IsGateway: true,
+			Role:   model.Role{Name: model.RoleGateway, Confidence: 75},
+			Level:  model.Level{Value: model.LevelUnknown, Reasons: []string{"spans levels"}},
+			Events: 5, FirstSeen: time.Unix(0, 0).UTC(), LastSeen: time.Unix(0, 0).UTC(),
+		},
+	}
+	require.NoError(t, s.SaveAssets(ctx, p.ID, assets))
+
+	back, total, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID})
+	require.NoError(t, err)
+	assert.Equal(t, 4, total)
+	levels := map[string]model.Level{}
+	for _, a := range back {
+		levels[a.Key] = a.Level
+	}
+	assert.Equal(t, model.Level{Value: 1, Confidence: 80, Reasons: []string{"serves modbus"}}, levels["plc"])
+	assert.Equal(t, model.Level{Value: 2, Confidence: 65}, levels["hmi"])
+	assert.Equal(t, 0, levels["field"].Value, "level 0 is a level, not an absence")
+	assert.True(t, levels["field"].Known())
+	assert.Equal(t, model.LevelUnknown, levels["gw"].Value)
+	assert.False(t, levels["gw"].Known())
+	assert.Equal(t, []string{"spans levels"}, levels["gw"].Reasons)
+
+	// Filtering by level, including the assets nothing placed.
+	one, _, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Level: "1"})
+	require.NoError(t, err)
+	require.Len(t, one, 1)
+	assert.Equal(t, "plc", one[0].Key)
+
+	zero, _, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Level: "0"})
+	require.NoError(t, err)
+	require.Len(t, zero, 1)
+	assert.Equal(t, "field", zero[0].Key)
+
+	unplaced, _, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Level: store.LevelUnplaced})
+	require.NoError(t, err)
+	require.Len(t, unplaced, 1)
+	assert.Equal(t, "gw", unplaced[0].Key)
+
+	// A level that is not a number matches nothing rather than everything.
+	none, _, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Level: "1 OR 1=1"})
+	require.NoError(t, err)
+	assert.Empty(t, none)
+
+	facets, err := s.AssetLevels(ctx, p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"0", "1", "2", store.LevelUnplaced}, facets,
+		"the unplaced assets come last, after the levels")
+
+	sorted, _, err := s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Sort: "level"})
+	require.NoError(t, err)
+	require.Len(t, sorted, 4)
+	assert.Equal(t, []string{"field", "plc", "hmi", "gw"},
+		[]string{sorted[0].Key, sorted[1].Key, sorted[2].Key, sorted[3].Key},
+		"levels in order, and the unplaced asset last whichever way the column is read")
+
+	sorted, _, err = s.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Sort: "level", Desc: true})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"hmi", "plc", "field", "gw"},
+		[]string{sorted[0].Key, sorted[1].Key, sorted[2].Key, sorted[3].Key})
 }

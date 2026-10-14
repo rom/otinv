@@ -56,6 +56,8 @@
       "device_role": "io_controller",
       "model": "S7-300EC",
       "reported_address": "192.168.0.11",
+      "reported_gateway": "192.168.0.11",
+      "reported_netmask": "255.255.255.0",
       "station_name": "%n%n%n ",
       "vendor_id": "42",
       "vendor_name": "Siemens"

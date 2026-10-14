@@ -162,6 +162,11 @@ func (s *Server) routes() {
 	mux.HandleFunc("GET /dashboard", s.handleDashboard)
 	mux.HandleFunc("GET /assets", s.handleAssets)
 	mux.HandleFunc("GET /assets/{key}", s.handleAsset)
+	mux.HandleFunc("GET /topology", s.handleTopology)
+	// The island fetches the graph as JSON and the export link takes the same
+	// filter as a standalone picture.
+	mux.HandleFunc("GET /topology.json", s.handleTopologyJSON)
+	mux.HandleFunc("GET /topology.svg", s.handleTopologySVG)
 	mux.HandleFunc("GET /flows", s.handleFlows)
 	mux.HandleFunc("GET /matrix", s.handleMatrix)
 	mux.HandleFunc("GET /events", s.handleEvents)
@@ -289,6 +294,7 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		Search:   q.Get("q"),
 		Role:     q.Get("role"),
 		Protocol: q.Get("protocol"),
+		Level:    q.Get("level"),
 	}
 	limit := clampInt(q.Get("limit"), page.Theme.PageSize(), 1, 500)
 	offset := clampInt(q.Get("offset"), 0, 0, 1<<30)
@@ -304,6 +310,7 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		ProjectID: s.project.ID,
 		Role:      filter.Role,
 		Protocol:  filter.Protocol,
+		Level:     filter.Level,
 		Search:    filter.Search,
 		Limit:     limit,
 		Offset:    offset,
@@ -324,6 +331,11 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, "listing protocols", err)
 		return
 	}
+	levels, err := s.store.AssetLevels(ctx, s.project.ID)
+	if err != nil {
+		s.fail(w, r, "listing levels", err)
+		return
+	}
 
 	view := templates.AssetsView{
 		Page:      page,
@@ -335,6 +347,7 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		Sort:      order,
 		Roles:     roles,
 		Protocols: protocols,
+		Levels:    levels,
 	}
 
 	// htmx asks for the table alone, so filtering and paging stay on the
@@ -354,6 +367,7 @@ func assetRows(assets []model.Asset) []templates.AssetRow {
 			Label:     a.Label,
 			Vendor:    a.Vendor(),
 			Role:      a.Role.Name,
+			Level:     a.Level,
 			Events:    a.Events,
 			LastSeen:  a.LastSeen,
 			IsGateway: a.IsGateway,

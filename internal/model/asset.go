@@ -29,6 +29,34 @@ type Role struct {
 	Reasons    []string `json:"reasons,omitempty"`
 }
 
+// LevelUnknown marks an asset no Purdue level could be inferred for. A
+// forwarding device spans levels rather than sitting in one, and an asset
+// nothing was observed about sits nowhere until the analyst says otherwise.
+const LevelUnknown = -1
+
+// Level is an inferred Purdue level with the confidence and the reasons
+// behind it. The reference model's levels are 0 (process), 1 (basic control),
+// 2 (area supervisory), 3 (site operations) and 4 (enterprise).
+//
+// A level is an inference like any other, so it carries why: an analyst who
+// cannot see the reasoning cannot correct it (CLAUDE.md, "Purdue level
+// assignment: inferred from role + subnet, overridable by the user").
+type Level struct {
+	Value      int      `json:"value"`
+	Confidence int      `json:"confidence"`
+	Reasons    []string `json:"reasons,omitempty"`
+}
+
+// Known reports whether a level was inferred at all.
+//
+// A zero Level is an absence rather than level 0: the lowest level of the
+// reference model is a claim like any other, so it counts as one only when it
+// arrives with the confidence or the reasons that make it one. Without that
+// rule an asset nobody placed would read as a field device.
+func (l Level) Known() bool {
+	return l.Value != LevelUnknown && (l.Confidence > 0 || len(l.Reasons) > 0)
+}
+
 // Evidence points at the single observation that produced an inference, so
 // that every inferred field can be traced back to a packet.
 type Evidence struct {
@@ -89,6 +117,7 @@ type Asset struct {
 	Addresses []Address `json:"addresses,omitempty"`
 
 	Role       Role            `json:"role"`
+	Level      Level           `json:"level"`
 	Attributes []Attribute     `json:"attributes,omitempty"`
 	Protocols  []ProtocolUsage `json:"protocols,omitempty"`
 

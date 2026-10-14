@@ -40,6 +40,19 @@ templ AssetsPage(v AssetsView) {
 					}
 				</select>
 			</label>
+			<label>
+				{ T(v.Page.Lang, "topology.level") }
+				<select name="level">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, level := range v.Levels {
+						if level == v.Filter.Level {
+							<option value={ level } selected>{ LevelLabel(v.Page.Lang, level) }</option>
+						} else {
+							<option value={ level }>{ LevelLabel(v.Page.Lang, level) }</option>
+						}
+					}
+				</select>
+			</label>
 			<button type="submit">{ T(v.Page.Lang, "assets.filter") }</button>
 		</form>
 		@AssetTable(v)
@@ -69,6 +82,11 @@ templ AssetTable(v AssetsView) {
 								<div class="sub">{ Join(row.Addresses) }</div>
 							</td>
 							<td>{ RoleLabel(v.Page.Lang, row.Role) }</td>
+							<td>
+								<a href={ templ.SafeURL(LevelHref(row.Level)) }>
+									{ LevelLabel(v.Page.Lang, LevelValue(row.Level.Value)) }
+								</a>
+							</td>
 							<td>
 								if row.Vendor == "" {
 									—

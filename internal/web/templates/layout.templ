@@ -13,6 +13,10 @@ templ Layout(p PageView) {
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			// htmx injects a stylesheet for its loading indicators at runtime,
+			// which a strict style-src refuses. The rules are in app.css
+			// instead, so nothing is lost and no page reports a violation.
+			<meta name="htmx-config" content="{&#34;includeIndicatorStyles&#34;:false}"/>
 			<title>{ p.Title } · otinv</title>
 			<link rel="stylesheet" href="/static/css/app.css"/>
 			<script src="/static/vendor/htmx.min.js" defer></script>

@@ -307,6 +307,30 @@ func TestRebuildStreamsEventsIntoAssets(t *testing.T) {
 	assert.Len(t, assets, 2)
 	assert.Equal(t, int64(7), dst.projectID)
 	assert.Equal(t, assets, dst.assets, "what is returned is what is saved")
+
+	// A rebuild places the assets in the reference model, which the builder
+	// alone cannot do: the placement needs the whole inventory.
+	levels := map[string]model.Level{}
+	for _, a := range assets {
+		levels[a.Label] = a.Level
+	}
+	assert.Equal(t, 1, levels["10.0.0.3"].Value, "the Modbus server is a controller")
+	assert.Positive(t, levels["10.0.0.3"].Confidence)
+	require.NotEmpty(t, levels["10.0.0.3"].Reasons)
+	assert.Equal(t, 2, levels["10.0.0.57"].Value, "the polling client supervises it")
+}
+
+// The builder on its own places nothing: a level needs every asset, so an
+// asset that has not been through Rebuild must not read as level 0.
+func TestBuilderLeavesAssetsUnplaced(t *testing.T) {
+	b := inventory.New()
+	client := flow("00:20:78:00:62:0d", "10.0.0.57", 2578, "00:02:b3:ce:70:51", "10.0.0.3", 502)
+	b.Add(request(client, "ReadCoils", 1, model.ClassRead, 0))
+
+	for _, a := range b.Assets() {
+		assert.Equal(t, model.LevelUnknown, a.Level.Value, a.Label)
+		assert.False(t, a.Level.Known(), a.Label)
+	}
 }
 
 // End to end: the public sample capture through ingest and into an inventory.

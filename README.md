@@ -18,10 +18,11 @@ air-gapped analyst laptop.
 ## Status
 
 This repository holds the decode path (ingest, dissector registry and all ten
-Tier 1 dissectors), the storage and inventory path, a web GUI that makes a
-project browsable, and JSON/CSV export. Everything was developed test first
-against public sample captures, each dissector cross-checked against an
-independent decode of the same bytes and fuzzed.
+Tier 1 dissectors), the storage and inventory path, the topology and Purdue
+placement, a web GUI that makes a project browsable, and JSON/CSV export.
+Everything was developed test first against public sample captures, each
+dissector cross-checked against an independent decode of the same bytes and
+fuzzed.
 
 | Component | State |
 |-----------|-------|
@@ -39,18 +40,19 @@ independent decode of the same bytes and fuzzed.
 | `internal/dissect/opcua` — Tier 1 OPC UA binary, including the security posture of every endpoint | done |
 | `internal/store` — SQLite (pure Go), embedded migrations, batched event writes, asset/event/flow queries, aggregates, per-project settings | done |
 | `internal/inventory` — asset identity and merge, gateway detection, role inference, identity enrichment | done |
-| `internal/web` — GUI: dashboard, assets, flows, communication matrix, events, protocol statistics, captures, settings | done |
+| `internal/topology` — L2/L3 graph building, Purdue level placement, cross-level flows | done |
+| `internal/web` — GUI: dashboard, assets, topology, flows, communication matrix, events, protocol statistics, captures, settings | done |
 | `internal/export` — JSON and CSV export of every stored table | done |
 | `cmd/otinv` — `analyze`, `serve`, `export`, `protocols`, `version` | done |
-| `internal/topology`, `internal/rules`, `internal/baseline` | not started |
+| `internal/rules`, `internal/baseline` | not started |
 | Tier 2 and Tier 3 protocols | not started |
 | HTML report and CycloneDX-style asset export | not started |
 
 The GUI has no authentication yet, so it binds to loopback and **refuses to
 start on any other address** rather than exposing OT data unprotected. Capture
-upload through the GUI, the topology graph, detection rules, findings triage
-and baselines are later milestones; `analyze` on the command line is how
-captures get in for now.
+upload through the GUI, detection rules, findings triage and baselines are
+later milestones; `analyze` on the command line is how captures get in for
+now.
 
 ## Quickstart
 
@@ -221,7 +223,7 @@ classification set (`read`, `write`, `control`, `program`, `firmware`,
 | IEC 61850 MMS | 102/tcp | ISO/OSI stack, confirmed and unconfirmed services, named variables and domains, reads, writes, reports, file transfer | Identify: vendor, model, revision |
 | IEC 61850 GOOSE | EtherType 0x88B8 | gocbRef, datSet, goID, confRev, stNum/sqNum with state-number jumps, timeAllowedToLive, the simulation and ndsCom flags, the all-data values | publisher MAC with its control block reference |
 | EtherNet/IP + CIP | 44818/tcp, 2222 and 44818/udp | encapsulation commands, CPF items, CIP services with their class and instance paths, Multiple Service Packet, Forward Open, cyclic I/O | List Identity and the Identity object: vendor, product code and name, serial number, revision |
-| PROFINET DCP | EtherType 0x8892 | Identify, Hello, Get and Set with all three block layouts, IP parameters, device role, control responses | station name, vendor and device id, the manufacturer's type string, IO role |
+| PROFINET DCP | EtherType 0x8892 | Identify, Hello, Get and Set with all three block layouts, IP parameters, device role, control responses | station name, vendor and device id, the manufacturer's type string, IO role, and the address, netmask and gateway the station reports |
 | BACnet/IP | 47808/udp | BVLL including forwarded NPDUs, network layer routing and discovery, APDU types, confirmed and unconfirmed services, object and property identifiers, errors, rejects and aborts | readProperty and i-Am replies: vendor, model, firmware, name, location, serial number |
 | OPC UA binary | 4840/tcp | HEL/ACK/ERR/OPN/MSG/CLO framing and chunking, service identifiers, endpoint descriptions with security mode and policy, session activation, node and method lists | application name and URI, product URI, endpoint URL |
 
@@ -339,15 +341,21 @@ unasked, which makes it the best inventory material there is in a passive
 capture:
 
 ```
-Field               Value          Confidence  Evidence
-name                X208-BORD      90%         profinet_dcp Identify
-vendor              Siemens        90%         profinet_dcp Identify
-vendor_id           42             90%         profinet_dcp Identify
-device_id           0x0a01         85%         profinet_dcp Identify
-device_role         io_device      90%         profinet_dcp Identify
-model               INC            95%         profinet_dcp Identify
-reported_address    192.168.0.6    60%         profinet_dcp Identify
+Field               Value            Confidence  Evidence
+name                X208-BORD        90%         profinet_dcp Identify
+vendor              Siemens          90%         profinet_dcp Identify
+vendor_id           42               90%         profinet_dcp Identify
+device_id           0x0a01           85%         profinet_dcp Identify
+device_role         io_device        90%         profinet_dcp Identify
+model               INC              95%         profinet_dcp Identify
+reported_address    192.168.0.6      60%         profinet_dcp Identify
+netmask             255.255.255.0    60%         profinet_dcp Identify
+gateway_address     192.168.0.1      60%         profinet_dcp Identify
 ```
+
+The netmask is worth more than it looks: a mask cannot be read off an address,
+so a station stating its own is the only way a passive observer learns where a
+subnet ends, and the topology groups by it instead of assuming a prefix.
 
 The name of station and the IP address are what PROFINET addresses a device
 by, so a `Set` of either takes it off the network as surely as unplugging it:
@@ -439,6 +447,49 @@ identifier, so the stream state remembers that a message is in progress and
 reports a continuation as what it is, rather than reading its first octets as
 a service. A sequence number that skips is reported as `sequence_gap`.
 
+## Topology and Purdue levels
+
+`internal/topology` turns the inventory and the flow aggregate into a graph,
+and places every asset in a level of the Purdue reference model. Both are
+inferences and both carry their reasons, because a level an analyst cannot
+argue with is a level they cannot correct.
+
+A device is placed by what it was observed doing, and only then by where it
+lives:
+
+| Evidence | Level | Confidence |
+|----------|-------|------------|
+| serves a control protocol (Modbus, DNP3, S7comm, IEC 104, MMS, GOOSE, EtherNet/IP, PROFINET DCP, BACnet) | 1 — basic control | 80 |
+| programs controllers (program or firmware operations as a client) | 2 — supervisory | 70 |
+| polls controllers | 2 — supervisory | 65 |
+| serves OPC UA and nothing else | 3 — site operations | 45, with the caveat in the reason |
+| nothing of its own, but most placed devices in its subnet agree | that level | 40 |
+| forwards for several addresses | unplaced, with the reason | — |
+
+Levels 0 and 4 are never inferred: field instrumentation does not appear in IP
+traffic at all, and nothing in a capture distinguishes an enterprise host from
+a supervisory one without a zone definition the analyst supplies. A gateway is
+deliberately left unplaced — a device that forwards across a boundary is on
+both sides of it, and putting it in one level would be a claim about traffic
+rather than about the device.
+
+Subnets are grouped by a netmask **the devices themselves reported** where one
+was observed — a PROFINET DCP IP parameter block carries the station's address,
+mask and gateway — and otherwise by an assumed /24, which the subnet table on
+the topology page labels as the assumption it is. A station that states its
+address in a frame with no IP layer is grouped by that address, which is how
+PROFINET devices end up in a subnet at all.
+
+The graph itself: one node per asset however many addresses it has, one edge
+per protocol between two devices with both directions merged, oriented from the
+client to the server (the inventory knows which side served it), and carrying
+the most consequential classification observed on it — an edge with one write
+among a thousand reads is a write. A multicast group is drawn as what it is,
+with publications running outward to it, so a GOOSE publisher's fast path is
+visible rather than hidden. Edges between levels that are not neighbours are
+listed under the graph as flows that skip a level, which is the shape of
+`CLAUDE.md`'s rule about bypassing the DMZ.
+
 ## What the GUI shows
 
 `otinv serve` renders every page on the server with templ and uses htmx only
@@ -448,16 +499,23 @@ view is deep-linkable: the whole filter state lives in the URL.
 - **Dashboard** — eight tiles: assets (and how many of them are controllers),
   events (and flows), protocols, captures (and packets), malformed frames,
   anomalies, exceptions and the time span the captures cover. Then charts of
-  events by protocol, by classification and by operation, assets by role and
-  by vendor, exceptions by name, a timeline of the whole project, and the
-  latest events. Every tile, bar and segment links through to the filtered
+  events by protocol, by classification and by operation, assets by role, by
+  Purdue level and by vendor, exceptions by name, a timeline of the whole
+  project, and the latest events. Every tile, bar and segment links through to the filtered
   view behind it.
-- **Assets** — faceted list (search, role, protocol), paged and sortable
+- **Assets** — faceted list (search, role, protocol, Purdue level), paged and
+  sortable, with the inferred level on every row
 - **Asset detail** — the inferred role *with the reasons for it*, identity
   fields with their confidence and the packet that proves each one, every
   observed (MAC, IP, VLAN) tuple with its time range, protocols as client and
   as server with their class histogram and unit ids, and the device's recent
   operations
+- **Topology** — the network graph, in three layouts (Purdue layers, subnet
+  groups, force-directed), filtered by protocol, classification, level, device
+  or a minimum number of events, with the devices outside the filter drawn as
+  the context the selection talks to. A node links to its asset, an edge to
+  the events behind it. Under the graph: the inventory by level, how each
+  subnet was decided, and the flows that skip a level
 - **Flows** — who talks to whom over what, with a class breakdown per flow and
   a drill-down to the events behind a row
 - **Communication matrix** — source × destination heat map, filterable by
@@ -478,12 +536,22 @@ view is deep-linkable: the whole filter state lives in the URL.
   language
 
 The charts are drawn as SVG on the server rather than by a charting library in
-the browser. That is a deliberate deviation from `CLAUDE.md`, which names
-ECharts and Cytoscape: a server-drawn chart needs no inline script, so the
-strict CSP holds with no exceptions, and the pages work with JavaScript
-switched off entirely. The interactive views that genuinely need a client
-library — the topology graph above all — will use the vendored ones when they
-arrive.
+the browser: a server-drawn chart needs no script, so the strict CSP holds with
+no exceptions and the pages work with JavaScript switched off entirely. That is
+a deliberate deviation from `CLAUDE.md`, which names ECharts.
+
+The topology graph is the one place where that is not enough — an analyst has
+to drag a node out of a hairball — so it is drawn by the vendored Cytoscape in
+a 440-line island that loads on no other page. The same graph is **also** drawn
+as SVG by the server, which is the no-script fallback, the SVG export, and what
+a reader sees for the moment before the island is ready. The extension that
+would export SVG from Cytoscape is GPLv3 and is deliberately not vendored.
+
+Two libraries inject a stylesheet of their own at runtime, which a strict
+`style-src` refuses. htmx is told not to (`htmx-config`), Cytoscape finds its
+stylesheet already linked, and both sets of rules are served from
+`static/css/` instead — so the GUI has no content security policy violations
+to explain away, and a test asserts the pages carry no inline style or script.
 
 Everything is embedded in the binary: htmx is vendored under
 `internal/web/static/vendor/` (see its `PROVENANCE.md`) and there are no CDN
@@ -559,7 +627,17 @@ than from the URL, and a test tries to drop the table through the search box.
   access is a later milestone.
 - **User overrides of inferred fields are not implemented.** The GUI can
   change its own appearance settings but not an asset's vendor, role or Purdue
-  level; `CLAUDE.md` requires those to be overridable and they will be.
+  level; `CLAUDE.md` requires those to be overridable and they will be. Until
+  then a wrong level can be argued with — the asset page shows the reasoning —
+  but not corrected.
+- **Purdue levels 0 and 4 are never inferred**, and the zones and subnets
+  `CLAUDE.md` wants in the settings are not there yet, so a plant with an
+  enterprise segment in the capture will see it placed at level 2 by
+  behaviour alone.
+- **The topology graph is capped** at 500 devices and 2000 links per request,
+  busiest first, and says so on the page when it cuts. The static picture
+  stops at 150 devices and points at the interactive graph instead of drawing
+  a smear.
 - A sender whose MBAP length field disagrees with what it actually transmits
   desynchronises its stream. Resynchronisation requires the next candidate
   frame to look convincingly like the protocol, so the frame right after the
