@@ -384,6 +384,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Addresses, digests and identifiers line up under each other when asked to,
    which is what makes a column of them scannable. */
 :root[data-mono="on"] td a, :root[data-mono="on"] .mono, :root[data-mono="on"] .matrix th { font-family: var(--mono); }
+/* A cell of prose rather than of addresses keeps the reading font, whatever
+   the monospace setting says: the setting is about addresses. */
+:root[data-mono="on"] td.text a { font-family: inherit; }
 .mono { font-family: var(--mono); }
 
 .row-malformed { background: var(--bad-bg); }
@@ -771,3 +774,61 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .htmx-indicator { opacity: 0; }
 .htmx-request .htmx-indicator { opacity: 1; transition: opacity 200ms ease-in; }
 .htmx-request.htmx-indicator { opacity: 1; transition: opacity 200ms ease-in; }
+
+/* ---------------------------------------------------------------------------
+   Findings
+   ---------------------------------------------------------------------------
+   A triage queue is read by severity first, so the severity is a coloured tag
+   rather than a word in a column of words. The triage states are deliberately
+   quieter: they say where a finding is in someone's workflow, not how bad it
+   is. */
+
+.tag.severity-critical { background: var(--c-firmware); color: #fff; }
+.tag.severity-high { background: var(--c-control); color: #fff; }
+.tag.severity-medium { background: var(--warn-bg); color: var(--warn-text); }
+.tag.severity-low { background: var(--accent-soft); color: var(--accent); }
+.tag.severity-info { background: var(--panel-2); color: var(--muted); }
+
+.tag.status-new { background: var(--accent-soft); color: var(--accent); }
+.tag.status-investigating { background: var(--warn-bg); color: var(--warn-text); }
+.tag.status-accepted_risk,
+.tag.status-false_positive { background: var(--panel-2); color: var(--muted); }
+.tag.status-resolved { background: var(--good-bg); color: var(--good-text); }
+
+/* The bars of the findings chart take the same colours as the tags. */
+.bar-severity-critical { fill: var(--c-firmware); }
+.bar-severity-high { fill: var(--c-control); }
+.bar-severity-medium { fill: var(--c-write); }
+.bar-severity-low { fill: var(--accent); }
+.bar-severity-info { fill: var(--c-other); }
+
+/* The selection column of the triage list is as narrow as a checkbox. */
+th.select, td.select { width: 1.6rem; text-align: center; }
+
+/* A rule id is short and must not wrap mid-identifier. */
+td.rule-id { white-space: nowrap; }
+
+.filters label.check { display: flex; align-items: center; gap: 0.35rem; }
+
+/* A label that only a screen reader reads: the selection column's header. */
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.settings textarea {
+	width: 100%;
+	min-width: 18rem;
+	font: inherit;
+	padding: 0.3rem 0.45rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--panel);
+	color: var(--text);
+}

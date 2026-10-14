@@ -88,6 +88,18 @@ func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, "counting assets by level", err)
 		return
 	}
+	bySeverity, err := s.store.CountFindingsBy(ctx, s.project.ID, "severity")
+	if err != nil {
+		s.fail(w, r, "counting findings by severity", err)
+		return
+	}
+	openFindings, err := s.store.CountOpenFindings(ctx, s.project.ID)
+	if err != nil {
+		s.fail(w, r, "counting open findings", err)
+		return
+	}
+	// What the rules found belongs beside the counts, not below the charts.
+	view.Tiles = append(view.Tiles, findingsTile(lang, theme, openFindings, bySeverity))
 
 	view.Protocols = templates.NewBars(templates.T(lang, "chart.protocols"),
 		buckets(byProtocol), nil, func(label string) string {
@@ -114,6 +126,12 @@ func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	view.Levels = templates.NewBars(templates.T(lang, "chart.levels"),
 		levelBuckets(lang, byLevel), nil, func(label string) string {
 			return "/assets?level=" + url.QueryEscape(levelKey(lang, label))
+		})
+	view.Findings = templates.NewBars(templates.T(lang, "chart.findings"),
+		severityBuckets(lang, bySeverity), func(label string) string {
+			return "severity-" + severityKey(lang, label)
+		}, func(label string) string {
+			return "/findings?severity=" + url.QueryEscape(severityKey(lang, label))
 		})
 	view.Vendors = templates.NewBars(templates.T(lang, "chart.vendors"),
 		buckets(byVendor), nil, func(label string) string {
@@ -694,16 +712,24 @@ func (s *Server) checkCSRF(r *http.Request) error {
 	if subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(posted)) != 1 {
 		return fmt.Errorf("the CSRF token does not match the cookie")
 	}
-	// A browser sends Origin on a cross-origin post, and Sec-Fetch-Site on
-	// every modern one. Either is enough to refuse a post from elsewhere.
+	// A browser sends Origin on a post, and Sec-Fetch-Site on every modern
+	// one. Either is enough to refuse a post from elsewhere.
+	site := r.Header.Get("Sec-Fetch-Site")
+	if site != "" && site != "same-origin" && site != "none" {
+		return fmt.Errorf("the request comes from %q", site)
+	}
 	if origin := r.Header.Get("Origin"); origin != "" {
+		// A form posted from a page served with a strict referrer policy
+		// carries "null" as its origin rather than this server's: the
+		// browser has deliberately withheld it. Sec-Fetch-Site still says
+		// where the request came from, and a cross-site post could not
+		// carry the SameSite=Strict cookie compared above in the first
+		// place, so an opaque origin with a same-origin fetch is accepted.
+		opaque := origin == "null" && site == "same-origin"
 		u, err := url.Parse(origin)
-		if err != nil || u.Host != r.Host {
+		if !opaque && (err != nil || u.Host != r.Host) {
 			return fmt.Errorf("the Origin %q is not this server", origin)
 		}
-	}
-	if site := r.Header.Get("Sec-Fetch-Site"); site != "" && site != "same-origin" && site != "none" {
-		return fmt.Errorf("the request comes from %q", site)
 	}
 	return nil
 }
@@ -778,6 +804,67 @@ func roleBuckets(lang templates.Lang, bs []store.Bucket) []templates.Bucket {
 		})
 	}
 	return out
+}
+
+// findingsTile is the dashboard's view of the rules: how much is still open,
+// and how serious the worst of it is.
+func findingsTile(lang templates.Lang, theme templates.Theme, open int64,
+	bySeverity []store.Bucket,
+) templates.StatTile {
+	tile := templates.StatTile{
+		Label: templates.T(lang, "tile.findings"),
+		Value: templates.Count(theme, open),
+		Href:  "/findings?open=1",
+		Note:  templates.T(lang, "tile.none"),
+	}
+	if open > 0 {
+		tile.Tone = "warn"
+	}
+	// The worst severity present says more than the total does.
+	worst := ""
+	for _, severity := range model.Severities {
+		for _, bucket := range bySeverity {
+			if bucket.Label == string(severity) && bucket.Count > 0 {
+				worst = templates.T(lang, "severity."+bucket.Label)
+				break
+			}
+		}
+		if worst != "" {
+			break
+		}
+	}
+	if worst != "" {
+		tile.Note = worst + " " + templates.T(lang, "tile.worst")
+	}
+	return tile
+}
+
+// severityBuckets labels the severities for a chart, most serious first.
+func severityBuckets(lang templates.Lang, bs []store.Bucket) []templates.Bucket {
+	byName := map[string]int64{}
+	for _, b := range bs {
+		byName[b.Label] = b.Count
+	}
+	out := make([]templates.Bucket, 0, len(bs))
+	for _, severity := range model.Severities {
+		if n := byName[string(severity)]; n > 0 {
+			out = append(out, templates.Bucket{
+				Label: templates.SeverityLabel(lang, string(severity)),
+				Count: n,
+			})
+		}
+	}
+	return out
+}
+
+// severityKey recovers the severity behind a translated label.
+func severityKey(lang templates.Lang, label string) string {
+	for _, severity := range model.Severities {
+		if templates.SeverityLabel(lang, string(severity)) == label {
+			return string(severity)
+		}
+	}
+	return label
 }
 
 // levelBuckets labels the Purdue levels for a chart.

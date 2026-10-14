@@ -21,6 +21,7 @@ import (
 	"github.com/a-h/templ"
 
 	"github.com/rom/otinv/internal/model"
+	"github.com/rom/otinv/internal/rules"
 	"github.com/rom/otinv/internal/store"
 	"github.com/rom/otinv/internal/web/templates"
 )
@@ -59,18 +60,29 @@ type Options struct {
 	// ShutdownTimeout bounds how long a shutdown waits for requests in
 	// flight. Zero means DefaultShutdownTimeout.
 	ShutdownTimeout time.Duration
+
+	// Rules is the detection rule configuration, as otinv.yaml defines it:
+	// the GUI runs exactly the rules the command line would. Assets is
+	// filled per run, since the inventory changes under it.
+	Rules rules.Config
+
+	// RuleFiles are the custom rule files the configuration loaded, which
+	// the rules view names so that a reader knows where a rule is edited.
+	RuleFiles []string
 }
 
 // Server serves the GUI for one project.
 type Server struct {
-	store    *store.Store
-	project  model.Project
-	addr     string
-	log      *slog.Logger
-	mux      *http.ServeMux
-	readOnly bool
-	lang     templates.Lang
-	shutdown time.Duration
+	store     *store.Store
+	project   model.Project
+	addr      string
+	log       *slog.Logger
+	mux       *http.ServeMux
+	readOnly  bool
+	lang      templates.Lang
+	shutdown  time.Duration
+	rules     rules.Config
+	ruleFiles []string
 }
 
 // New builds a server.
@@ -105,14 +117,22 @@ func New(opts Options) (*Server, error) {
 		lang = valid
 	}
 
+	// Building the engine once here turns a bad rule configuration into a
+	// server that refuses to start, rather than into a page that fails.
+	if _, err := rules.New(opts.Rules); err != nil {
+		return nil, err
+	}
+
 	s := &Server{
-		store:    opts.Store,
-		project:  opts.Project,
-		addr:     opts.Addr,
-		log:      opts.Logger,
-		readOnly: opts.ReadOnly,
-		lang:     lang,
-		shutdown: opts.ShutdownTimeout,
+		store:     opts.Store,
+		project:   opts.Project,
+		addr:      opts.Addr,
+		log:       opts.Logger,
+		readOnly:  opts.ReadOnly,
+		lang:      lang,
+		shutdown:  opts.ShutdownTimeout,
+		rules:     opts.Rules,
+		ruleFiles: opts.RuleFiles,
 	}
 	s.routes()
 	return s, nil
@@ -172,6 +192,12 @@ func (s *Server) routes() {
 	mux.HandleFunc("GET /events", s.handleEvents)
 	mux.HandleFunc("GET /protocols", s.handleProtocols)
 	mux.HandleFunc("GET /captures", s.handleCaptures)
+	mux.HandleFunc("GET /findings", s.handleFindings)
+	mux.HandleFunc("POST /findings", s.handleBulkTriage)
+	mux.HandleFunc("GET /findings/{id}", s.handleFinding)
+	mux.HandleFunc("POST /findings/{id}", s.handleTriage)
+	mux.HandleFunc("GET /rules", s.handleRules)
+	mux.HandleFunc("POST /rules", s.handleRerunRules)
 	mux.HandleFunc("GET /settings", s.handleSettings)
 	mux.HandleFunc("POST /settings", s.handleSaveSettings)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -229,7 +255,11 @@ func secureHeaders(next http.Handler) http.Handler {
 				"form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'")
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
-		h.Set("Referrer-Policy", "no-referrer")
+		// same-origin rather than no-referrer: a referrer never leaves this
+		// origin either way, but no-referrer also makes a browser post forms
+		// with an opaque "null" origin, which is one signal fewer for the
+		// CSRF check to work with.
+		h.Set("Referrer-Policy", "same-origin")
 		h.Set("Cross-Origin-Opener-Policy", "same-origin")
 		h.Set("Cross-Origin-Resource-Policy", "same-origin")
 		next.ServeHTTP(w, r)

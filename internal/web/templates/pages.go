@@ -36,6 +36,7 @@ type DashboardView struct {
 	Protocols  BarsView
 	Roles      BarsView
 	Levels     BarsView
+	Findings   BarsView
 	Vendors    BarsView
 	Classes    ProportionView
 	Timeline   TimelineView
@@ -674,6 +675,8 @@ func NavItems(lang Lang) []NavItem {
 		{Key: "flows", Label: T(lang, "nav.flows"), Href: "/flows"},
 		{Key: "matrix", Label: T(lang, "nav.matrix"), Href: "/matrix"},
 		{Key: "events", Label: T(lang, "nav.events"), Href: "/events"},
+		{Key: "findings", Label: T(lang, "nav.findings"), Href: "/findings"},
+		{Key: "rules", Label: T(lang, "nav.rules"), Href: "/rules"},
 		{Key: "protocols", Label: T(lang, "nav.protocols"), Href: "/protocols"},
 		{Key: "captures", Label: T(lang, "nav.captures"), Href: "/captures"},
 		{Key: "settings", Label: T(lang, "nav.settings"), Href: "/settings"},

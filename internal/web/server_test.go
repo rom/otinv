@@ -349,7 +349,10 @@ func TestSecurityHeaders(t *testing.T) {
 			assert.Contains(t, csp, "frame-ancestors 'none'")
 			assert.NotContains(t, csp, "unsafe-inline", "no inline scripts anywhere")
 			assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
-			assert.Equal(t, "no-referrer", rec.Header().Get("Referrer-Policy"))
+			// same-origin rather than no-referrer: a referrer still never
+			// leaves this origin, and a browser posting a form keeps sending
+			// a real Origin header, which the CSRF check reads.
+			assert.Equal(t, "same-origin", rec.Header().Get("Referrer-Policy"))
 			assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"))
 		})
 	}

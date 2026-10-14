@@ -1,0 +1,419 @@
+package templates
+
+import "strconv"
+
+// FindingsPage is the triage list: what the rules found, most serious first,
+// with a bulk action for the states an analyst sets on a whole batch.
+//
+// The filters and the sort live in the URL, like every other view here, so a
+// triage queue can be sent to a colleague as a link.
+templ FindingsPage(v FindingsView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "findings.title") }</h1>
+		<p class="caption">{ T(v.Page.Lang, "findings.intro") }</p>
+		if v.Saved != "" {
+			<p class="notice">{ v.Saved }</p>
+		}
+		<form class="filters" method="get" action="/findings">
+			<input
+				type="search"
+				name="q"
+				value={ v.Filter.Search }
+				placeholder={ T(v.Page.Lang, "findings.search") }
+				aria-label={ T(v.Page.Lang, "findings.search") }
+			/>
+			<label>
+				{ T(v.Page.Lang, "findings.severity") }
+				<select name="severity">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, severity := range v.Severities {
+						if severity == v.Filter.Severity {
+							<option value={ severity } selected>{ SeverityLabel(v.Page.Lang, severity) }</option>
+						} else {
+							<option value={ severity }>{ SeverityLabel(v.Page.Lang, severity) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "findings.status") }
+				<select name="status">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, status := range v.Statuses {
+						if status == v.Filter.Status {
+							<option value={ status } selected>{ StatusLabel(v.Page.Lang, status) }</option>
+						} else {
+							<option value={ status }>{ StatusLabel(v.Page.Lang, status) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "findings.rule") }
+				<select name="rule">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, rule := range v.Rules {
+						if rule == v.Filter.Rule {
+							<option value={ rule } selected>{ rule }</option>
+						} else {
+							<option value={ rule }>{ rule }</option>
+						}
+					}
+				</select>
+			</label>
+			<label class="check">
+				if v.Filter.Open {
+					<input type="checkbox" name="open" value="1" checked/>
+				} else {
+					<input type="checkbox" name="open" value="1"/>
+				}
+				{ T(v.Page.Lang, "findings.open") }
+			</label>
+			<button type="submit">{ T(v.Page.Lang, "assets.filter") }</button>
+			<a class="button-link" href="/findings">{ T(v.Page.Lang, "topology.reset") }</a>
+		</form>
+		<p class="count">
+			{ Count(v.Theme, int64(v.Total)) } { T(v.Page.Lang, "findings.total") }
+			·
+			{ Count(v.Theme, v.Open) } { T(v.Page.Lang, "findings.open_count") }
+		</p>
+		if len(v.Rows) == 0 {
+			<p class="empty">{ T(v.Page.Lang, "findings.none") }</p>
+		} else {
+			<form method="post" action="/findings">
+				<input type="hidden" name="csrf" value={ v.CSRF }/>
+				<input type="hidden" name="return" value={ v.SortURL(v.Sort) }/>
+				<table>
+					<thead>
+						<tr>
+							<th scope="col" class="select">
+								<span class="visually-hidden">{ T(v.Page.Lang, "findings.selected") }</span>
+							</th>
+							<th scope="col">{ T(v.Page.Lang, "findings.finding") }</th>
+							for _, header := range v.Headers() {
+								<th scope="col" aria-sort={ header.Direction } class={ header.Class() }>
+									<a href={ templ.SafeURL(header.URL) }>{ header.Label }</a>
+								</th>
+							}
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range v.Rows {
+							<tr>
+								<td class="select">
+									<input
+										type="checkbox"
+										name="id"
+										value={ row.ID }
+										aria-label={ T(v.Page.Lang, "findings.selected") + " " + TrimID(row.ID) }
+									/>
+								</td>
+								<td class="text">
+									<a href={ templ.SafeURL(row.Href) }>{ row.Summary }</a>
+									<div class="sub">{ row.Title }</div>
+								</td>
+								<td>
+									<span class={ SeverityCSS(row.Severity) }>
+										{ SeverityLabel(v.Page.Lang, row.Severity) }
+									</span>
+								</td>
+								<td class="mono rule-id">{ row.RuleID }</td>
+								<td>
+									if row.SrcHref != "" {
+										<a href={ templ.SafeURL(row.SrcHref) }>{ row.Src }</a>
+									} else {
+										{ row.Src }
+									}
+								</td>
+								<td>
+									if row.DstHref != "" {
+										<a href={ templ.SafeURL(row.DstHref) }>{ row.Dst }</a>
+									} else {
+										{ row.Dst }
+									}
+								</td>
+								<td class="num">{ Count(v.Theme, row.Count) }</td>
+								<td>{ FormatTimeIn(v.Theme, row.LastSeen) }</td>
+								<td>
+									<span class={ StatusCSS(row.Status) }>
+										{ StatusLabel(v.Page.Lang, row.Status) }
+									</span>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				<div class="actions">
+					<label>
+						{ T(v.Page.Lang, "findings.bulk") }
+						<select name="status">
+							for _, status := range v.Statuses {
+								<option value={ status }>{ StatusLabel(v.Page.Lang, status) }</option>
+							}
+						</select>
+					</label>
+					<button type="submit">{ T(v.Page.Lang, "findings.apply") }</button>
+				</div>
+			</form>
+			<nav class="pager">
+				if v.HasPrev() {
+					<a href={ templ.SafeURL(v.PrevURL()) }>{ T(v.Page.Lang, "assets.prev") }</a>
+				}
+				<span>{ v.Range() }</span>
+				if v.HasNext() {
+					<a href={ templ.SafeURL(v.NextURL()) }>{ T(v.Page.Lang, "assets.next") }</a>
+				}
+			</nav>
+		}
+	}
+}
+
+// FindingPage is one finding: what it is, the packet it rests on, and the
+// triage form.
+templ FindingPage(v FindingView) {
+	@Layout(v.Page) {
+		<p class="caption"><a href={ templ.SafeURL(v.Back) }>{ T(v.Page.Lang, "finding.back") }</a></p>
+		<h1>{ v.Finding.Summary }</h1>
+		<p class="role">
+			<span class={ SeverityCSS(string(v.Finding.Severity)) }>
+				{ SeverityLabel(v.Page.Lang, string(v.Finding.Severity)) }
+			</span>
+			<span class={ StatusCSS(string(v.Finding.Status)) }>
+				{ StatusLabel(v.Page.Lang, string(v.Finding.Status)) }
+			</span>
+			<span class="mono">{ v.Finding.RuleID }</span>
+			·
+			{ v.Observations() }
+		</p>
+		if v.Saved {
+			<p class="notice">{ T(v.Page.Lang, "findings.saved") }</p>
+		}
+		<section class="panel">
+			<h2>{ v.Finding.Title }</h2>
+			if v.Finding.Description != "" {
+				<p>{ v.Finding.Description }</p>
+			}
+			if v.Finding.Technique != "" {
+				<p class="caption">
+					{ T(v.Page.Lang, "finding.technique") }:
+					if v.TechniqueURL != "" {
+						<a href={ templ.SafeURL(v.TechniqueURL) } rel="noreferrer">
+							{ v.Finding.Technique }
+							if v.Finding.TechniqueName != "" {
+								{ " " + v.Finding.TechniqueName }
+							}
+						</a>
+					} else {
+						{ v.Finding.Technique }
+					}
+				</p>
+			}
+		</section>
+		<section class="panel">
+			<h2>{ T(v.Page.Lang, "finding.evidence") }</h2>
+			<table class="kv">
+				<tbody>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "finding.capture") }</th>
+						<td class="mono">{ v.Finding.Evidence.CaptureID }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "finding.packet") }</th>
+						<td class="num">{ strconv.FormatUint(v.Finding.Evidence.PacketIndex, 10) }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "finding.time") }</th>
+						<td>{ FormatTimeIn(v.Theme, v.Finding.Evidence.Timestamp) }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "findings.protocol") }</th>
+						<td>{ ProtocolLabel(v.Finding.Protocol) }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "finding.operation") }</th>
+						<td>{ v.Finding.Evidence.Operation }</td>
+					</tr>
+					if v.Finding.Evidence.FunctionCode > 0 {
+						<tr>
+							<th scope="row">{ T(v.Page.Lang, "finding.function_code") }</th>
+							<td class="num">{ strconv.Itoa(v.Finding.Evidence.FunctionCode) }</td>
+						</tr>
+					}
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "findings.src") }</th>
+						<td>
+							if v.SrcHref != "" {
+								<a href={ templ.SafeURL(v.SrcHref) }>{ v.Finding.Src }</a>
+							} else {
+								{ v.Finding.Src }
+							}
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "findings.dst") }</th>
+						<td>
+							if v.DstHref != "" {
+								<a href={ templ.SafeURL(v.DstHref) }>{ v.Finding.Dst }</a>
+							} else {
+								{ v.Finding.Dst }
+							}
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "finding.first_seen") }</th>
+						<td>{ FormatTimeIn(v.Theme, v.Finding.FirstSeen) }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "findings.last") }</th>
+						<td>{ FormatTimeIn(v.Theme, v.Finding.LastSeen) }</td>
+					</tr>
+				</tbody>
+			</table>
+			<p><a class="button-link" href={ templ.SafeURL(v.EventsHref) }>{ T(v.Page.Lang, "finding.events") }</a></p>
+		</section>
+		if len(v.Details) > 0 {
+			<section class="panel">
+				<h2>{ T(v.Page.Lang, "finding.details") }</h2>
+				<table class="kv">
+					<tbody>
+						for _, row := range v.Details {
+							<tr>
+								<th scope="row" class="mono">{ row.Field }</th>
+								<td>{ row.Value }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</section>
+		}
+		<section class="panel">
+			<h2>{ T(v.Page.Lang, "finding.triage") }</h2>
+			<form class="settings" method="post" action={ templ.SafeURL(FindingURL(v.Finding.ID)) }>
+				<input type="hidden" name="csrf" value={ v.CSRF }/>
+				<div class="setting">
+					<div class="setting-label"><span>{ T(v.Page.Lang, "findings.status") }</span></div>
+					<div class="setting-control">
+						<select name="status">
+							for _, option := range v.Statuses {
+								if option.Selected {
+									<option value={ option.Value } selected>{ option.Label }</option>
+								} else {
+									<option value={ option.Value }>{ option.Label }</option>
+								}
+							}
+						</select>
+					</div>
+				</div>
+				<div class="setting">
+					<div class="setting-label"><span>{ T(v.Page.Lang, "finding.assignee") }</span></div>
+					<div class="setting-control">
+						<input type="text" name="assignee" value={ v.Finding.Assignee } maxlength="64"/>
+					</div>
+				</div>
+				<div class="setting">
+					<div class="setting-label"><span>{ T(v.Page.Lang, "finding.note") }</span></div>
+					<div class="setting-control">
+						<textarea name="note" rows="3" maxlength="500">{ v.Finding.Note }</textarea>
+					</div>
+				</div>
+				<div class="actions">
+					<button type="submit">{ T(v.Page.Lang, "finding.save") }</button>
+				</div>
+			</form>
+		</section>
+	}
+}
+
+// RulesPage lists the rules the server runs and what each has found.
+templ RulesPage(v RulesView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "rules.title") }</h1>
+		<p class="caption">{ T(v.Page.Lang, "rules.intro") }</p>
+		if v.Reran != "" {
+			<p class="notice">{ v.Reran }</p>
+		}
+		<table>
+			<thead>
+				<tr>
+					<th scope="col">{ T(v.Page.Lang, "rules.rule") }</th>
+					<th scope="col">{ T(v.Page.Lang, "findings.severity") }</th>
+					<th scope="col">{ T(v.Page.Lang, "finding.technique") }</th>
+					<th scope="col">{ T(v.Page.Lang, "rules.kind") }</th>
+					<th scope="col" class="num">{ T(v.Page.Lang, "rules.findings") }</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, row := range v.Rows {
+					<tr>
+						<td>
+							<span class="mono">{ row.ID }</span>
+							{ " " }
+							{ row.Title }
+							if row.Description != "" {
+								<div class="sub">{ row.Description }</div>
+							}
+							if row.Inactive != "" {
+								<div class="sub warn">
+									{ T(v.Page.Lang, "rules.inactive") }: { row.Inactive }
+								</div>
+							}
+						</td>
+						<td>
+							<span class={ SeverityCSS(row.Severity) }>
+								{ SeverityLabel(v.Page.Lang, row.Severity) }
+							</span>
+						</td>
+						<td>
+							if row.TechniqueURL != "" {
+								<a href={ templ.SafeURL(row.TechniqueURL) } rel="noreferrer">
+									{ row.Technique }
+								</a>
+							} else {
+								{ row.Technique }
+							}
+							if row.TechniqueName != "" {
+								<div class="sub">{ row.TechniqueName }</div>
+							}
+						</td>
+						<td class="rule-id">
+							if row.Custom {
+								{ T(v.Page.Lang, "rules.custom") }
+							} else {
+								{ T(v.Page.Lang, "rules.builtin") }
+							}
+						</td>
+						<td class="num">
+							if row.Findings > 0 {
+								<a href={ templ.SafeURL(row.Href) }>{ Count(v.Theme, row.Findings) }</a>
+							} else {
+								—
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<section class="panel">
+			<h2>{ T(v.Page.Lang, "rules.files") }</h2>
+			if len(v.CustomFiles) == 0 {
+				<p class="caption">{ T(v.Page.Lang, "rules.files.none") }</p>
+			} else {
+				<ul>
+					for _, file := range v.CustomFiles {
+						<li class="mono">{ file }</li>
+					}
+				</ul>
+			}
+			<p class="caption">{ T(v.Page.Lang, "rules.config") }</p>
+			if !v.ReadOnly {
+				<form method="post" action="/rules">
+					<input type="hidden" name="csrf" value={ v.CSRF }/>
+					<div class="actions">
+						<button type="submit">{ T(v.Page.Lang, "rules.rerun") }</button>
+					</div>
+					<p class="caption">{ T(v.Page.Lang, "rules.rerun.help") }</p>
+				</form>
+			}
+		</section>
+	}
+}

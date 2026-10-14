@@ -64,7 +64,9 @@ func sampleTraffic(t *testing.T, s *store.Store, project model.Project) {
 		Flow: modbus, Protocol: "modbus", Direction: model.DirRequest, ServerPort: 502,
 		Operation: "Diagnostics", FunctionCode: 8, Class: model.ClassControl,
 		UnitID: model.Ptr(uint16(10)),
-		Attrs:  map[string]string{"anomaly": "force_listen_only", "sub_function_name": "ForceListenOnly"},
+		// The name the dissector really produces, so that a rule matching on
+		// it fires here exactly as it would on a capture.
+		Attrs: map[string]string{"anomaly": "force_listen_only", "sub_function_name": "ForceListenOnlyMode"},
 	})
 	add(model.Event{
 		CaptureID: "part1", PacketIndex: 6, Timestamp: seen.Add(6 * time.Minute),
@@ -812,4 +814,299 @@ func TestAssetListFiltersByLevel(t *testing.T) {
 
 	body = get(t, h, "/assets?level=unknown", nil).Body.String()
 	assert.Contains(t, body, "No assets match this filter.")
+}
+
+// The findings views: the triage queue, one finding with its evidence, and
+// the rules that produce them.
+
+// storedFindings writes a couple of findings the way a rule run would.
+func storedFindings(t *testing.T, s *store.Store, project model.Project) {
+	t.Helper()
+	require.NoError(t, s.SaveFindings(context.Background(), project.ID, []model.Finding{
+		{
+			ID: "f1", RuleID: "OT-003",
+			Title:    "Modbus diagnostic that changes how a device answers",
+			Summary:  "10.0.0.57 sent ForceListenOnlyMode to 10.0.0.3",
+			Severity: model.SeverityHigh, Status: model.StatusNew,
+			Technique: "T0813", TechniqueName: "Denial of Control",
+			Src: "10.0.0.57", Dst: "10.0.0.3", Protocol: "modbus",
+			Count: 3, FirstSeen: seen, LastSeen: seen.Add(time.Hour),
+			Evidence: model.Evidence{
+				CaptureID: "part1", PacketIndex: 5, Timestamp: seen,
+				Protocol: "modbus", Operation: "Diagnostics", FunctionCode: 8,
+			},
+			Details: map[string]string{"sub_function": "ForceListenOnlyMode"},
+		},
+		{
+			ID: "f2", RuleID: "OT-010",
+			Title:    "Industrial protocol on a non-standard port",
+			Summary:  "modbus served on port 1502 by 10.0.0.9",
+			Severity: model.SeverityLow, Status: model.StatusNew,
+			Technique: "T0885", TechniqueName: "Commonly Used Port",
+			Dst: "10.0.0.9", Protocol: "modbus",
+			Count: 1, FirstSeen: seen, LastSeen: seen,
+			Evidence: model.Evidence{
+				CaptureID: "part1", PacketIndex: 9, Timestamp: seen, Protocol: "modbus",
+			},
+		},
+	}))
+}
+
+func TestFindingsListAndFilters(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	storedFindings(t, s, project)
+
+	body := get(t, h, "/findings", nil).Body.String()
+	assert.Contains(t, body, "ForceListenOnlyMode")
+	assert.Contains(t, body, "OT-003")
+	assert.Contains(t, body, "OT-010")
+	assert.Contains(t, body, "severity-high")
+	assert.Contains(t, body, "2 findings")
+	assert.Contains(t, body, "2 open")
+
+	// Each filter narrows the queue.
+	body = get(t, h, "/findings?severity=low", nil).Body.String()
+	assert.NotContains(t, body, "ForceListenOnlyMode")
+	assert.Contains(t, body, "port 1502")
+
+	body = get(t, h, "/findings?rule=OT-003", nil).Body.String()
+	assert.Contains(t, body, "ForceListenOnlyMode")
+	assert.NotContains(t, body, "port 1502")
+
+	body = get(t, h, "/findings?q=1502", nil).Body.String()
+	assert.Contains(t, body, "port 1502")
+	assert.NotContains(t, body, "ForceListenOnlyMode")
+
+	// A severity nobody defined is dropped rather than refused.
+	body = get(t, h, "/findings?severity=apocalyptic", nil).Body.String()
+	assert.Contains(t, body, "ForceListenOnlyMode")
+	assert.Contains(t, body, "port 1502")
+}
+
+// CLAUDE.md: no finding without traceable evidence. The page is where that
+// promise is kept.
+func TestFindingPageShowsTheEvidence(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	storedFindings(t, s, project)
+
+	rec := get(t, h, "/findings/f1", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+
+	assert.Contains(t, body, "10.0.0.57 sent ForceListenOnlyMode to 10.0.0.3")
+	assert.Contains(t, body, "part1", "the capture it came from")
+	assert.Contains(t, body, ">5<", "the packet index")
+	assert.Contains(t, body, "Diagnostics", "the operation")
+	assert.Contains(t, body, "ForceListenOnlyMode", "what the rule matched")
+	assert.Contains(t, body, "https://attack.mitre.org/techniques/T0813")
+	assert.Contains(t, body, "Denial of Control")
+	assert.Contains(t, body, "3 observations")
+	// And a way through to the traffic itself.
+	assert.Contains(t, body, "/events?")
+	assert.Contains(t, body, "capture=part1")
+
+	assert.Equal(t, http.StatusNotFound, get(t, h, "/findings/nope", nil).Code)
+}
+
+func TestTriageRoundTrip(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	storedFindings(t, s, project)
+
+	rec := get(t, h, "/findings/f1", nil)
+	token, cookie := csrfOf(t, rec)
+
+	rec = postTo(t, h, "/findings/f1", url.Values{
+		"csrf":     {token},
+		"status":   {"investigating"},
+		"assignee": {"rom"},
+		"note":     {"planned maintenance?"},
+	}, cookie)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+
+	body := get(t, h, "/findings/f1", nil).Body.String()
+	assert.Contains(t, body, "Investigating")
+	assert.Contains(t, body, "rom")
+	assert.Contains(t, body, "planned maintenance?")
+
+	stored, err := s.Finding(context.Background(), project.ID, "f1")
+	require.NoError(t, err)
+	assert.Equal(t, model.StatusInvestigating, stored.Status)
+
+	// A status nobody defined is refused rather than stored.
+	rec = postTo(t, h, "/findings/f1", url.Values{
+		"csrf": {token}, "status": {"ignored"},
+	}, cookie)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+	// And a post with no token at all gets nowhere.
+	rec = postTo(t, h, "/findings/f1", url.Values{"status": {"resolved"}}, cookie)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}
+
+func TestBulkTriageFromTheList(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	storedFindings(t, s, project)
+
+	rec := get(t, h, "/findings", nil)
+	token, cookie := csrfOf(t, rec)
+
+	rec = postTo(t, h, "/findings", url.Values{
+		"csrf":   {token},
+		"status": {"accepted_risk"},
+		"id":     {"f1", "f2"},
+		"return": {"/findings?severity=high"},
+	}, cookie)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	// The filter the analyst was looking at survives the round trip, rebuilt
+	// rather than echoed.
+	back, err := url.Parse(rec.Header().Get("Location"))
+	require.NoError(t, err)
+	assert.Equal(t, "/findings", back.Path)
+	assert.Equal(t, "high", back.Query().Get("severity"))
+	assert.Equal(t, "1", back.Query().Get("saved"))
+
+	open, err := s.CountOpenFindings(context.Background(), project.ID)
+	require.NoError(t, err)
+	assert.Zero(t, open, "both findings were accepted")
+
+	// A return address pointing anywhere else is replaced rather than
+	// followed: an open redirect out of a triage form would be a gift.
+	rec = get(t, h, "/findings", nil)
+	token, cookie = csrfOf(t, rec)
+	rec = postTo(t, h, "/findings", url.Values{
+		"csrf": {token}, "status": {"new"}, "id": {"f1"},
+		"return": {"https://evil.example/"},
+	}, cookie)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	assert.Equal(t, "/findings?saved=1", rec.Header().Get("Location"))
+}
+
+// A browser served with a strict referrer policy posts forms with an opaque
+// origin. The check reads Sec-Fetch-Site as well, so a real browser can save
+// a form while a cross-site post still cannot.
+func TestOpaqueOriginIsAcceptedOnlyForASameOriginPost(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	storedFindings(t, s, project)
+
+	rec := get(t, h, "/findings/f1", nil)
+	token, cookie := csrfOf(t, rec)
+
+	post := func(headers map[string]string) int {
+		req := httptest.NewRequest(http.MethodPost, "/findings/f1",
+			strings.NewReader(url.Values{"csrf": {token}, "status": {"resolved"}}.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		req.AddCookie(cookie)
+		out := httptest.NewRecorder()
+		h.ServeHTTP(out, req)
+		return out.Code
+	}
+
+	assert.Equal(t, http.StatusSeeOther, post(map[string]string{
+		"Origin": "null", "Sec-Fetch-Site": "same-origin",
+	}), "a form posted from this GUI saves")
+	assert.Equal(t, http.StatusForbidden, post(map[string]string{
+		"Origin": "null", "Sec-Fetch-Site": "cross-site",
+	}), "a post from another site does not")
+	assert.Equal(t, http.StatusForbidden, post(map[string]string{
+		"Origin": "null",
+	}), "and neither does one that says nothing about where it came from")
+}
+
+func TestRulesPageListsWhatTheServerRuns(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	storedFindings(t, s, project)
+
+	rec := get(t, h, "/rules", nil)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := rec.Body.String()
+
+	assert.Contains(t, body, "OT-001")
+	assert.Contains(t, body, "OT-013")
+	assert.Contains(t, body, "https://attack.mitre.org/techniques/T0813")
+	// The rule that cannot fire says why.
+	assert.Contains(t, body, "no engineering allow-list is configured")
+	// And the ones with findings link to them.
+	assert.Contains(t, body, "/findings?rule=OT-003")
+	assert.Contains(t, body, "Run the rules again")
+}
+
+func TestRerunningTheRulesKeepsTheTriage(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	sampleTraffic(t, s, project)
+
+	// A first run from the GUI finds what the sample traffic holds.
+	rec := get(t, h, "/rules", nil)
+	token, cookie := csrfOf(t, rec)
+	rec = postTo(t, h, "/rules", url.Values{"csrf": {token}}, cookie)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+
+	ctx := context.Background()
+	findings, total, err := s.Findings(ctx, store.FindingQuery{ProjectID: project.ID})
+	require.NoError(t, err)
+	require.NotZero(t, total, "the sample traffic holds a force listen only and a write")
+	first := findings[0]
+	assert.NotEmpty(t, first.Evidence.CaptureID)
+
+	require.NoError(t, s.SetTriage(ctx, project.ID, first.ID,
+		store.Triage{Status: model.StatusAcceptedRisk, Assignee: "rom"}))
+
+	// A second run updates the findings and leaves the triage alone, which is
+	// what makes re-running safe.
+	rec = get(t, h, "/rules", nil)
+	token, cookie = csrfOf(t, rec)
+	rec = postTo(t, h, "/rules", url.Values{"csrf": {token}}, cookie)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+
+	again, err := s.Finding(ctx, project.ID, first.ID)
+	require.NoError(t, err)
+	require.NotNil(t, again)
+	assert.Equal(t, model.StatusAcceptedRisk, again.Status)
+	assert.Equal(t, "rom", again.Assignee)
+}
+
+func TestReadOnlyServerRefusesTriageAndReruns(t *testing.T) {
+	h, s, project := serveWith(t, web.Options{ReadOnly: true})
+	storedFindings(t, s, project)
+
+	rec := get(t, h, "/findings/f1", nil)
+	token, cookie := csrfOf(t, rec)
+	assert.Equal(t, http.StatusForbidden,
+		postTo(t, h, "/findings/f1", url.Values{"csrf": {token}, "status": {"resolved"}}, cookie).Code)
+	assert.Equal(t, http.StatusForbidden,
+		postTo(t, h, "/findings", url.Values{"csrf": {token}, "status": {"resolved"}, "id": {"f1"}}, cookie).Code)
+	assert.Equal(t, http.StatusForbidden,
+		postTo(t, h, "/rules", url.Values{"csrf": {token}}, cookie).Code)
+
+	// And the page does not offer what the server would refuse.
+	assert.NotContains(t, get(t, h, "/rules", nil).Body.String(), "Run the rules again")
+}
+
+func TestDashboardShowsWhatTheRulesFound(t *testing.T) {
+	h, s, project := serve(t, sampleAssets())
+	storedFindings(t, s, project)
+
+	body := get(t, h, "/dashboard", nil).Body.String()
+	assert.Contains(t, body, "Open findings")
+	assert.Contains(t, body, "Findings by severity")
+	assert.Contains(t, body, "/findings?open=1")
+	assert.Contains(t, body, "most serious")
+}
+
+// postTo sends a form to any path, which the findings views need as well as
+// the settings.
+func postTo(t *testing.T, h http.Handler, path string, form url.Values, cookie *http.Cookie) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Origin", "http://example.com")
+	req.Host = "example.com"
+	if cookie != nil {
+		req.AddCookie(cookie)
+	}
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	return rec
 }
