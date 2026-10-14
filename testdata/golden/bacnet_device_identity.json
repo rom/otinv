@@ -1,0 +1,698 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2015-03-31T17:29:45.0078Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 75,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "object-identifier",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2015-03-31T17:29:45.062391Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 75,
+    "identity": {
+      "device_instance": "500"
+    },
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "object-identifier",
+      "service": "readProperty",
+      "value": "device:500"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 5,
+    "ts": "2015-03-31T17:29:45.0632Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 120,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "vendor-identifier",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 6,
+    "ts": "2015-03-31T17:29:45.115099Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 120,
+    "identity": {
+      "vendor_id": "5",
+      "vendor_name": "Johnson Controls"
+    },
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "vendor-identifier",
+      "service": "readProperty",
+      "value": "5"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 7,
+    "ts": "2015-03-31T17:29:45.115871Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 121,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "vendor-name",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 8,
+    "ts": "2015-03-31T17:29:45.170638Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 121,
+    "identity": {
+      "vendor_name": "JCI"
+    },
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "vendor-name",
+      "service": "readProperty",
+      "value": "JCI",
+      "value_charset": "ucs2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 9,
+    "ts": "2015-03-31T17:29:45.171466Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 44,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "firmware-revision",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 10,
+    "ts": "2015-03-31T17:29:45.226074Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 44,
+    "identity": {
+      "firmware_revision": "5.1.0.4400"
+    },
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "firmware-revision",
+      "service": "readProperty",
+      "value": "5.1.0.4400",
+      "value_charset": "ucs2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 11,
+    "ts": "2015-03-31T17:29:45.226907Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 12,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "application-software-version",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 12,
+    "ts": "2015-03-31T17:29:45.281871Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 12,
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "application-software-version",
+      "service": "readProperty",
+      "value_charset": "ucs2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 13,
+    "ts": "2015-03-31T17:29:45.282621Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 77,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "object-name",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 14,
+    "ts": "2015-03-31T17:29:45.337381Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 77,
+    "identity": {
+      "device_name": "KBRNAE"
+    },
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "object-name",
+      "service": "readProperty",
+      "value": "KBRNAE",
+      "value_charset": "ucs2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 15,
+    "ts": "2015-03-31T17:29:45.337853Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 70,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "model-name",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 16,
+    "ts": "2015-03-31T17:29:45.392831Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 70,
+    "identity": {
+      "model_name": "MS-NAE4510-2"
+    },
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "model-name",
+      "service": "readProperty",
+      "value": "MS-NAE4510-2",
+      "value_charset": "ucs2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 17,
+    "ts": "2015-03-31T17:29:45.393389Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 28,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "description",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 18,
+    "ts": "2015-03-31T17:29:45.448074Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 28,
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "description",
+      "service": "readProperty",
+      "value_charset": "ucs2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 19,
+    "ts": "2015-03-31T17:29:45.448443Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 58,
+    "attrs": {
+      "apdu_type": "Confirmed-Request",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "expecting_reply": "true",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "location",
+      "service": "readProperty"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 20,
+    "ts": "2015-03-31T17:29:45.508711Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "readProperty",
+    "function_code": 12,
+    "class": "read",
+    "transaction_id": 1,
+    "address": 58,
+    "attrs": {
+      "apdu_type": "ComplexACK",
+      "bvlc_function": "Original-Unicast-NPDU",
+      "object": "device:4194303",
+      "object_instance": "4194303",
+      "object_type": "device",
+      "property": "location",
+      "service": "readProperty",
+      "value_charset": "ucs2"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 21,
+    "ts": "2015-03-31T17:29:45.509199Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "Read-Broadcast-Distribution-Table",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "bvlc_function": "Read-Broadcast-Distribution-Table"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 22,
+    "ts": "2015-03-31T17:29:45.569515Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "BVLC-Result",
+    "function_code": -1,
+    "class": "other",
+    "exception": "Read-Broadcast-Distribution-Table NAK",
+    "attrs": {
+      "bvlc_function": "BVLC-Result",
+      "bvlc_result": "Read-Broadcast-Distribution-Table NAK"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 25,
+    "ts": "2015-03-31T17:30:05.91874Z",
+    "flow": {
+      "src_mac": "3c:a9:f4:21:22:f8",
+      "dst_mac": "00:19:07:24:3c:ca",
+      "src_ip": "10.1.1.167",
+      "dst_ip": "10.1.1.165",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "request",
+    "server_port": 47808,
+    "operation": "Register-Foreign-Device",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "bvlc_function": "Register-Foreign-Device",
+      "time_to_live": "16"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 26,
+    "ts": "2015-03-31T17:30:05.970497Z",
+    "flow": {
+      "src_mac": "00:19:07:24:3c:ca",
+      "dst_mac": "3c:a9:f4:21:22:f8",
+      "src_ip": "10.1.1.165",
+      "dst_ip": "10.1.1.167",
+      "src_port": 47808,
+      "dst_port": 47808,
+      "transport": "udp"
+    },
+    "protocol": "bacnet",
+    "direction": "response",
+    "server_port": 47808,
+    "operation": "BVLC-Result",
+    "function_code": -1,
+    "class": "other",
+    "exception": "Register-Foreign-Device NAK",
+    "attrs": {
+      "bvlc_function": "BVLC-Result",
+      "bvlc_result": "Register-Foreign-Device NAK"
+    }
+  }
+]

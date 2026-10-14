@@ -1,0 +1,158 @@
+package templates
+
+import "strconv"
+
+// FlowsPage is the communication list: who talks to whom over which protocol,
+// how much, and what the mix of operations was.
+templ FlowsPage(v FlowsView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "flows.title") }</h1>
+		<form class="filters" method="get" action="/flows" hx-get="/flows" hx-target="#flow-table" hx-push-url="true">
+			<input
+				type="search"
+				name="q"
+				value={ v.Filter.Search }
+				placeholder={ T(v.Page.Lang, "flows.search") }
+				aria-label={ T(v.Page.Lang, "flows.search") }
+			/>
+			<label>
+				{ T(v.Page.Lang, "flows.protocol") }
+				<select name="protocol">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, proto := range v.Protocols {
+						if proto == v.Filter.Protocol {
+							<option value={ proto } selected>{ ProtocolLabel(proto) }</option>
+						} else {
+							<option value={ proto }>{ ProtocolLabel(proto) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "events.class") }
+				<select name="class">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, class := range v.Classes {
+						if class == v.Filter.Class {
+							<option value={ class } selected>{ ClassLabel(v.Page.Lang, class) }</option>
+						} else {
+							<option value={ class }>{ ClassLabel(v.Page.Lang, class) }</option>
+						}
+					}
+				</select>
+			</label>
+			if v.Filter.Endpoint != "" {
+				<input type="hidden" name="endpoint" value={ v.Filter.Endpoint }/>
+				<span class="chip">{ v.Filter.Endpoint }</span>
+			}
+			<button type="submit">{ T(v.Page.Lang, "assets.filter") }</button>
+		</form>
+		@FlowTable(v)
+	}
+}
+
+// FlowTable is swapped on its own when htmx asks for a filtered list.
+templ FlowTable(v FlowsView) {
+	<div id="flow-table">
+		<p class="count">{ Count(v.Theme, int64(v.Total)) } { T(v.Page.Lang, "flows.count") }</p>
+		if len(v.Rows) == 0 {
+			<p class="empty">{ T(v.Page.Lang, "flows.none") }</p>
+		} else {
+			<table>
+				<thead>
+					@SortableHeaders(v.Headers())
+				</thead>
+				<tbody>
+					for _, row := range v.Rows {
+						<tr>
+							<td>
+								<a href={ templ.SafeURL(row.SrcHref) }>{ row.Src }</a>
+							</td>
+							<td>
+								<a href={ templ.SafeURL(row.DstHref) }>{ row.Dst }</a>
+								if row.ServerPort != "" {
+									<span class="sub">:{ row.ServerPort }</span>
+								}
+							</td>
+							<td>
+								{ ProtocolLabel(row.Protocol) }
+								<div class="sub">{ row.Transport }</div>
+							</td>
+							<td class="num">
+								<a href={ templ.SafeURL(row.Href) }>{ Count(v.Theme, row.Events) }</a>
+								if row.Malformed > 0 {
+									<div class="sub warn">{ T(v.Page.Lang, "flows.malformed") }: { Count(v.Theme, row.Malformed) }</div>
+								}
+							</td>
+							<td class="mix">
+								@MixBar(row.Classes)
+							</td>
+							<td>{ FormatTimeIn(v.Theme, row.FirstSeen) }</td>
+							<td>{ FormatTimeIn(v.Theme, row.LastSeen) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<nav class="pager">
+				if v.HasPrev() {
+					<a href={ templ.SafeURL(v.PrevURL()) }>{ T(v.Page.Lang, "assets.prev") }</a>
+				}
+				<span>{ v.PageLabel() }</span>
+				if v.HasNext() {
+					<a href={ templ.SafeURL(v.NextURL()) }>{ T(v.Page.Lang, "assets.next") }</a>
+				}
+			</nav>
+		}
+	</div>
+}
+
+// MatrixPage is the communication matrix: the same traffic as the flow table,
+// seen as a grid of who talks to whom.
+templ MatrixPage(v MatrixView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "matrix.title") }</h1>
+		<form class="filters" method="get" action="/matrix">
+			<label>
+				{ T(v.Page.Lang, "flows.protocol") }
+				<select name="protocol">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, proto := range v.Protocols {
+						if proto == v.Filter.Protocol {
+							<option value={ proto } selected>{ ProtocolLabel(proto) }</option>
+						} else {
+							<option value={ proto }>{ ProtocolLabel(proto) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "events.class") }
+				<select name="class">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, class := range v.Classes {
+						if class == v.Filter.Class {
+							<option value={ class } selected>{ ClassLabel(v.Page.Lang, class) }</option>
+						} else {
+							<option value={ class }>{ ClassLabel(v.Page.Lang, class) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "matrix.size") }
+				<select name="size">
+					for _, size := range []int{10, 20, 30, 45} {
+						if size == v.Filter.Size {
+							<option value={ strconv.Itoa(size) } selected>{ strconv.Itoa(size) }</option>
+						} else {
+							<option value={ strconv.Itoa(size) }>{ strconv.Itoa(size) }</option>
+						}
+					}
+				</select>
+			</label>
+			<button type="submit">{ T(v.Page.Lang, "assets.filter") }</button>
+		</form>
+		<p class="caption">{ T(v.Page.Lang, "matrix.help") }</p>
+		@MatrixTable(v.Chart, v.Page)
+	}
+}

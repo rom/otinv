@@ -7,6 +7,11 @@ COMMIT     ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 TEMPL_VERSION := v0.3.898
 
+# golangci-lint refuses a module whose Go version is newer than the one it was
+# built with, so the linter has to keep pace with go.mod. This is the oldest
+# release that can analyse the version in go.mod.
+GOLANGCI_VERSION := v2.14.0
+
 # How long each fuzz target runs in `make fuzz`. Long enough to catch a
 # regression in a changed dissector, short enough to run on every change.
 FUZZTIME ?= 30s
@@ -16,8 +21,11 @@ export CGO_ENABLED := 0
 
 # Never download a toolchain: the build must work on an air-gapped laptop, and
 # this fails loudly if a dependency raises the Go floor above the installed
-# toolchain instead of silently fetching another one.
-export GOTOOLCHAIN := local
+# toolchain instead of silently fetching another one. Override it
+# (make GOTOOLCHAIN=auto test) where fetching one is acceptable, such as a
+# container whose installed toolchain is older than go.mod asks for.
+GOTOOLCHAIN ?= local
+export GOTOOLCHAIN
 
 LDFLAGS := -s -w \
 	-X main.version=$(VERSION) \
@@ -69,6 +77,10 @@ fuzz:
 
 lint:
 	go vet $(PKG)
+	@command -v golangci-lint >/dev/null 2>&1 || { \
+		echo "golangci-lint is not installed. To install it:"; \
+		echo "    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION)"; \
+		exit 1; }
 	golangci-lint run
 
 fmt:

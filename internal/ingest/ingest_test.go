@@ -17,13 +17,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/rom/otinv/internal/dissect"
-	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the dissector
-	_ "github.com/rom/otinv/internal/dissect/enip"   // register the dissector
-	_ "github.com/rom/otinv/internal/dissect/goose"  // register the dissector
-	_ "github.com/rom/otinv/internal/dissect/iec104" // register the dissector
-	_ "github.com/rom/otinv/internal/dissect/mms"    // register the dissector
-	_ "github.com/rom/otinv/internal/dissect/modbus" // register the dissector
-	_ "github.com/rom/otinv/internal/dissect/s7comm" // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/bacnet"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/dnp3"     // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/enip"     // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/goose"    // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/iec104"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/mms"      // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/modbus"   // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/opcua"    // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/profinet" // register the dissector
+	_ "github.com/rom/otinv/internal/dissect/s7comm"   // register the dissector
 	"github.com/rom/otinv/internal/ingest"
 	"github.com/rom/otinv/internal/model"
 )
@@ -96,6 +99,11 @@ func TestGolden(t *testing.T) {
 		"enip_cip_vendor_service",
 		"enip_cip_batch_request",
 		"enip_cip_batch_reply",
+		"profinet_dcp_change_ip",
+		"profinet_dcp_crafted_name",
+		"profinet_dcp_identify_scan",
+		"bacnet_device_identity",
+		"opcua_method_call",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, events := run(t, filepath.Join(root, "testdata", "pcaps", name+".pcap"))

@@ -274,6 +274,30 @@ var identityTargets = map[string][]struct {
 	// An MMS device answers Identify with its vendor, model and revision,
 	// which is the same kind of structured self-description as an SZL read.
 	"revision": {{"firmware_revision", 90}},
+	// An OPC UA server describes itself in every endpoint description it
+	// returns: the URI that identifies the application, the product it is
+	// and the name it goes by. The endpoint URL a client connects to names
+	// the host and port the server is known by.
+	"application_uri":  {{"application_uri", 90}},
+	"application_name": {{"name", 85}},
+	"product_uri":      {{"product_uri", 85}},
+	"endpoint_url":     {{"endpoint_url", 80}},
+	// A PROFINET station answering a DCP Identify states the name an
+	// engineer gave it, which is the name PROFINET itself addresses it by,
+	// the part it plays in the system — IO device, IO controller or IO
+	// supervisor — and its vendor and device identifiers. A device stating
+	// its own role is better evidence than any amount of traffic watching.
+	"station_name": {{"name", 90}},
+	"device_role":  {{"device_role", 90}},
+	"device_id":    {{"device_id", 85}},
+	// A BACnet device answers a read of its device object with the name an
+	// engineer gave it, where it is installed, and what software it runs.
+	// The answer echoes the property it is for, so this arrives without any
+	// request to pair it with.
+	"device_name":          {{"name", 85}},
+	"application_software": {{"application", 85}},
+	"location":             {{"location", 80}},
+	"device_instance":      {{"device_instance", 85}},
 	// A CIP device states its ODVA device profile — what kind of thing it
 	// is — and the vendor identifier ODVA assigned its manufacturer. Both
 	// are the device's own answer about itself, which is the strongest

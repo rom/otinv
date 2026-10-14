@@ -138,11 +138,13 @@ func TestListenAddressPolicy(t *testing.T) {
 	}
 }
 
-func TestRootRedirectsToAssets(t *testing.T) {
+// The root lands on the dashboard: a reader opening the GUI wants the project
+// at a glance before any one table of it.
+func TestRootRedirectsToDashboard(t *testing.T) {
 	h, _, _ := serve(t, sampleAssets())
 	rec := get(t, h, "/", nil)
 	assert.Equal(t, http.StatusSeeOther, rec.Code)
-	assert.Equal(t, "/assets", rec.Header().Get("Location"))
+	assert.Equal(t, "/dashboard", rec.Header().Get("Location"))
 }
 
 func TestAssetListShowsInventory(t *testing.T) {

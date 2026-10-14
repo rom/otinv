@@ -405,3 +405,75 @@ func (r *Registry) HasPort(name string, transport model.Transport, port uint16) 
 	}
 	return containsPort(reg.tcpPorts, port)
 }
+
+// Registered describes one registered dissector, as `otinv protocols` lists
+// it. Ports are defaults plus anything ExtraTCPPorts added; a dissector is
+// offered streams on other ports too, through Probe.
+type Registered struct {
+	Name       string   `json:"name"`
+	Tier       int      `json:"tier"`
+	TCPPorts   []uint16 `json:"tcp_ports,omitempty"`
+	UDPPorts   []uint16 `json:"udp_ports,omitempty"`
+	EtherTypes []uint16 `json:"ether_types,omitempty"`
+	// Framed reports whether the dissector can split a byte stream into PDUs
+	// (Framer). One that cannot is only ever handed whole datagrams.
+	Framed bool `json:"framed"`
+	// Defers reports whether the dissector asks to wait for more bytes before
+	// claiming a stream on a port it shares (Deferring).
+	Defers bool `json:"defers"`
+}
+
+// Registered returns a description of every registered dissector, in
+// registration order.
+func (r *Registry) Registered() []Registered {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	out := make([]Registered, 0, len(r.order))
+	for _, name := range r.order {
+		reg := r.byName[name]
+		_, framed := reg.d.(Framer)
+		_, defers := reg.d.(Deferring)
+		out = append(out, Registered{
+			Name:       name,
+			Tier:       reg.d.Tier(),
+			TCPPorts:   append([]uint16(nil), reg.tcpPorts...),
+			UDPPorts:   append([]uint16(nil), reg.udpPorts...),
+			EtherTypes: append([]uint16(nil), reg.etherTypes...),
+			Framed:     framed,
+			Defers:     defers,
+		})
+	}
+	return out
+}
+
+// Subset returns a registry holding only the named dissectors, which is how
+// `otinv analyze --only` restricts a run to the protocols an analyst asked
+// for. The dissectors are shared with r; the parse health of the subset is
+// its own, so a restricted run reports only what it actually tried.
+func (r *Registry) Subset(names ...string) (*Registry, error) {
+	if len(names) == 0 {
+		return nil, fmt.Errorf("dissect: Subset needs at least one protocol name")
+	}
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	sub := NewRegistry()
+	seen := make(map[string]bool, len(names))
+	for _, name := range names {
+		reg, ok := r.byName[name]
+		if !ok {
+			return nil, fmt.Errorf("dissect: no such dissector %q", name)
+		}
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		copied := *reg
+		sub.byName[name] = &copied
+		sub.order = append(sub.order, name)
+		sub.health[name] = &Health{}
+	}
+	return sub, nil
+}

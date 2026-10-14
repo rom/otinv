@@ -291,3 +291,87 @@ func TestEtherTypeRegistration(t *testing.T) {
 	require.Len(t, others, 1)
 	assert.Equal(t, "layer2", others[0].Name())
 }
+
+// quiet is a minimal dissector with no framer, which is what a datagram-only
+// protocol looks like to the registry.
+type quiet struct {
+	name string
+	tier int
+}
+
+func (q *quiet) Name() string { return q.name }
+func (q *quiet) Tier() int    { return q.tier }
+func (*quiet) Probe(*dissect.FlowContext, []byte) int {
+	return 50
+}
+func (*quiet) Parse(*dissect.FlowContext, []byte) ([]model.Event, error) {
+	return nil, nil
+}
+
+// Registered is what `otinv protocols` prints, so it has to describe a
+// registration exactly: its ports, its EtherTypes and how it is fed.
+func TestRegisteredDescribesEveryRegistration(t *testing.T) {
+	r := dissect.NewRegistry()
+	r.Register(&greedy{}, dissect.TCPPorts(502), dissect.UDPPorts(47808))
+	r.Register(&quiet{name: "layer2", tier: 3}, dissect.EtherTypes(0x88b8))
+	require.NoError(t, r.ExtraTCPPorts("greedy", 1502))
+
+	rows := r.Registered()
+	require.Len(t, rows, 2)
+	assert.Equal(t, []string{"greedy", "layer2"}, []string{rows[0].Name, rows[1].Name},
+		"registration order is kept")
+
+	assert.Equal(t, 2, rows[0].Tier)
+	assert.Equal(t, []uint16{502, 1502}, rows[0].TCPPorts, "a configured port is listed too")
+	assert.Equal(t, []uint16{47808}, rows[0].UDPPorts)
+	assert.Empty(t, rows[0].EtherTypes)
+	assert.True(t, rows[0].Framed)
+	assert.False(t, rows[0].Defers)
+
+	assert.Equal(t, 3, rows[1].Tier)
+	assert.Equal(t, []uint16{0x88b8}, rows[1].EtherTypes)
+	assert.Empty(t, rows[1].TCPPorts)
+	assert.False(t, rows[1].Framed, "nothing framed: it only ever sees whole frames")
+
+	// The description is a copy: changing it cannot reach the registry.
+	rows[0].TCPPorts[0] = 9999
+	assert.Equal(t, []uint16{502, 1502}, r.Registered()[0].TCPPorts)
+}
+
+// Subset is `analyze --only`: the named dissectors and nothing else.
+func TestSubsetKeepsOnlyTheNamedDissectors(t *testing.T) {
+	r := dissect.NewRegistry()
+	r.Register(&greedy{}, dissect.TCPPorts(502))
+	r.Register(&quiet{name: "layer2", tier: 3}, dissect.EtherTypes(0x88b8))
+
+	sub, err := r.Subset("layer2")
+	require.NoError(t, err)
+	assert.Equal(t, []string{"layer2"}, sub.Names())
+	_, ok := sub.Lookup("greedy")
+	assert.False(t, ok, "a protocol left out cannot claim a stream")
+	_, ok = sub.Lookup("layer2")
+	assert.True(t, ok)
+	assert.Equal(t, []uint16{0x88b8}, sub.Registered()[0].EtherTypes,
+		"the registration travels with the dissector")
+	assert.True(t, sub.HasEtherType("layer2", 0x88b8))
+
+	// A repeated name is the same single dissector.
+	sub, err = r.Subset("layer2", "layer2")
+	require.NoError(t, err)
+	assert.Equal(t, []string{"layer2"}, sub.Names())
+
+	// Parse health is the subset's own, so a restricted run reports only what
+	// it actually tried.
+	_, err = sub.Parse(&quiet{name: "layer2", tier: 3}, testCtx(), []byte{1})
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, sub.Health()["layer2"].PDUs)
+	assert.Empty(t, r.Health()["layer2"].PDUs, "the original is untouched")
+
+	_, err = r.Subset("nosuch")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `no such dissector "nosuch"`)
+
+	_, err = r.Subset()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "at least one protocol name")
+}

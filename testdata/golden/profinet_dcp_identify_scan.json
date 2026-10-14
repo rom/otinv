@@ -1,0 +1,416 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2012-11-12T11:03:12.006493Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:9a:c3",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50380698,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch3",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 2,
+    "ts": "2012-11-12T11:03:13.464918Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:e6:1e",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50366023,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch1",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2012-11-12T11:03:22.352818Z",
+    "flow": {
+      "src_mac": "00:1b:1b:35:84:10",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50338818,
+    "attrs": {
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "pn-io",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2012-11-12T11:03:29.004719Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:e6:0f",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50380701,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch4",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 5,
+    "ts": "2012-11-12T11:03:34.749229Z",
+    "flow": {
+      "src_mac": "00:1b:1b:35:84:07",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50351524,
+    "attrs": {
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "pn-io",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 6,
+    "ts": "2012-11-12T11:03:48.762496Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:e6:5a",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50375238,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch7",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 7,
+    "ts": "2012-11-12T11:03:49.42629Z",
+    "flow": {
+      "src_mac": "00:1b:1b:47:51:84",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50389457,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "swln3",
+      "padding_bytes": "20",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 8,
+    "ts": "2012-11-12T11:03:51.117946Z",
+    "flow": {
+      "src_mac": "00:1b:1b:47:51:6b",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50349790,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "swln4",
+      "padding_bytes": "20",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 9,
+    "ts": "2012-11-12T11:03:52.302271Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:e5:2e",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50332134,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch6",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 10,
+    "ts": "2012-11-12T11:03:55.648286Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:e6:d2",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50380697,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch2",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 11,
+    "ts": "2012-11-12T11:03:59.984921Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:e6:78",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50376147,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch5",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 12,
+    "ts": "2012-11-12T11:04:12.003644Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:9a:c3",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50380699,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch3",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 13,
+    "ts": "2012-11-12T11:04:13.461836Z",
+    "flow": {
+      "src_mac": "00:1b:1b:02:e6:1e",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50366024,
+    "attrs": {
+      "anomaly": "padding_not_zero",
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "switch1",
+      "padding_bytes": "18",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 14,
+    "ts": "2012-11-12T11:04:22.355634Z",
+    "flow": {
+      "src_mac": "00:1b:1b:35:84:10",
+      "dst_mac": "01:0e:cf:00:00:00",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 50338819,
+    "attrs": {
+      "blocks": "NameOfStation",
+      "frame_id": "0xfefe",
+      "name_of_station": "pn-io",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  }
+]
