@@ -803,3 +803,152 @@ func TestAssetLevelRoundTripAndFilter(t *testing.T) {
 	assert.Equal(t, []string{"hmi", "plc", "field", "gw"},
 		[]string{sorted[0].Key, sorted[1].Key, sorted[2].Key, sorted[3].Key})
 }
+
+// finding builds a finding the way the engine produces one.
+func finding(id, rule string, severity model.Severity, count int64) model.Finding {
+	return model.Finding{
+		ID: id, RuleID: rule,
+		Title: "Siemens S7 CPU stopped", Summary: "10.0.0.57 stopped the CPU on 10.0.0.3",
+		Description: "A CPU was stopped.", Severity: severity,
+		Technique: "T0858", TechniqueName: "Change Operating Mode",
+		Status: model.StatusNew,
+		Src:    "10.0.0.57", Dst: "10.0.0.3", Protocol: "s7comm",
+		Count:     count,
+		FirstSeen: time.Unix(1093521694, 0).UTC(),
+		LastSeen:  time.Unix(1093522000, 0).UTC(),
+		Evidence: model.Evidence{
+			CaptureID: "aa11", PacketIndex: 41, Timestamp: time.Unix(1093522000, 0).UTC(),
+			Protocol: "s7comm", Operation: "PLC_STOP", FunctionCode: 41,
+		},
+		Details: map[string]string{"operation": "PLC_STOP"},
+	}
+}
+
+func TestFindingsRoundTripAndKeepTheirTriage(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+
+	require.NoError(t, s.SaveFindings(ctx, p.ID, []model.Finding{
+		finding("aaaa", "OT-002", model.SeverityHigh, 3),
+		finding("bbbb", "OT-010", model.SeverityLow, 1),
+	}))
+
+	back, total, err := s.Findings(ctx, store.FindingQuery{ProjectID: p.ID})
+	require.NoError(t, err)
+	assert.Equal(t, 2, total)
+	require.Len(t, back, 2)
+	assert.Equal(t, "aaaa", back[0].ID, "the most serious finding comes first")
+	assert.Equal(t, finding("aaaa", "OT-002", model.SeverityHigh, 3), back[0],
+		"a finding must round-trip unchanged")
+
+	// Triage belongs to the analyst.
+	require.NoError(t, s.SetTriage(ctx, p.ID, "aaaa", store.Triage{
+		Status: model.StatusInvestigating, Assignee: "rom", Note: "planned maintenance?",
+	}))
+
+	// A second run of the rules updates the counts and leaves the triage.
+	require.NoError(t, s.SaveFindings(ctx, p.ID, []model.Finding{
+		finding("aaaa", "OT-002", model.SeverityHigh, 9),
+	}))
+
+	got, err := s.Finding(ctx, p.ID, "aaaa")
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	assert.EqualValues(t, 9, got.Count, "the run updates what it observed")
+	assert.Equal(t, model.StatusInvestigating, got.Status, "but never the triage")
+	assert.Equal(t, "rom", got.Assignee)
+	assert.Equal(t, "planned maintenance?", got.Note)
+
+	// The finding the second run did not produce is gone: the project no
+	// longer holds the traffic behind it.
+	_, total, err = s.Findings(ctx, store.FindingQuery{ProjectID: p.ID})
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+
+	// A run that finds nothing clears the list rather than leaving a stale one.
+	require.NoError(t, s.SaveFindings(ctx, p.ID, nil))
+	_, total, err = s.Findings(ctx, store.FindingQuery{ProjectID: p.ID})
+	require.NoError(t, err)
+	assert.Zero(t, total)
+}
+
+func TestFindingQueryFiltersAndCounts(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+
+	high := finding("aaaa", "OT-002", model.SeverityHigh, 3)
+	low := finding("bbbb", "OT-010", model.SeverityLow, 1)
+	low.Protocol = "modbus"
+	low.Summary = "modbus served on port 1502"
+	require.NoError(t, s.SaveFindings(ctx, p.ID, []model.Finding{high, low}))
+	require.NoError(t, s.SetTriage(ctx, p.ID, "bbbb", store.Triage{Status: model.StatusFalsePositive}))
+
+	for _, tc := range []struct {
+		name  string
+		query store.FindingQuery
+		want  []string
+	}{
+		{name: "by severity", query: store.FindingQuery{Severity: "high"}, want: []string{"aaaa"}},
+		{name: "by status", query: store.FindingQuery{Status: "false_positive"}, want: []string{"bbbb"}},
+		{name: "open only", query: store.FindingQuery{Open: true}, want: []string{"aaaa"}},
+		{name: "by rule", query: store.FindingQuery{RuleID: "OT-010"}, want: []string{"bbbb"}},
+		{name: "by protocol", query: store.FindingQuery{Protocol: "modbus"}, want: []string{"bbbb"}},
+		{name: "by search", query: store.FindingQuery{Search: "1502"}, want: []string{"bbbb"}},
+		{name: "by endpoint", query: store.FindingQuery{Search: "10.0.0.57"}, want: []string{"aaaa", "bbbb"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.query.ProjectID = p.ID
+			got, _, err := s.Findings(ctx, tc.query)
+			require.NoError(t, err)
+			ids := make([]string, 0, len(got))
+			for _, f := range got {
+				ids = append(ids, f.ID)
+			}
+			assert.ElementsMatch(t, tc.want, ids)
+		})
+	}
+
+	open, err := s.CountOpenFindings(ctx, p.ID)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, open, "a false positive is not open")
+
+	bySeverity, err := s.CountFindingsBy(ctx, p.ID, "severity")
+	require.NoError(t, err)
+	assert.Len(t, bySeverity, 2)
+
+	rules, err := s.FindingRules(ctx, p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"OT-002", "OT-010"}, rules)
+
+	_, err = s.CountFindingsBy(ctx, p.ID, "; DROP TABLE findings")
+	require.Error(t, err, "a dimension outside the whitelist never reaches a query")
+}
+
+func TestBulkTriage(t *testing.T) {
+	s, ctx := open(t)
+	p, err := s.EnsureProject(ctx, "demo")
+	require.NoError(t, err)
+	require.NoError(t, s.SaveFindings(ctx, p.ID, []model.Finding{
+		finding("aaaa", "OT-002", model.SeverityHigh, 1),
+		finding("bbbb", "OT-010", model.SeverityLow, 1),
+		finding("cccc", "OT-010", model.SeverityLow, 1),
+	}))
+
+	n, err := s.SetTriageMany(ctx, p.ID, []string{"bbbb", "cccc"}, store.Triage{Status: model.StatusAcceptedRisk})
+	require.NoError(t, err)
+	assert.Equal(t, 2, n)
+
+	open, err := s.CountOpenFindings(ctx, p.ID)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, open)
+
+	_, err = s.SetTriageMany(ctx, p.ID, []string{"bbbb"}, store.Triage{Status: "nonsense"})
+	require.Error(t, err)
+	_, err = s.SetTriageMany(ctx, p.ID, nil, store.Triage{Status: model.StatusResolved})
+	require.NoError(t, err, "a bulk action over nothing is not an error")
+
+	err = s.SetTriage(ctx, p.ID, "no-such-finding", store.Triage{Status: model.StatusResolved})
+	require.Error(t, err)
+}
