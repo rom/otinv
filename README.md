@@ -19,7 +19,8 @@ air-gapped analyst laptop.
 
 This repository holds the decode path (ingest, dissector registry and all ten
 Tier 1 dissectors), the storage and inventory path, the topology and Purdue
-placement, a web GUI that makes a project browsable, and JSON/CSV export.
+placement, the detection rules and their findings, a web GUI that makes a
+project browsable and triageable, and JSON/CSV export.
 Everything was developed test first against public sample captures, each
 dissector cross-checked against an independent decode of the same bytes and
 fuzzed.
@@ -41,18 +42,18 @@ fuzzed.
 | `internal/store` — SQLite (pure Go), embedded migrations, batched event writes, asset/event/flow queries, aggregates, per-project settings | done |
 | `internal/inventory` — asset identity and merge, gateway detection, role inference, identity enrichment | done |
 | `internal/topology` — L2/L3 graph building, Purdue level placement, cross-level flows | done |
-| `internal/web` — GUI: dashboard, assets, topology, flows, communication matrix, events, protocol statistics, captures, settings | done |
+| `internal/rules` — rule engine, thirteen built-in rules, the YAML DSL for custom ones | done |
+| `internal/web` — GUI: dashboard, assets, topology, flows, communication matrix, events, findings with triage, rules, protocol statistics, captures, settings | done |
 | `internal/export` — JSON and CSV export of every stored table | done |
-| `cmd/otinv` — `analyze`, `serve`, `export`, `protocols`, `version` | done |
-| `internal/rules`, `internal/baseline` | not started |
+| `cmd/otinv` — `analyze`, `serve`, `export`, `protocols`, `rules`, `version` | done |
+| `internal/baseline` | not started |
 | Tier 2 and Tier 3 protocols | not started |
 | HTML report and CycloneDX-style asset export | not started |
 
 The GUI has no authentication yet, so it binds to loopback and **refuses to
 start on any other address** rather than exposing OT data unprotected. Capture
-upload through the GUI, detection rules, findings triage and baselines are
-later milestones; `analyze` on the command line is how captures get in for
-now.
+upload through the GUI and baseline diffing are later milestones; `analyze` on
+the command line is how captures get in for now.
 
 ## Quickstart
 
@@ -118,6 +119,7 @@ otinv analyze <capture…>   decode captures, report, and optionally store them 
 otinv serve                browse a project in the GUI
 otinv export               write a project out as JSON or CSV
 otinv protocols            list the dissectors in this binary, with tiers and default ports
+otinv rules                list the detection rules, or validate a custom rule file
 otinv version              version, commit, build date and the Go toolchain
 ```
 
@@ -134,6 +136,7 @@ text on a terminal and JSON when redirected) and `-v` as shorthand for
 | `--db` | project database file (default `<project>.otinv.db`) |
 | `--reingest` | replace a capture that is already in the project |
 | `--skip-inventory` | store the events without rebuilding the asset inventory |
+| `--skip-rules` | store the events without running the detection rules over them |
 | `--json` | emit the report as JSON |
 | `--events` / `--max-events N` | include decoded events in the JSON report, all of them or the first N |
 | `--out`, `-o` | write the report to a file instead of stdout |
@@ -157,6 +160,7 @@ does nothing.
 | `--read-only` | refuse every state-changing request, so the GUI can only be read |
 | `--lang` | UI language when the project has none stored (`en`, `sv`) |
 | `--shutdown-timeout` | how long to wait for requests in flight on SIGINT/SIGTERM |
+| `--config`, `-c` | configuration file, so the GUI runs the same rules the command line does |
 
 `--read-only` is enforced by the server, not only by the page: the settings
 form is rendered disabled *and* a hand-made post is refused with 403.
@@ -166,7 +170,7 @@ form is rendered disabled *and* a hand-made post is refused with 403.
 | Flag | What it does |
 |------|--------------|
 | `--project`, `-p` | project to export (required) |
-| `--what` | tables, comma separated: `summary`, `captures`, `protocols`, `assets`, `flows`, `events`, or `all` |
+| `--what` | tables, comma separated: `summary`, `captures`, `protocols`, `assets`, `flows`, `findings`, `events`, or `all` |
 | `--format`, `-f` | `json` (any mix of tables) or `csv` (one table at a time) |
 | `--out`, `-o` | write to a file instead of stdout |
 | `--protocol` / `--class` | restrict the flows and events to one protocol or one classification |
@@ -206,6 +210,20 @@ s7comm        1     102    -           -          length, defers
 
 `--json` for the machine-readable form, `--tier` to list one depth tier, and
 `--config` to show the extra ports a configuration file adds.
+
+### rules
+
+```
+$ bin/otinv rules
+ID      SEVERITY  TECHNIQUE                                        KIND      TITLE
+OT-001  high      T1692.001 Unauthorized Message: Command Message  built-in  Write, control or program operation from a host outside…
+OT-002  high      T0858 Change Operating Mode                      built-in  Siemens S7 CPU stopped, started or reprogrammed
+…
+```
+
+`--json` for the machine-readable form, `--config` to include the custom rules
+a configuration file loads, and `--check file.yaml` to validate a rule file and
+print what it defines.
 
 ## Protocols decoded
 
@@ -490,6 +508,112 @@ visible rather than hidden. Edges between levels that are not neighbours are
 listed under the graph as flows that skip a level, which is the shape of
 `CLAUDE.md`'s rule about bypassing the DMZ.
 
+## Detection rules
+
+Rules turn decoded events into findings, each with the packet behind it.
+`CLAUDE.md` is categorical about that — "No finding without traceable
+evidence" — so the engine drops a finding a rule reports without one, and the
+GUI shows capture, packet index, timestamp, protocol, operation and function
+code on every finding page.
+
+Thirteen rules ship built in. Each names a MITRE ATT&CK for ICS technique,
+transcribed from the published matrix rather than from memory: several of the
+techniques this project would once have cited have since been restructured
+(Unauthorized Command Message is now T1692.001 under Unauthorized Message,
+System Firmware is T1693.001 under Modify Firmware), which is exactly why the
+table is generated from ATT&CK's own STIX bundle.
+
+| Rule | What it looks for | Severity | Technique |
+|------|-------------------|----------|-----------|
+| OT-001 | write, control or program operation from a host outside the engineering allow-list | high | T1692.001 |
+| OT-002 | S7 CPU stopped or started, block uploaded, downloaded, activated or deleted | high | T0858, T0843, T0845, T0889 |
+| OT-003 | Modbus FC 8 Force Listen Only Mode or Restart Communications Option | high | T0813 |
+| OT-004 | DNP3 restart, application stop, unsolicited reporting disabled, file transfer | high | T0816, T0881, T1691.002 |
+| OT-005 | IEC 104 control command, raised when it is an execute rather than a select | medium/high | T1692.001 |
+| OT-006 | MMS write to a control object (the CO constraint, Oper, SBO, Cancel) | high | T1692.001 |
+| OT-007 | GOOSE state or sequence counters that do not add up, or a simulated frame | high | T0848 |
+| OT-008 | CIP Stop, Start, Reset or a firmware service | high | T0858, T0816, T1693.001 |
+| OT-009 | OPC UA channel or endpoint with security mode None | high/medium | T0830 |
+| OT-010 | industrial protocol on a port that is not one of its registered ones | low | T0885 |
+| OT-011 | flow between Purdue levels that are not neighbours | medium | T0886 |
+| OT-012 | burst of protocol exceptions between two devices | low | T0861 |
+| OT-013 | repeated undecodable frames from one source | low | T0814 |
+
+Two of `CLAUDE.md`'s rules are deliberately absent rather than pretended: a
+new talker compared with a baseline needs the baseline package, and cleartext
+IT protocols on an OT segment need the Tier 3 dissectors that recognise them.
+
+A finding is about a device, not an address: the engine keys them on the asset
+the inventory resolved, so a controller with two IPs raises one finding with a
+count rather than two. Keying is also what makes a re-run safe — the id is
+derived from the rule and what the finding is about, so running the rules
+again updates each finding in place and leaves the triage state alone.
+
+On the bundled public captures the built-ins find, among others, an engineering
+station downloading a block into a CPU, a master forcing a Modbus device
+listen-only, a DNP3 outstation restarted and told to stop reporting, IEC 104
+commands with their select and execute steps told apart, a GOOSE sequence
+regression, a Logix controller stopped and started over CIP, and an OPC UA
+channel running with security mode None.
+
+### The engineering allow-list
+
+OT-001 is the rule `CLAUDE.md` leads with, and it needs to know which stations
+are allowed to write. Without that list it cannot answer, so it says so rather
+than flagging every write in the plant:
+
+```sh
+$ bin/otinv rules
+…
+inactive in this configuration
+  OT-001  no engineering allow-list is configured (rules.engineering_stations in otinv.yaml)
+```
+
+```yaml
+# otinv.yaml
+rules:
+  engineering_stations: [192.168.1.10, 10.10.0.0/24]
+  disabled: []
+  files: [rules.example.yaml]
+```
+
+### Custom rules
+
+Custom rules are YAML, validated on load with errors that say what is wrong
+and where. They match on protocol, classification, operation, function codes,
+unit ids, source and destination sets (addresses, MACs or CIDR blocks, with
+exceptions), anomalies and malformed frames, and they can be limited to a time
+window or held back until a rate threshold is crossed:
+
+```yaml
+rules:
+  - id: PLANT-002
+    title: Control command outside the maintenance window
+    severity: medium
+    technique: T1692.001
+    match:
+      classification: [control, program]
+    window:
+      days: [mon, tue, wed, thu, fri]
+      from: "06:00"
+      to: "18:00"
+      outside: true
+
+  - id: PLANT-003
+    title: Burst of writes from one host
+    match:
+      classification: [write]
+      src: [10.0.0.0/24]
+    threshold:
+      count: 10
+      within: 1m
+```
+
+A rule that names nothing to match on is refused rather than loaded, because a
+rule that matches every event is a rule that buries the ones that matter.
+`otinv rules --check plant.yaml` validates a file and prints what it defines;
+see [`rules.example.yaml`](rules.example.yaml).
+
 ## What the GUI shows
 
 `otinv serve` renders every page on the server with templ and uses htmx only
@@ -500,8 +624,8 @@ view is deep-linkable: the whole filter state lives in the URL.
   events (and flows), protocols, captures (and packets), malformed frames,
   anomalies, exceptions and the time span the captures cover. Then charts of
   events by protocol, by classification and by operation, assets by role, by
-  Purdue level and by vendor, exceptions by name, a timeline of the whole
-  project, and the latest events. Every tile, bar and segment links through to the filtered
+  Purdue level and by vendor, findings by severity, exceptions by name, a
+  timeline of the whole project, and the latest events. Every tile, bar and segment links through to the filtered
   view behind it.
 - **Assets** — faceted list (search, role, protocol, Purdue level), paged and
   sortable, with the inferred level on every row
@@ -528,6 +652,15 @@ view is deep-linkable: the whole filter state lives in the URL.
   health (malformed frames and anomalies) and the time range; pick a protocol
   and it adds that protocol's own timeline, operation histogram and server
   ports
+- **Findings** — the triage queue: severity, rule, endpoints, how many
+  observations, and the workflow state. Filter by severity, status, rule or
+  text, set a state on a batch at once, and open a finding for its evidence —
+  the capture, the packet index, the timestamp, the operation and the function
+  code, with a link through to the traffic itself and to the ATT&CK technique
+- **Rules** — every rule this server runs, built-in and custom, with its
+  technique, how many findings it has in this project, and why a rule that
+  cannot fire cannot. Re-running the rules over the stored events is one
+  button, and it keeps the triage states
 - **Captures** — what has been ingested, with digests and time ranges
 - **Settings** — fifteen settings stored per project: theme (automatic, light,
   dark), accent colour (six), contrast, density, font size, row stripes,
@@ -566,11 +699,12 @@ English and Swedish (`?lang=sv`, the stored setting, `serve --lang sv`, or
   authentication is not built yet
 - `--read-only` refuses every state-changing request, enforced by the server
   and not only by the rendered page
-- The settings form — the one state-changing request the GUI has — carries a
-  CSRF token in a `HttpOnly`, `SameSite=Strict` cookie that the form repeats,
-  compared in constant time, with the `Origin` and `Sec-Fetch-Site` headers
-  checked as well; a value the setting does not define is dropped rather than
-  stored
+- Every state-changing request — the settings, a triage change, a rule re-run
+  — carries a CSRF token in a `HttpOnly`, `SameSite=Strict` cookie that the
+  form repeats, compared in constant time, with the `Origin` and
+  `Sec-Fetch-Site` headers checked as well; a value the form does not define
+  is dropped rather than stored, and a return address that points anywhere but
+  back into the GUI is replaced
 - Strict CSP with no inline scripts, `nosniff`, `no-referrer`,
   `frame-ancestors 'none'`, and `Cache-Control: no-store` on every page of OT
   data
@@ -625,6 +759,16 @@ than from the URL, and a test tries to drop the table through the search box.
 
 - **No authentication**, so the GUI is loopback-only by construction. Remote
   access is a later milestone.
+- **Two of CLAUDE.md's rules are not built yet**: a new talker compared with a
+  baseline, which needs the baseline package, and cleartext IT protocols on an
+  OT segment, which needs the Tier 3 dissectors. The rule about a protocol in
+  the wrong Purdue level is not built either: levels are currently inferred
+  *from* the protocols, so such a rule could only ever fire on a user override,
+  and overrides are not built yet.
+- **Rules are enabled, disabled and edited in `otinv.yaml`**, not in the GUI.
+  The rules view lists what the server runs and re-runs them over the stored
+  events; `CLAUDE.md` asks for editing custom rules in the GUI as well, which
+  is a later milestone.
 - **User overrides of inferred fields are not implemented.** The GUI can
   change its own appearance settings but not an asset's vendor, role or Purdue
   level; `CLAUDE.md` requires those to be overridable and they will be. Until
