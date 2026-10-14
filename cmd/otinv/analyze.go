@@ -13,13 +13,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/rom/otinv/internal/dissect"
-	_ "github.com/rom/otinv/internal/dissect/dnp3"   // register the DNP3 dissector
-	_ "github.com/rom/otinv/internal/dissect/enip"   // register the EtherNet/IP and CIP dissector
-	_ "github.com/rom/otinv/internal/dissect/goose"  // register the IEC 61850 GOOSE dissector
-	_ "github.com/rom/otinv/internal/dissect/iec104" // register the IEC 60870-5-104 dissector
-	_ "github.com/rom/otinv/internal/dissect/mms"    // register the IEC 61850 MMS dissector
-	_ "github.com/rom/otinv/internal/dissect/modbus" // register the Modbus dissector
-	_ "github.com/rom/otinv/internal/dissect/s7comm" // register the S7comm dissector
+	_ "github.com/rom/otinv/internal/dissect/bacnet"   // register the BACnet/IP dissector
+	_ "github.com/rom/otinv/internal/dissect/dnp3"     // register the DNP3 dissector
+	_ "github.com/rom/otinv/internal/dissect/enip"     // register the EtherNet/IP and CIP dissector
+	_ "github.com/rom/otinv/internal/dissect/goose"    // register the IEC 61850 GOOSE dissector
+	_ "github.com/rom/otinv/internal/dissect/iec104"   // register the IEC 60870-5-104 dissector
+	_ "github.com/rom/otinv/internal/dissect/mms"      // register the IEC 61850 MMS dissector
+	_ "github.com/rom/otinv/internal/dissect/modbus"   // register the Modbus dissector
+	_ "github.com/rom/otinv/internal/dissect/opcua"    // register the OPC UA dissector
+	_ "github.com/rom/otinv/internal/dissect/profinet" // register the PROFINET DCP dissector
+	_ "github.com/rom/otinv/internal/dissect/s7comm"   // register the S7comm dissector
 	"github.com/rom/otinv/internal/ingest"
 	"github.com/rom/otinv/internal/inventory"
 	"github.com/rom/otinv/internal/model"

@@ -1,0 +1,133 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2011-11-21T09:41:20.314843Z",
+    "flow": {
+      "src_mac": "00:0c:29:ba:09:ea",
+      "dst_mac": "08:00:06:93:cf:32",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 16777217,
+    "attrs": {
+      "blocks": "AllSelector",
+      "frame_id": "0xfefe",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 2,
+    "ts": "2011-11-21T09:41:20.355788Z",
+    "flow": {
+      "src_mac": "08:00:06:93:cf:32",
+      "dst_mac": "00:0c:29:ba:09:ea",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "response",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 16777217,
+    "identity": {
+      "device_id": "0x0a01",
+      "device_role": "io_device",
+      "model": "INC",
+      "reported_address": "192.168.0.6",
+      "station_name": "X208-BORD",
+      "vendor_id": "42",
+      "vendor_name": "Siemens"
+    },
+    "attrs": {
+      "blocks": "DeviceOptions,DeviceVendorValue,NameOfStation,DeviceID,DeviceRole,IPParameter",
+      "device_id": "0x0a01",
+      "device_role": "0x01",
+      "device_vendor_value": "INC",
+      "frame_id": "0xfeff",
+      "gateway": "192.168.0.1",
+      "ip_address": "192.168.0.6",
+      "ip_state": "ip_set",
+      "name_of_station": "X208-BORD",
+      "netmask": "255.255.255.0",
+      "service": "Identify",
+      "service_type": "success",
+      "supported_options": "13",
+      "vendor_id": "0x002a"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2011-11-21T09:41:21.736928Z",
+    "flow": {
+      "src_mac": "00:0c:29:ba:09:ea",
+      "dst_mac": "08:00:06:93:cf:32",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Set",
+    "function_code": 4,
+    "class": "write",
+    "transaction_id": 16777217,
+    "attrs": {
+      "blocks": "IPParameter",
+      "frame_id": "0xfefd",
+      "gateway": "192.168.0.1",
+      "ip_address": "192.168.0.10",
+      "ip_state": "ip_set",
+      "netmask": "255.255.255.0",
+      "service": "Set",
+      "service_type": "request",
+      "set_permanent": "true"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2011-11-21T09:41:21.764872Z",
+    "flow": {
+      "src_mac": "08:00:06:93:cf:32",
+      "dst_mac": "00:0c:29:ba:09:ea",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet"
+    },
+    "protocol": "profinet_dcp",
+    "direction": "response",
+    "operation": "Set",
+    "function_code": 4,
+    "class": "write",
+    "transaction_id": 16777217,
+    "attrs": {
+      "acked_block": "IPParameter",
+      "block_result": "Ok",
+      "blocks": "Response",
+      "frame_id": "0xfefd",
+      "service": "Set",
+      "service_type": "success"
+    }
+  }
+]

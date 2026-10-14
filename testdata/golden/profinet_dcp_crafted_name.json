@@ -1,0 +1,144 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 1,
+    "ts": "2008-01-17T10:23:18.895639Z",
+    "flow": {
+      "src_mac": "00:80:c8:38:a4:8b",
+      "dst_mac": "00:02:e3:17:c7:50",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet",
+      "vlan": [
+        0
+      ]
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 16777217,
+    "attrs": {
+      "blocks": "AllSelector",
+      "frame_id": "0xfefe",
+      "response_delay": "1",
+      "service": "Identify",
+      "service_type": "request"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 2,
+    "ts": "2008-01-17T10:23:18.896662Z",
+    "flow": {
+      "src_mac": "00:02:e3:17:c7:50",
+      "dst_mac": "00:80:c8:38:a4:8b",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet",
+      "vlan": [
+        0
+      ]
+    },
+    "protocol": "profinet_dcp",
+    "direction": "response",
+    "operation": "Identify",
+    "function_code": 5,
+    "class": "discovery",
+    "transaction_id": 16777217,
+    "identity": {
+      "device_id": "0x0101",
+      "device_role": "io_controller",
+      "model": "S7-300EC",
+      "reported_address": "192.168.0.11",
+      "station_name": "%n%n%n ",
+      "vendor_id": "42",
+      "vendor_name": "Siemens"
+    },
+    "attrs": {
+      "anomaly": "name_of_station_not_printable",
+      "blocks": "DeviceOptions,DeviceVendorValue,NameOfStation,DeviceID,DeviceRole,IPParameter",
+      "device_id": "0x0101",
+      "device_role": "0x02",
+      "device_vendor_value": "S7-300EC",
+      "frame_id": "0xfeff",
+      "gateway": "192.168.0.11",
+      "ip_address": "192.168.0.11",
+      "ip_state": "ip_set",
+      "name_of_station": "%n%n%n ",
+      "netmask": "255.255.255.0",
+      "service": "Identify",
+      "service_type": "success",
+      "supported_options": "7",
+      "vendor_id": "0x002a"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 3,
+    "ts": "2008-01-17T10:23:19.970994Z",
+    "flow": {
+      "src_mac": "00:80:c8:38:a4:8b",
+      "dst_mac": "00:02:e3:17:c7:50",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet",
+      "vlan": [
+        0
+      ]
+    },
+    "protocol": "profinet_dcp",
+    "direction": "request",
+    "operation": "Set",
+    "function_code": 4,
+    "class": "write",
+    "transaction_id": 16777217,
+    "attrs": {
+      "blocks": "NameOfStation,End",
+      "control": "End",
+      "frame_id": "0xfefd",
+      "name_of_station": "%n%n%n ",
+      "service": "Set",
+      "service_type": "request",
+      "set_permanent": "true"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2008-01-17T10:23:19.971394Z",
+    "flow": {
+      "src_mac": "00:02:e3:17:c7:50",
+      "dst_mac": "00:80:c8:38:a4:8b",
+      "src_ip": "",
+      "dst_ip": "",
+      "src_port": 0,
+      "dst_port": 0,
+      "transport": "ethernet",
+      "vlan": [
+        0
+      ]
+    },
+    "protocol": "profinet_dcp",
+    "direction": "response",
+    "operation": "Set",
+    "function_code": 4,
+    "class": "write",
+    "transaction_id": 16777217,
+    "attrs": {
+      "acked_block": "End",
+      "block_result": "Ok",
+      "blocks": "Response,Response",
+      "frame_id": "0xfefd",
+      "service": "Set",
+      "service_type": "success"
+    }
+  }
+]

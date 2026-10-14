@@ -30,6 +30,13 @@ commit captures from real customer or production environments.
 | `enip_cip_batch_request.pcap` | 304 | `ecf46cb2bfb1e7cda70d9b966431fe2e1f1056d2a158cf54ddce6f03fc82474e` |
 | `enip_cip_batch_reply.pcap` | 387 | `4a6350da7f5d5b2ee383e9e92e6a5a846931785f849798799a323d0b8a8ba3d4` |
 | `enip_rockwell_session.pcap` | 129648 | `8439230c8c1a3e824fc8e5f0637160ad6d88fcd78cae94c60c1e6f9df9358f57` |
+| `profinet_dcp_change_ip.pcap` | 532 | `aaba0d1492ca2cae77dcac3ae311bcc5c63b72e79b2a8fd04389c0f9d1d01c98` |
+| `profinet_dcp_crafted_name.pcap` | 450 | `ebb4ac34bda04ce0f3acadb947ff9be14fe07b0bb17a3bbbfff17223288caea5` |
+| `profinet_dcp_identify_scan.pcap` | 1032 | `55ceb6e5c1ca1490c24d51d23084a554cecb95bdd9e9ae82e04b97c237798bbb` |
+| `bacnet_device_identity.pcap` | 1956 | `973724800eef38e1131368d4ebce0eafc6593ccb4763916b8ee69b3b1328d8ff` |
+| `bacnet_read_multiple.pcapng` | 596 | `65d2f0a179b2e7fa9d206355efb29b2383e0fb9ff50ab47621aaa1112644065a` |
+| `bacnet_schedule_property.pcapng` | 492 | `c597d9dd433fcca462ac8b25564e3a79e418d239fefe26e25657d196dec91eec` |
+| `opcua_method_call.pcap` | 46516 | `2a7bc18fc97829db65d04be564ef8db4d4e3950d0b0b07f77197449fbc9300de` |
 
 ## Origin
 
@@ -303,3 +310,103 @@ embedded request and not in the one that was sent. And its 0x52 requests are
 `Unconnected_Send` on the Connection Manager while the same code on a symbol
 is a fragmented tag read, which is the capture that proves a service code
 above the common range cannot be named without knowing the class.
+
+## PROFINET DCP captures
+
+The three `profinet_dcp_*.pcap` files came from the same public collection as
+the files above, where they are published as
+`profinet/PROFINET-RT-DCP/ChangeIPUsingDCP.pcap`,
+`profinet/profinet-wireshark-bug.pcap` and
+`profinet/PROFINET-RT-DCP/PROFINET-RT.pcap`. They are renamed here after what
+they hold — and the third needed it: despite its name it carries no cyclic RT
+traffic at all, only fourteen DCP Identify requests.
+
+`profinet_dcp_change_ip.pcap` — six packets, four of them the exchange the
+file is for: an engineering station asks every station on the segment to
+identify itself, a SCALANCE switch answers with its name of station
+`X208-BORD`, its vendor and device identifiers, its device type string, the
+part it plays (IO device) and its IP configuration, and then its address is
+changed from 192.168.0.6 to 192.168.0.10 and it accepts. The two remaining
+packets are the ARP probes the station sends to check its new address is
+free, which nothing claims. Changing a name of station or an IP address is
+how a PROFINET device is taken off the network, and nothing in DCP
+authenticates anything — which is what makes this the traffic behind
+CLAUDE.md's rule on writes from hosts outside the engineering allow-list.
+
+`profinet_dcp_crafted_name.pcap` — four packets of the same exchange against
+an S7-300, published because the station's name of station is `%n%n%n ` padded
+with 101 NUL octets: a format string attack on whatever reads it. The
+dissector reports the name as not printable and renders it with the
+unprintable octets replaced, which is the test that a name taken off the wire
+cannot reach the GUI as it was. This station states it is the IO controller,
+where the other one states it is a device.
+
+`profinet_dcp_identify_scan.pcap` — fourteen Identify requests from eleven
+interfaces, each filtered on the name of one station: `switch1` through
+`switch7`, `swln3`, `swln4` and `pn-io`. Eleven of them pad the frame to the
+Ethernet minimum with whatever was in the sender's buffer — the readable
+remains of a Siemens SIMATIC string — rather than with zeroes, which the
+dissector reports as non-zero padding. A device leaking its previous frame
+into the padding of this one is a small information disclosure that nothing
+else in the capture would show.
+
+## BACnet/IP captures
+
+`bacnet_device_identity.pcap` came from the same public collection as the
+files above (`pcaps/BACnet/bacnet_test.pcap`); the two `.pcapng` files came
+from the mirror of the Wireshark BACnet sample set in
+<https://github.com/automayt/ICS-pcap> (`BACNET/BACnetL_SchedRPM` and
+`BACNET/BACnet-exception-schedule-property-1`).
+
+`bacnet_device_identity.pcap` — 26 packets, 22 of them BACnet, and the clearest
+asset enrichment exchange in this whole directory: a client reads nine
+properties of a Johnson Controls automation engine's device object one at a
+time, and the answers name the vendor (`JCI`, vendor identifier 5), the model
+(`MS-NAE4510-2`), the firmware (`5.1.0.4400`), the device name (`KBRNAE`) and
+the device instance (500). The strings come back in UCS-2 rather than UTF-8,
+which is one of the four character sets BACnet allows and a shape a dissector
+has to read. The file also holds four frames of the virtual link layer on its
+own — a broadcast distribution table read and a foreign device registration,
+both refused — which is traffic with no application layer at all.
+
+`bacnet_read_multiple.pcapng` and `bacnet_schedule_property.pcapng` — two
+exchanges in the list form, where one request reads fifteen properties of a
+schedule object and the answer carries all fifteen values, nested in the
+constructed tags BACnet uses for structure. They exercise the tag reader
+rather than the service table, and the second is only the answers: a capture
+that starts after the question, which is what a capture from the field usually
+looks like.
+
+## OPC UA capture
+
+`opcua_method_call.pcap` came from the same public collection as the files
+above (`pcaps/OPC/opc-ua-ap-method-wireshark-freeze.pcap`), where it is
+published as a capture that froze the Wireshark of its day.
+
+It is 90 packets of a robustness test tool — a Wurldtech Achilles satellite
+running the OPC UA server test tool, which the client application URI says
+outright — working on a stack test server, and it is better material than an
+ordinary session for three reasons.
+
+The whole handshake is there twice: Hello, Acknowledge, OpenSecureChannel,
+GetEndpoints, CreateSession, ActivateSession and a method call, in two
+connections. Both channels are opened with `SecurityPolicy#None`, so nothing
+on them is signed or encrypted, and the five endpoints the server returns
+include one with message security mode None alongside the signed ones — which
+is exactly what CLAUDE.md's rule on OPC UA SecurityMode None is for. The
+server accepts sessions with an anonymous identity token.
+
+The server also describes itself in those endpoint descriptions: the
+application name `UA StackTest Server (AnsiC/2048)` and its application and
+product URIs, which is the identity CLAUDE.md names for this protocol.
+
+And the two method calls are what the file was published for. Each names a
+real object and then a method identifier whose string form declares a quarter
+of a megabyte of name in a five kilobyte message. The dissector records the
+object, refuses the length, and reports that the arguments could not be read —
+which is the behaviour that distinguishes bounding every length field from
+trusting one.
+
+The server runs on port 12001 rather than the registered 4840, so this capture
+is also the test that heuristic detection finds an OPC UA server where no
+port says to look.

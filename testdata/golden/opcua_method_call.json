@@ -1,0 +1,776 @@
+[
+  {
+    "capture_id": "test",
+    "packet_index": 4,
+    "ts": "2009-09-01T23:29:28.263186Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58674,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "Hello",
+    "function_code": -1,
+    "class": "other",
+    "identity": {
+      "endpoint_url": "opc.tcp://vm-xp-steven:12001/UA/StackTestServer"
+    },
+    "attrs": {
+      "endpoint_url": "opc.tcp://vm-xp-steven:12001/UA/StackTestServer",
+      "max_chunk_count": "0",
+      "max_message_size": "4000",
+      "message_type": "HEL",
+      "protocol_version": "0",
+      "receive_buffer": "65535",
+      "send_buffer": "65535"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 6,
+    "ts": "2009-09-01T23:29:28.263697Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58674,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "Acknowledge",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "max_chunk_count": "0",
+      "max_message_size": "4000",
+      "message_type": "ACK",
+      "protocol_version": "0",
+      "receive_buffer": "65535",
+      "send_buffer": "65535"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 8,
+    "ts": "2009-09-01T23:29:28.263929Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58674,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "OpenSecureChannelRequest",
+    "function_code": 446,
+    "class": "other",
+    "transaction_id": 1,
+    "attrs": {
+      "client_protocol_version": "0",
+      "insecure_channel": "true",
+      "message_type": "OPN",
+      "request_type": "issue",
+      "requested_lifetime_ms": "6000000",
+      "secure_channel": "0",
+      "security_mode": "None",
+      "security_policy": "None",
+      "sequence": "1",
+      "service": "OpenSecureChannelRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 9,
+    "ts": "2009-09-01T23:29:28.264887Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58674,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "OpenSecureChannelResponse",
+    "function_code": 449,
+    "class": "other",
+    "transaction_id": 1,
+    "attrs": {
+      "insecure_channel": "true",
+      "message_type": "OPN",
+      "secure_channel": "6495",
+      "security_policy": "None",
+      "security_token": "1",
+      "sequence": "51",
+      "server_protocol_version": "0",
+      "service": "OpenSecureChannelResponse"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 11,
+    "ts": "2009-09-01T23:29:28.564719Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58674,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "GetEndpointsRequest",
+    "function_code": 428,
+    "class": "discovery",
+    "transaction_id": 2,
+    "attrs": {
+      "message_type": "MSG",
+      "secure_channel": "6495",
+      "security_token": "1",
+      "sequence": "2",
+      "service": "GetEndpointsRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 20,
+    "ts": "2009-09-01T23:29:28.567391Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58674,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "GetEndpointsResponse",
+    "function_code": 431,
+    "class": "discovery",
+    "transaction_id": 2,
+    "identity": {
+      "application_name": "UA StackTest Server (AnsiC/2048)",
+      "application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)"
+    },
+    "attrs": {
+      "endpoint_count": "5",
+      "endpoint_urls": "opc.tcp://vm-xp-steven:12001/StackTestServer/AnsiC/2048",
+      "message_type": "MSG",
+      "offers_insecure_endpoint": "true",
+      "secure_channel": "6495",
+      "security_modes": "None,SignAndEncrypt,Sign",
+      "security_policies": "None,Basic128Rsa15,Basic256",
+      "security_token": "1",
+      "sequence": "52",
+      "server_application_name": "UA StackTest Server (AnsiC/2048)",
+      "server_application_type": "Server",
+      "server_application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)",
+      "service": "GetEndpointsResponse",
+      "user_tokens": "Anonymous"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 22,
+    "ts": "2009-09-01T23:29:28.770047Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58674,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "CreateSessionRequest",
+    "function_code": 461,
+    "class": "other",
+    "transaction_id": 3,
+    "attrs": {
+      "client_application_name": "ApplicationName",
+      "client_application_type": "Client",
+      "client_application_uri": "uri://AchillesSatellite/Opc.Ua.ServerTestTool/55ea864a-2be8-4bc6-bb73-1123c54d0fc4",
+      "client_product_uri": "urn:opcfoundation.org/UA/ServerTest",
+      "endpoint_url": "opc.tcp://vm-xp-steven:12001/UA/StackTestServer",
+      "message_type": "MSG",
+      "secure_channel": "6495",
+      "security_token": "1",
+      "sequence": "3",
+      "server_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)",
+      "service": "CreateSessionRequest",
+      "session_name": "MySession 1"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 33,
+    "ts": "2009-09-01T23:29:28.773823Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58674,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "CreateSessionResponse",
+    "function_code": 464,
+    "class": "other",
+    "transaction_id": 3,
+    "identity": {
+      "application_name": "UA StackTest Server (AnsiC/2048)",
+      "application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)"
+    },
+    "attrs": {
+      "endpoint_count": "5",
+      "endpoint_urls": "opc.tcp://vm-xp-steven:12001/StackTestServer/AnsiC/2048",
+      "message_type": "MSG",
+      "offers_insecure_endpoint": "true",
+      "secure_channel": "6495",
+      "security_modes": "None,SignAndEncrypt,Sign",
+      "security_policies": "None,Basic128Rsa15,Basic256",
+      "security_token": "1",
+      "sequence": "53",
+      "server_application_name": "UA StackTest Server (AnsiC/2048)",
+      "server_application_type": "Server",
+      "server_application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)",
+      "server_certificate_bytes": "1003",
+      "service": "CreateSessionResponse",
+      "session_id": "ns=10;i=365457",
+      "session_timeout_ms": "60000",
+      "user_tokens": "Anonymous"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 35,
+    "ts": "2009-09-01T23:29:28.972544Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58674,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "ActivateSessionRequest",
+    "function_code": 467,
+    "class": "other",
+    "transaction_id": 4,
+    "attrs": {
+      "identity_token": "Anonymous",
+      "message_type": "MSG",
+      "secure_channel": "6495",
+      "security_token": "1",
+      "sequence": "4",
+      "service": "ActivateSessionRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 36,
+    "ts": "2009-09-01T23:29:28.97542Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58674,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "ActivateSessionResponse",
+    "function_code": 470,
+    "class": "other",
+    "transaction_id": 4,
+    "attrs": {
+      "message_type": "MSG",
+      "secure_channel": "6495",
+      "security_token": "1",
+      "sequence": "54",
+      "service": "ActivateSessionResponse"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 42,
+    "ts": "2009-09-01T23:29:29.17556Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58674,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "CallRequest",
+    "function_code": 712,
+    "class": "control",
+    "transaction_id": 5,
+    "quantity": 1,
+    "attrs": {
+      "anomaly": "service_arguments_unreadable",
+      "message_type": "MSG",
+      "method_count": "1",
+      "object": "i=342",
+      "secure_channel": "6495",
+      "security_token": "1",
+      "sequence": "5",
+      "service": "CallRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 43,
+    "ts": "2009-09-01T23:29:29.17718Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58674,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "Error",
+    "function_code": -1,
+    "class": "other",
+    "exception": "BadInternalError",
+    "attrs": {
+      "message_type": "ERR",
+      "status": "BadInternalError",
+      "status_code": "0x80020000"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 50,
+    "ts": "2009-09-01T23:29:29.197546Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58675,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "Hello",
+    "function_code": -1,
+    "class": "other",
+    "identity": {
+      "endpoint_url": "opc.tcp://vm-xp-steven:12001/UA/StackTestServer"
+    },
+    "attrs": {
+      "endpoint_url": "opc.tcp://vm-xp-steven:12001/UA/StackTestServer",
+      "max_chunk_count": "0",
+      "max_message_size": "4000",
+      "message_type": "HEL",
+      "protocol_version": "0",
+      "receive_buffer": "65535",
+      "send_buffer": "65535"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 51,
+    "ts": "2009-09-01T23:29:29.197961Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58675,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "Acknowledge",
+    "function_code": -1,
+    "class": "other",
+    "attrs": {
+      "max_chunk_count": "0",
+      "max_message_size": "4000",
+      "message_type": "ACK",
+      "protocol_version": "0",
+      "receive_buffer": "65535",
+      "send_buffer": "65535"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 53,
+    "ts": "2009-09-01T23:29:29.19859Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58675,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "OpenSecureChannelRequest",
+    "function_code": 446,
+    "class": "other",
+    "transaction_id": 1,
+    "attrs": {
+      "client_protocol_version": "0",
+      "insecure_channel": "true",
+      "message_type": "OPN",
+      "request_type": "issue",
+      "requested_lifetime_ms": "6000000",
+      "secure_channel": "0",
+      "security_mode": "None",
+      "security_policy": "None",
+      "sequence": "1",
+      "service": "OpenSecureChannelRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 54,
+    "ts": "2009-09-01T23:29:29.199504Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58675,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "OpenSecureChannelResponse",
+    "function_code": 449,
+    "class": "other",
+    "transaction_id": 1,
+    "attrs": {
+      "insecure_channel": "true",
+      "message_type": "OPN",
+      "secure_channel": "6496",
+      "security_policy": "None",
+      "security_token": "1",
+      "sequence": "51",
+      "server_protocol_version": "0",
+      "service": "OpenSecureChannelResponse"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 57,
+    "ts": "2009-09-01T23:29:29.496448Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58675,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "GetEndpointsRequest",
+    "function_code": 428,
+    "class": "discovery",
+    "transaction_id": 2,
+    "attrs": {
+      "message_type": "MSG",
+      "secure_channel": "6496",
+      "security_token": "1",
+      "sequence": "2",
+      "service": "GetEndpointsRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 66,
+    "ts": "2009-09-01T23:29:29.498595Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58675,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "GetEndpointsResponse",
+    "function_code": 431,
+    "class": "discovery",
+    "transaction_id": 2,
+    "identity": {
+      "application_name": "UA StackTest Server (AnsiC/2048)",
+      "application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)"
+    },
+    "attrs": {
+      "endpoint_count": "5",
+      "endpoint_urls": "opc.tcp://vm-xp-steven:12001/StackTestServer/AnsiC/2048",
+      "message_type": "MSG",
+      "offers_insecure_endpoint": "true",
+      "secure_channel": "6496",
+      "security_modes": "None,SignAndEncrypt,Sign",
+      "security_policies": "None,Basic128Rsa15,Basic256",
+      "security_token": "1",
+      "sequence": "52",
+      "server_application_name": "UA StackTest Server (AnsiC/2048)",
+      "server_application_type": "Server",
+      "server_application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)",
+      "service": "GetEndpointsResponse",
+      "user_tokens": "Anonymous"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 68,
+    "ts": "2009-09-01T23:29:29.697462Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58675,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "CreateSessionRequest",
+    "function_code": 461,
+    "class": "other",
+    "transaction_id": 3,
+    "attrs": {
+      "client_application_name": "ApplicationName",
+      "client_application_type": "Client",
+      "client_application_uri": "uri://AchillesSatellite/Opc.Ua.ServerTestTool/55ea864a-2be8-4bc6-bb73-1123c54d0fc4",
+      "client_product_uri": "urn:opcfoundation.org/UA/ServerTest",
+      "endpoint_url": "opc.tcp://vm-xp-steven:12001/UA/StackTestServer",
+      "message_type": "MSG",
+      "secure_channel": "6496",
+      "security_token": "1",
+      "sequence": "3",
+      "server_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)",
+      "service": "CreateSessionRequest",
+      "session_name": "MySession 1"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 79,
+    "ts": "2009-09-01T23:29:29.701079Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58675,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "CreateSessionResponse",
+    "function_code": 464,
+    "class": "other",
+    "transaction_id": 3,
+    "identity": {
+      "application_name": "UA StackTest Server (AnsiC/2048)",
+      "application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)"
+    },
+    "attrs": {
+      "endpoint_count": "5",
+      "endpoint_urls": "opc.tcp://vm-xp-steven:12001/StackTestServer/AnsiC/2048",
+      "message_type": "MSG",
+      "offers_insecure_endpoint": "true",
+      "secure_channel": "6496",
+      "security_modes": "None,SignAndEncrypt,Sign",
+      "security_policies": "None,Basic128Rsa15,Basic256",
+      "security_token": "1",
+      "sequence": "53",
+      "server_application_name": "UA StackTest Server (AnsiC/2048)",
+      "server_application_type": "Server",
+      "server_application_uri": "http://vm-xp-steven/UA StackTest Server (AnsiC/2048)",
+      "server_certificate_bytes": "1003",
+      "service": "CreateSessionResponse",
+      "session_id": "ns=10;i=365513",
+      "session_timeout_ms": "60000",
+      "user_tokens": "Anonymous"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 81,
+    "ts": "2009-09-01T23:29:29.896636Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58675,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "ActivateSessionRequest",
+    "function_code": 467,
+    "class": "other",
+    "transaction_id": 4,
+    "attrs": {
+      "identity_token": "Anonymous",
+      "message_type": "MSG",
+      "secure_channel": "6496",
+      "security_token": "1",
+      "sequence": "4",
+      "service": "ActivateSessionRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 82,
+    "ts": "2009-09-01T23:29:29.899422Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58675,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "ActivateSessionResponse",
+    "function_code": 470,
+    "class": "other",
+    "transaction_id": 4,
+    "attrs": {
+      "message_type": "MSG",
+      "secure_channel": "6496",
+      "security_token": "1",
+      "sequence": "54",
+      "service": "ActivateSessionResponse"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 84,
+    "ts": "2009-09-01T23:29:30.100501Z",
+    "flow": {
+      "src_mac": "00:50:8d:9a:08:5e",
+      "dst_mac": "00:0c:29:a0:86:e6",
+      "src_ip": "192.168.41.176",
+      "dst_ip": "192.168.41.212",
+      "src_port": 58675,
+      "dst_port": 12001,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "request",
+    "server_port": 12001,
+    "operation": "CallRequest",
+    "function_code": 712,
+    "class": "control",
+    "transaction_id": 5,
+    "quantity": 1,
+    "attrs": {
+      "anomaly": "service_arguments_unreadable",
+      "message_type": "MSG",
+      "method_count": "1",
+      "object": "i=342",
+      "secure_channel": "6496",
+      "security_token": "1",
+      "sequence": "5",
+      "service": "CallRequest"
+    }
+  },
+  {
+    "capture_id": "test",
+    "packet_index": 85,
+    "ts": "2009-09-01T23:29:30.102096Z",
+    "flow": {
+      "src_mac": "00:0c:29:a0:86:e6",
+      "dst_mac": "00:50:8d:9a:08:5e",
+      "src_ip": "192.168.41.212",
+      "dst_ip": "192.168.41.176",
+      "src_port": 12001,
+      "dst_port": 58675,
+      "transport": "tcp"
+    },
+    "protocol": "opcua",
+    "direction": "response",
+    "server_port": 12001,
+    "operation": "Error",
+    "function_code": -1,
+    "class": "other",
+    "exception": "BadDecodingError",
+    "attrs": {
+      "message_type": "ERR",
+      "status": "BadDecodingError",
+      "status_code": "0x80070000"
+    }
+  }
+]
