@@ -21,8 +21,9 @@ import (
 // store caps a page for the GUI's sake, so an export walks the list a page at
 // a time rather than asking for a number it would not get.
 const (
-	assetPage = 500
-	flowPage  = 1000
+	assetPage   = 500
+	flowPage    = 1000
+	findingPage = 500
 )
 
 func newExportCommand() *cobra.Command {
@@ -209,6 +210,13 @@ func fillDocument(ctx context.Context, db *store.Store, projectID int64, doc *ex
 			}
 			doc.Flows = export.FromFlows(flows)
 			counts[kind] = len(doc.Flows)
+		case export.KindFindings:
+			findings, err := allFindings(ctx, db, projectID, protocol, limit)
+			if err != nil {
+				return nil, err
+			}
+			doc.Findings = findings
+			counts[kind] = len(findings)
 		case export.KindEvents:
 			// Streamed in writeExport.
 		}
@@ -226,6 +234,31 @@ func allAssets(ctx context.Context, db *store.Store, projectID int64,
 			ProjectID: projectID,
 			Protocol:  protocol,
 			Limit:     assetPage,
+			Offset:    offset,
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, page...)
+		if limit > 0 && len(out) >= limit {
+			return out[:limit], nil
+		}
+		if len(page) == 0 || len(out) >= total {
+			return out, nil
+		}
+	}
+}
+
+// allFindings walks the findings, page by page.
+func allFindings(ctx context.Context, db *store.Store, projectID int64,
+	protocol string, limit int,
+) ([]model.Finding, error) {
+	var out []model.Finding
+	for offset := 0; ; offset += findingPage {
+		page, total, err := db.Findings(ctx, store.FindingQuery{
+			ProjectID: projectID,
+			Protocol:  protocol,
+			Limit:     findingPage,
 			Offset:    offset,
 		})
 		if err != nil {

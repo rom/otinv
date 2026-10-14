@@ -1,0 +1,55 @@
+# Custom detection rules. Point otinv.yaml at this file with:
+#
+#   rules:
+#     files: [rules.example.yaml]
+#
+# Validate it without analysing anything:
+#
+#   otinv rules --check rules.example.yaml
+#
+# Every field under `match` that is set has to match; a field that is not set
+# matches everything. A rule has to name at least one of them, so that no rule
+# can turn every event into a finding.
+rules:
+  # Only the engineering station may write to the turbine controller.
+  - id: PLANT-001
+    title: Write to the turbine controller from an unexpected host
+    description: >
+      Modbus writes to 192.168.1.40 are expected from the engineering station
+      alone. Anything else writing to it is either an undocumented tool or
+      somebody who should not be there.
+    severity: high
+    technique: T0836
+    match:
+      protocol: [modbus]
+      classification: [write, control]
+      dst: [192.168.1.40]
+      not_src: [192.168.1.10]
+
+  # Control commands outside the maintenance window, which runs on weekdays
+  # between 06:00 and 18:00 UTC. Capture timestamps are UTC throughout otinv,
+  # so a window is written in UTC too.
+  - id: PLANT-002
+    title: Control command outside the maintenance window
+    severity: medium
+    technique: T1692.001
+    match:
+      classification: [control, program]
+    window:
+      days: [mon, tue, wed, thu, fri]
+      from: "06:00"
+      to: "18:00"
+      outside: true
+
+  # A burst of writes from one host: ten within a minute is not an operator
+  # turning a valve, it is a script.
+  - id: PLANT-003
+    title: Burst of writes from one host
+    severity: medium
+    technique: T0836
+    match:
+      classification: [write]
+      src: [10.0.0.0/24]
+    threshold:
+      count: 10
+      within: 1m

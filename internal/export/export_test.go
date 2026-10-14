@@ -28,7 +28,7 @@ func TestParseKinds(t *testing.T) {
 		{name: "duplicates collapse", spec: "flows,flows", want: []Kind{KindFlows}},
 		{name: "all leaves out the events", spec: "all", want: Overview},
 		{name: "all plus events", spec: "all,events", want: Kinds},
-		{name: "unknown", spec: "findings", err: `no table named "findings"`},
+		{name: "unknown", spec: "rumours", err: `no table named "rumours"`},
 		{name: "empty", spec: " , ", err: "no table named"},
 	}
 
@@ -110,6 +110,20 @@ func sampleDocument(t *testing.T) *Document {
 		},
 		Events: 4, FirstSeen: first, LastSeen: last,
 	}}
+	doc.Findings = []model.Finding{{
+		ID: "9f2c", RuleID: "OT-003", Title: "Modbus diagnostic that changes how a device answers",
+		Summary:  "10.0.0.5 sent ForceListenOnlyMode to 10.0.0.9",
+		Severity: model.SeverityHigh, Status: model.StatusInvestigating,
+		Technique: "T0813", TechniqueName: "Denial of Control",
+		Assignee: "rom", Note: "ask the integrator",
+		Src: "10.0.0.5", Dst: "10.0.0.9", Protocol: "modbus",
+		Count: 3, FirstSeen: first, LastSeen: last,
+		Evidence: model.Evidence{
+			CaptureID: "abc123", PacketIndex: 12, Timestamp: first,
+			Protocol: "modbus", Operation: "Diagnostics", FunctionCode: 8,
+		},
+		Details: map[string]string{"sub_function": "ForceListenOnlyMode"},
+	}}
 	doc.Events = []model.Event{{
 		CaptureID: "abc123", PacketIndex: 7, Timestamp: first,
 		Protocol: "modbus", Direction: model.DirRequest, Operation: "WriteSingleCoil",
@@ -145,8 +159,8 @@ func TestTablesRenderEveryKind(t *testing.T) {
 		}
 	}
 
-	_, err := doc.Table(Kind("findings"))
-	require.Error(t, err)
+	_, err := doc.Table(Kind("rumours"))
+	require.Error(t, err, "a table nobody defined is an error, not an empty file")
 }
 
 func TestSummaryTableIsVertical(t *testing.T) {
@@ -177,7 +191,7 @@ func TestAssetRowCarriesInferenceConfidence(t *testing.T) {
 	doc := sampleDocument(t)
 	table, err := doc.Table(KindAssets)
 	require.NoError(t, err)
-	row := rowMap(table, 0)
+	row := rowMap(table)
 
 	assert.Equal(t, "Siemens (90%)", row["vendor"])
 	assert.Equal(t, "S7-300 (85%)", row["model"])
@@ -201,7 +215,7 @@ func TestEventRowFlattensMapsAndOmitsAbsentFields(t *testing.T) {
 	doc := sampleDocument(t)
 	table, err := doc.Table(KindEvents)
 	require.NoError(t, err)
-	row := rowMap(table, 0)
+	row := rowMap(table)
 
 	assert.Equal(t, "WriteSingleCoil", row["operation"])
 	assert.Equal(t, "write", row["class"])
@@ -222,7 +236,7 @@ func TestFlowAndProtocolRowsHaveAColumnPerClassification(t *testing.T) {
 	for _, kind := range []Kind{KindFlows, KindProtocols} {
 		table, err := doc.Table(kind)
 		require.NoError(t, err)
-		row := rowMap(table, 0)
+		row := rowMap(table)
 
 		for _, class := range model.Classifications {
 			assert.Contains(t, table.Columns, string(class), kind)
@@ -300,7 +314,7 @@ func TestJSONOmitsTablesTheExportDidNotAskFor(t *testing.T) {
 	// export of one table must not look like an empty project in the others.
 	var top map[string]json.RawMessage
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &top))
-	for _, key := range []string{"assets", "flows", "events", "captures", "protocols"} {
+	for _, key := range []string{"assets", "flows", "events", "captures", "protocols", "findings"} {
 		assert.NotContains(t, top, key)
 	}
 	assert.Contains(t, top, "summary")
@@ -368,11 +382,31 @@ func TestEventStreamCSVWritesAHeaderAndRows(t *testing.T) {
 	assert.Empty(t, row["ts"], "an event with no timestamp leaves the cell empty")
 }
 
-// rowMap pairs a table's header with one of its rows.
-func rowMap(t Table, index int) map[string]string {
+// rowMap pairs a table's header with its first row.
+func rowMap(t Table) map[string]string {
 	out := make(map[string]string, len(t.Columns))
 	for i, name := range t.Columns {
-		out[name] = t.Rows[index][i]
+		out[name] = t.Rows[0][i]
 	}
 	return out
+}
+
+func TestFindingRowCarriesTheEvidenceAndTheTriage(t *testing.T) {
+	doc := sampleDocument(t)
+	table, err := doc.Table(KindFindings)
+	require.NoError(t, err)
+	row := rowMap(table)
+
+	assert.Equal(t, "OT-003", row["rule_id"])
+	assert.Equal(t, "high", row["severity"])
+	assert.Equal(t, "investigating", row["status"], "triage travels with the finding")
+	assert.Equal(t, "rom", row["assignee"])
+	assert.Equal(t, "T0813", row["technique"])
+	assert.Equal(t, "Denial of Control", row["technique_name"])
+	// The packet behind it, which is the point of the row.
+	assert.Equal(t, "abc123", row["capture_id"])
+	assert.Equal(t, "12", row["packet_index"])
+	assert.Equal(t, "Diagnostics", row["operation"])
+	assert.Equal(t, "8", row["function_code"])
+	assert.Equal(t, "sub_function=ForceListenOnlyMode", row["details"])
 }

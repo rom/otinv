@@ -16,6 +16,7 @@ import (
 
 	"github.com/rom/otinv/internal/dissect"
 	"github.com/rom/otinv/internal/export"
+	"github.com/rom/otinv/internal/model"
 )
 
 // modbusPCAP is a capture with both reads and writes in it, which makes it
@@ -299,7 +300,7 @@ func TestExportRefusesWhatItCannotFind(t *testing.T) {
 	assert.Contains(t, err.Error(), `holds no project "other"`)
 	assert.Contains(t, err.Error(), `"demo"`, "the error names what the file does hold")
 
-	_, err = run(t, "export", "--project", "demo", "--db", db, "--what", "findings")
+	_, err = run(t, "export", "--project", "demo", "--db", db, "--what", "rumours")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no table named")
 
@@ -442,4 +443,196 @@ func TestProjectDBPathSanitisesTheName(t *testing.T) {
 	assert.Equal(t, "---etc-passwd.otinv.db", projectDBPath("../etc/passwd", ""),
 		"a project name cannot walk out of the working directory")
 	assert.Equal(t, "/tmp/given.db", projectDBPath("demo", "/tmp/given.db"))
+}
+
+func TestRulesCommandListsTheBuiltIns(t *testing.T) {
+	out := mustRun(t, "rules")
+
+	for _, id := range []string{"OT-001", "OT-005", "OT-013"} {
+		assert.Contains(t, out, id)
+	}
+	assert.Contains(t, out, "T1692.001 Unauthorized Message: Command Message",
+		"a rule cites the technique by id and name")
+	assert.Contains(t, out, "inactive in this configuration")
+	assert.Contains(t, out, "no engineering allow-list is configured")
+	assert.Contains(t, out, "13 rules")
+}
+
+func TestRulesCommandJSON(t *testing.T) {
+	out := mustRun(t, "rules", "--json")
+
+	var listing struct {
+		Total int `json:"total"`
+		Rules []struct {
+			ID            string `json:"id"`
+			Title         string `json:"title"`
+			Severity      string `json:"severity"`
+			Technique     string `json:"technique"`
+			TechniqueName string `json:"technique_name"`
+			TechniqueURL  string `json:"technique_url"`
+			Custom        bool   `json:"custom"`
+			Inactive      string `json:"inactive"`
+		} `json:"rules"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(out), &listing))
+	assert.Equal(t, 13, listing.Total)
+	for _, rule := range listing.Rules {
+		assert.NotEmpty(t, rule.Title, rule.ID)
+		assert.NotEmpty(t, rule.Severity, rule.ID)
+		assert.NotEmpty(t, rule.Technique, rule.ID)
+		assert.NotEmpty(t, rule.TechniqueName, rule.ID)
+		assert.Contains(t, rule.TechniqueURL, "https://attack.mitre.org/techniques/", rule.ID)
+		assert.False(t, rule.Custom)
+	}
+}
+
+func TestRulesCommandChecksACustomFile(t *testing.T) {
+	dir := t.TempDir()
+	good := filepath.Join(dir, "plant.yaml")
+	require.NoError(t, os.WriteFile(good, []byte(`
+rules:
+  - id: PLANT-001
+    title: Writes to the turbine controller
+    severity: high
+    technique: T0836
+    match:
+      protocol: [modbus]
+      classification: [write]
+      dst: [192.168.1.40]
+`), 0o600))
+
+	out := mustRun(t, "rules", "--check", good)
+	assert.Contains(t, out, "1 rule")
+	assert.Contains(t, out, "PLANT-001")
+	assert.Contains(t, out, "custom")
+	assert.NotContains(t, out, "OT-001", "--check lists what the file defines, not the built-ins")
+
+	bad := filepath.Join(dir, "bad.yaml")
+	require.NoError(t, os.WriteFile(bad, []byte("rules:\n  - id: A\n    title: T\n    match: {}\n"), 0o600))
+	_, err := run(t, "rules", "--check", bad)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "selects every event")
+}
+
+func TestAnalyzeRunsTheRulesIntoTheProject(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "demo.db")
+
+	out := mustRun(t, "analyze", "../../testdata/pcaps/s7comm_downloading_block_db1.pcap",
+		"--project", "demo", "--db", db, "--quiet")
+	assert.Contains(t, out, "findings:")
+	assert.Contains(t, out, "high")
+
+	// The findings are stored with their evidence, which the export shows.
+	report := mustRun(t, "export", "--project", "demo", "--db", db, "--what", "findings", "--compact")
+	var doc export.Document
+	require.NoError(t, json.Unmarshal([]byte(report), &doc))
+	require.NotEmpty(t, doc.Findings)
+	for _, f := range doc.Findings {
+		assert.NotEmpty(t, f.RuleID)
+		assert.NotEmpty(t, f.Summary)
+		assert.NotEmpty(t, f.Technique)
+		assert.NotEmpty(t, f.Evidence.CaptureID, f.ID)
+		assert.NotZero(t, f.Evidence.PacketIndex, f.ID)
+	}
+
+	// A block download into a CPU is what this capture holds.
+	var titles []string
+	for _, f := range doc.Findings {
+		titles = append(titles, f.Summary)
+	}
+	assert.Contains(t, strings.Join(titles, " | "), "downloaded a block into the CPU")
+}
+
+func TestAnalyzeSkipRules(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "demo.db")
+
+	out := mustRun(t, "analyze", "../../testdata/pcaps/s7comm_downloading_block_db1.pcap",
+		"--project", "demo", "--db", db, "--quiet", "--skip-rules")
+	assert.NotContains(t, out, "findings:")
+
+	report := mustRun(t, "export", "--project", "demo", "--db", db, "--what", "findings", "--compact")
+	var doc export.Document
+	require.NoError(t, json.Unmarshal([]byte(report), &doc))
+	assert.Empty(t, doc.Findings)
+}
+
+// The allow-list turns on the rule that needs it, and the configuration file
+// is where it comes from.
+func TestEngineeringAllowListFromTheConfiguration(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "demo.db")
+	config := filepath.Join(dir, "otinv.yaml")
+	require.NoError(t, os.WriteFile(config, []byte(
+		"rules:\n  engineering_stations: [10.9.9.9]\n"), 0o600))
+
+	mustRun(t, "analyze", "../../testdata/pcaps/s7comm_downloading_block_db1.pcap",
+		"--project", "demo", "--db", db, "--config", config, "--quiet")
+
+	report := mustRun(t, "export", "--project", "demo", "--db", db, "--what", "findings", "--compact")
+	var doc export.Document
+	require.NoError(t, json.Unmarshal([]byte(report), &doc))
+
+	var unauthorised int
+	for _, f := range doc.Findings {
+		if f.RuleID == "OT-001" {
+			unauthorised++
+		}
+	}
+	assert.Positive(t, unauthorised,
+		"the station that downloaded a block is not the one the allow-list names")
+
+	// With the real station on the list, the rule has nothing to say.
+	require.NoError(t, os.WriteFile(config, []byte(
+		"rules:\n  engineering_stations: [192.168.1.10]\n"), 0o600))
+	mustRun(t, "analyze", "../../testdata/pcaps/s7comm_downloading_block_db1.pcap",
+		"--project", "demo", "--db", db, "--config", config, "--quiet", "--reingest")
+
+	report = mustRun(t, "export", "--project", "demo", "--db", db, "--what", "findings", "--compact")
+	require.NoError(t, json.Unmarshal([]byte(report), &doc))
+	for _, f := range doc.Findings {
+		assert.NotEqual(t, "OT-001", f.RuleID, "the allow-listed station is allowed")
+	}
+}
+
+func TestRulesFileFromTheConfiguration(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "demo.db")
+	ruleFile := filepath.Join(dir, "plant.yaml")
+	require.NoError(t, os.WriteFile(ruleFile, []byte(`
+rules:
+  - id: PLANT-009
+    title: Any S7 program operation at all
+    severity: critical
+    technique: T0843
+    match:
+      protocol: [s7comm]
+      classification: [program]
+`), 0o600))
+	config := filepath.Join(dir, "otinv.yaml")
+	require.NoError(t, os.WriteFile(config,
+		[]byte("rules:\n  files: ["+ruleFile+"]\n"), 0o600))
+
+	mustRun(t, "analyze", "../../testdata/pcaps/s7comm_downloading_block_db1.pcap",
+		"--project", "demo", "--db", db, "--config", config, "--quiet")
+
+	report := mustRun(t, "export", "--project", "demo", "--db", db, "--what", "findings", "--compact")
+	var doc export.Document
+	require.NoError(t, json.Unmarshal([]byte(report), &doc))
+
+	var custom *model.Finding
+	for i, f := range doc.Findings {
+		if f.RuleID == "PLANT-009" {
+			custom = &doc.Findings[i]
+		}
+	}
+	require.NotNil(t, custom, "a custom rule the configuration loads runs with the built-ins")
+	assert.Equal(t, model.SeverityCritical, custom.Severity)
+	assert.NotEmpty(t, custom.Evidence.CaptureID)
+
+	// And `otinv rules` lists it alongside them.
+	out := mustRun(t, "rules", "--config", config)
+	assert.Contains(t, out, "PLANT-009")
+	assert.Contains(t, out, "custom")
 }

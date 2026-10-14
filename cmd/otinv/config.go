@@ -20,6 +20,21 @@ const DefaultConfigPath = "otinv.yaml"
 type Config struct {
 	Protocols map[string]ProtocolConfig `yaml:"protocols"`
 	Probe     ProbeConfig               `yaml:"probe"`
+	Rules     RulesConfig               `yaml:"rules"`
+}
+
+// RulesConfig configures the detection rules.
+type RulesConfig struct {
+	// EngineeringStations is the allow-list of hosts permitted to write,
+	// control and program, as addresses or CIDR blocks. Without it the rule
+	// that needs it stays inactive and says so, rather than flagging every
+	// write in the plant.
+	EngineeringStations []string `yaml:"engineering_stations"`
+	// Disabled lists the rule ids to leave out.
+	Disabled []string `yaml:"disabled"`
+	// Files are custom rule files, in the YAML DSL. A relative path is read
+	// from the working directory, the same as the configuration file itself.
+	Files []string `yaml:"files"`
 }
 
 // ProtocolConfig holds per-protocol settings.

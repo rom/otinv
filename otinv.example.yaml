@@ -14,3 +14,18 @@ protocols:
 # when the port does not match a known default.
 probe:
   min_confidence: 70
+
+# Detection rules.
+rules:
+  # The hosts allowed to write, control and program. The rule that flags
+  # commands from anywhere else needs this list: without it, it stays
+  # inactive and says so rather than flagging every write in the plant.
+  engineering_stations:
+    - 192.168.1.10
+    - 10.10.0.0/24
+
+  # Built-in rules to leave out of a run, by id. `otinv rules` lists them.
+  disabled: []
+
+  # Custom rule files, in the YAML DSL. See rules.example.yaml.
+  files: []

@@ -9,6 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/rom/otinv/internal/dissect"
+	"github.com/rom/otinv/internal/rules"
 	"github.com/rom/otinv/internal/store"
 	"github.com/rom/otinv/internal/web"
 	"github.com/rom/otinv/internal/web/templates"
@@ -16,12 +18,13 @@ import (
 
 func newServeCommand() *cobra.Command {
 	var (
-		project  string
-		dbPath   string
-		listen   string
-		readOnly bool
-		lang     string
-		shutdown time.Duration
+		project    string
+		dbPath     string
+		listen     string
+		readOnly   bool
+		lang       string
+		shutdown   time.Duration
+		configPath string
 	)
 
 	cmd := &cobra.Command{
@@ -47,6 +50,17 @@ func newServeCommand() *cobra.Command {
 				return fmt.Errorf("serve: --shutdown-timeout must be positive, not %s", shutdown)
 			}
 
+			// The GUI runs the same rules the command line does, from the
+			// same configuration file.
+			cfg, err := LoadConfig(configPath)
+			if err != nil {
+				return err
+			}
+			custom, err := rules.LoadRuleFiles(cfg.Rules.Files...)
+			if err != nil {
+				return err
+			}
+
 			ctx, stop := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 			defer stop()
 
@@ -68,6 +82,13 @@ func newServeCommand() *cobra.Command {
 				ReadOnly:        readOnly,
 				Lang:            lang,
 				ShutdownTimeout: shutdown,
+				Rules: rules.Config{
+					EngineeringStations: cfg.Rules.EngineeringStations,
+					Registry:            dissect.Default(),
+					Custom:              custom,
+					Disabled:            cfg.Rules.Disabled,
+				},
+				RuleFiles: cfg.Rules.Files,
 			})
 			if err != nil {
 				return err
@@ -94,5 +115,7 @@ func newServeCommand() *cobra.Command {
 		"UI language when the project has none stored: "+templates.LangList())
 	cmd.Flags().DurationVar(&shutdown, "shutdown-timeout", web.DefaultShutdownTimeout,
 		"how long to wait for requests in flight when shutting down")
+	cmd.Flags().StringVarP(&configPath, "config", "c", "",
+		"configuration file, for the detection rules (default "+DefaultConfigPath+" when present)")
 	return cmd
 }

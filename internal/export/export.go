@@ -28,17 +28,22 @@ const (
 	KindProtocols Kind = "protocols"
 	KindAssets    Kind = "assets"
 	KindFlows     Kind = "flows"
+	KindFindings  Kind = "findings"
 	KindEvents    Kind = "events"
 )
 
 // Kinds lists the tables in the order a full export writes them: the project
 // at a glance first, the individual events last.
-var Kinds = []Kind{KindSummary, KindCaptures, KindProtocols, KindAssets, KindFlows, KindEvents}
+var Kinds = []Kind{
+	KindSummary, KindCaptures, KindProtocols, KindAssets, KindFlows, KindFindings, KindEvents,
+}
 
 // Overview is what "all" expands to. The events are left out because a
 // project can hold millions of them and an overview is meant to be read; ask
 // for them by name.
-var Overview = []Kind{KindSummary, KindCaptures, KindProtocols, KindAssets, KindFlows}
+var Overview = []Kind{
+	KindSummary, KindCaptures, KindProtocols, KindAssets, KindFlows, KindFindings,
+}
 
 // ParseKinds turns a comma-separated list of table names into kinds,
 // expanding "all" into Overview. Duplicates collapse and the result keeps the
@@ -105,12 +110,13 @@ type Document struct {
 	// project says so itself rather than looking like the whole of it.
 	Filter *Filter `json:"filter,omitempty"`
 
-	Summary   *Summary      `json:"summary,omitempty"`
-	Captures  []Capture     `json:"captures,omitempty"`
-	Protocols []Protocol    `json:"protocols,omitempty"`
-	Assets    []model.Asset `json:"assets,omitempty"`
-	Flows     []Flow        `json:"flows,omitempty"`
-	Events    []model.Event `json:"events,omitempty"`
+	Summary   *Summary        `json:"summary,omitempty"`
+	Captures  []Capture       `json:"captures,omitempty"`
+	Protocols []Protocol      `json:"protocols,omitempty"`
+	Assets    []model.Asset   `json:"assets,omitempty"`
+	Flows     []Flow          `json:"flows,omitempty"`
+	Findings  []model.Finding `json:"findings,omitempty"`
+	Events    []model.Event   `json:"events,omitempty"`
 }
 
 // Filter is the selection an export was made with.
@@ -303,6 +309,8 @@ func (d *Document) Table(kind Kind) (Table, error) {
 		return Table{Kind: kind, Columns: AssetColumns, Rows: rowsOf(d.Assets, AssetRow)}, nil
 	case KindFlows:
 		return Table{Kind: kind, Columns: FlowColumns(), Rows: rowsOf(d.Flows, FlowRow)}, nil
+	case KindFindings:
+		return Table{Kind: kind, Columns: FindingColumns, Rows: rowsOf(d.Findings, FindingRow)}, nil
 	case KindEvents:
 		return Table{Kind: kind, Columns: EventColumns, Rows: rowsOf(d.Events, EventRow)}, nil
 	default:
@@ -412,6 +420,32 @@ func AssetRow(a model.Asset) []string {
 		strings.Join(served, " "), strings.Join(spoke, " "),
 		strconv.FormatUint(a.Events, 10), ts(a.FirstSeen), ts(a.LastSeen),
 		allAttributes(a),
+	}
+}
+
+// FindingColumns are the columns of the findings table. The evidence is in
+// it, because a finding without the packet behind it is not one.
+var FindingColumns = []string{
+	"id", "rule_id", "severity", "status", "title", "summary", "technique",
+	"technique_name", "src", "dst", "protocol", "count", "first_seen", "last_seen",
+	"assignee", "note", "capture_id", "packet_index", "evidence_ts", "operation",
+	"function_code", "details",
+}
+
+// FindingRow renders one finding.
+func FindingRow(f model.Finding) []string {
+	code := ""
+	if f.Evidence.FunctionCode != 0 {
+		code = strconv.Itoa(f.Evidence.FunctionCode)
+	}
+	return []string{
+		f.ID, f.RuleID, string(f.Severity), string(f.Status), f.Title, f.Summary,
+		f.Technique, f.TechniqueName, f.Src, f.Dst, f.Protocol,
+		strconv.FormatInt(f.Count, 10), ts(f.FirstSeen), ts(f.LastSeen),
+		f.Assignee, f.Note,
+		f.Evidence.CaptureID, strconv.FormatUint(f.Evidence.PacketIndex, 10),
+		ts(f.Evidence.Timestamp), f.Evidence.Operation, code,
+		pairs(f.Details),
 	}
 }
 

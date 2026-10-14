@@ -27,7 +27,9 @@ import (
 	"github.com/rom/otinv/internal/ingest"
 	"github.com/rom/otinv/internal/inventory"
 	"github.com/rom/otinv/internal/model"
+	"github.com/rom/otinv/internal/rules"
 	"github.com/rom/otinv/internal/store"
+	"github.com/rom/otinv/internal/topology"
 )
 
 func newAnalyzeCommand() *cobra.Command {
@@ -45,6 +47,7 @@ func newAnalyzeCommand() *cobra.Command {
 		outPath       string
 		quiet         bool
 		skipInventory bool
+		skipRules     bool
 	)
 
 	cmd := &cobra.Command{
@@ -111,7 +114,7 @@ func newAnalyzeCommand() *cobra.Command {
 				return closeOut()
 			}
 			if err := analyzeIntoProject(cmd.Context(), out, args, opts,
-				project, dbPath, reingest, skipInventory); err != nil {
+				project, dbPath, reingest, skipInventory, skipRules); err != nil {
 				return err
 			}
 			return closeOut()
@@ -141,6 +144,8 @@ func newAnalyzeCommand() *cobra.Command {
 		"leave out the per-capture report; with --project, print its summary alone")
 	cmd.Flags().BoolVar(&skipInventory, "skip-inventory", false,
 		"store the events without rebuilding the asset inventory")
+	cmd.Flags().BoolVar(&skipRules, "skip-rules", false,
+		"store the events without running the detection rules over them")
 	return cmd
 }
 
@@ -233,7 +238,7 @@ func splitList(values []string) []string {
 // analyzeIntoProject ingests captures into a project database and rebuilds its
 // inventory from everything the project holds.
 func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, opts analyzeOptions,
-	project, dbPath string, reingest, skipInventory bool,
+	project, dbPath string, reingest, skipInventory, skipRules bool,
 ) error {
 	db, err := store.Open(ctx, projectDBPath(project, dbPath))
 	if err != nil {
@@ -257,6 +262,7 @@ func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, opts
 		}
 	}
 
+	var inventoryAssets []model.Asset
 	assets := 0
 	if skipInventory {
 		// The events are stored; the inventory is whatever the last rebuild
@@ -268,7 +274,24 @@ func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, opts
 		if err != nil {
 			return err
 		}
+		inventoryAssets = rebuilt
 		assets = len(rebuilt)
+	}
+
+	// The rules run over everything the project holds, not only what this
+	// command just ingested: a finding about a flow is about the project.
+	var findings []model.Finding
+	if !skipRules {
+		if inventoryAssets == nil {
+			stored, _, err := db.Assets(ctx, store.AssetQuery{ProjectID: p.ID, Limit: maxRuleAssets})
+			if err != nil {
+				return err
+			}
+			inventoryAssets = stored
+		}
+		if findings, err = runRules(ctx, db, p.ID, inventoryAssets, opts.cfg); err != nil {
+			return err
+		}
 	}
 	events, err := db.CountEvents(ctx, p.ID)
 	if err != nil {
@@ -283,8 +306,99 @@ func analyzeIntoProject(ctx context.Context, out io.Writer, paths []string, opts
 		p2.printf("\nproject %q: %d assets from %d stored events in %s\n",
 			p.Name, assets, events, db.Path())
 	}
+	if !skipRules {
+		p2.printf("findings: %s\n", describeFindings(findings))
+	}
 	p2.printf("browse with: otinv serve --project %s\n", p.Name)
 	return p2.err
+}
+
+// maxRuleAssets bounds how much of the inventory a rule run reads when it did
+// not just rebuild it itself.
+const maxRuleAssets = 5000
+
+// runRules builds the engine from the configuration, streams the project's
+// events through it, shows it the topology and stores what it found.
+func runRules(ctx context.Context, db *store.Store, projectID int64,
+	assets []model.Asset, cfg *Config,
+) ([]model.Finding, error) {
+	custom, err := rules.LoadRuleFiles(cfg.Rules.Files...)
+	if err != nil {
+		return nil, err
+	}
+	engine, err := rules.New(rules.Config{
+		Assets:              assets,
+		EngineeringStations: cfg.Rules.EngineeringStations,
+		Registry:            dissect.Default(),
+		Custom:              custom,
+		Disabled:            cfg.Rules.Disabled,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.EachEvent(ctx, projectID, func(e model.Event) error {
+		engine.Add(e)
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("rules: reading events: %w", err)
+	}
+
+	// The rules that look at the network as a whole — a flow that skips a
+	// Purdue level — need the graph the topology view draws.
+	links, err := projectLinks(ctx, db, projectID)
+	if err != nil {
+		return nil, err
+	}
+	engine.AddTopology(topology.Build(assets, links, topology.Options{}))
+
+	findings := engine.Findings()
+	if err := db.SaveFindings(ctx, projectID, findings); err != nil {
+		return nil, err
+	}
+	return findings, nil
+}
+
+// projectLinks reads the flow aggregate as the topology wants it.
+func projectLinks(ctx context.Context, db *store.Store, projectID int64) ([]topology.Link, error) {
+	var out []topology.Link
+	for offset := 0; ; offset += flowPage {
+		page, total, err := db.Flows(ctx, store.FlowQuery{
+			ProjectID: projectID, Limit: flowPage, Offset: offset,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range page {
+			out = append(out, topology.Link{
+				Src: f.Src, Dst: f.Dst, Protocol: f.Protocol, Transport: f.Transport,
+				ServerPort: f.ServerPort, Events: f.Events, Malformed: f.Malformed,
+				Classes: f.Classes, FirstSeen: f.FirstSeen, LastSeen: f.LastSeen,
+			})
+		}
+		if len(page) == 0 || offset+len(page) >= total {
+			return out, nil
+		}
+	}
+}
+
+// describeFindings summarises a run for the terminal: how many, and how
+// serious the worst of them are.
+func describeFindings(findings []model.Finding) string {
+	if len(findings) == 0 {
+		return "none"
+	}
+	counts := map[model.Severity]int{}
+	for _, f := range findings {
+		counts[f.Severity]++
+	}
+	parts := make([]string, 0, len(model.Severities))
+	for _, severity := range model.Severities {
+		if counts[severity] > 0 {
+			parts = append(parts, fmt.Sprintf("%d %s", counts[severity], severity))
+		}
+	}
+	return fmt.Sprintf("%d (%s)", len(findings), strings.Join(parts, ", "))
 }
 
 func ingestCapture(ctx context.Context, out io.Writer, db *store.Store, p model.Project,
