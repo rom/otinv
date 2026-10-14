@@ -1,0 +1,219 @@
+package templates
+
+import "strconv"
+
+// The charts are drawn by the server: an SVG whose geometry is in attributes
+// and whose colours come from the stylesheet, or a table of cells with an
+// intensity class. Nothing here needs a script, so the content security
+// policy stays strict and a chart still renders when scripting is off.
+
+// BarChart is a horizontal bar chart: a label, a bar and a count per row.
+templ BarChart(v BarsView) {
+	<figure class="chart bars">
+		<figcaption>
+			{ v.Title }
+			if v.Caption != "" {
+				<span class="caption">{ v.Caption }</span>
+			}
+		</figcaption>
+		if v.Empty() {
+			<p class="empty">—</p>
+		} else {
+			<table class="bar-table">
+				<tbody>
+					for _, bar := range v.Bars {
+						<tr>
+							<th scope="row">
+								if bar.Href != "" {
+									<a href={ templ.SafeURL(bar.Href) }>{ bar.Label }</a>
+								} else {
+									{ bar.Label }
+								}
+							</th>
+							<td class="bar-cell">
+								<svg viewBox="0 0 100 10" preserveAspectRatio="none" role="img"
+									aria-label={ bar.Label + ": " + strconv.FormatInt(bar.Count, 10) }>
+									<rect class={ bar.CSS() } x="0" y="1" height="8" width={ bar.Width() }></rect>
+								</svg>
+							</td>
+							<td class="num">{ strconv.FormatInt(bar.Count, 10) }</td>
+							<td class="num share">{ bar.Share() }%</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			if v.More > 0 {
+				<p class="caption">+{ strconv.Itoa(v.More) }</p>
+			}
+		}
+	</figure>
+}
+
+// Proportion is one bar divided into its parts: the mix rather than the
+// magnitudes.
+templ Proportion(v ProportionView) {
+	<figure class="chart proportion">
+		<figcaption>
+			{ v.Title }
+			if v.Caption != "" {
+				<span class="caption">{ v.Caption }</span>
+			}
+		</figcaption>
+		if v.Empty() {
+			<p class="empty">—</p>
+		} else {
+			<svg viewBox="0 0 100 8" preserveAspectRatio="none" class="proportion-bar" role="img"
+				aria-label={ v.Title }>
+				for _, seg := range v.Segments {
+					<rect class={ seg.CSS() } y="0" height="8" x={ seg.Offset() } width={ seg.Width() }></rect>
+				}
+			</svg>
+			<ul class="legend">
+				for _, seg := range v.Segments {
+					<li>
+						<span class={ seg.CSS() + " swatch" }></span>
+						if seg.Href != "" {
+							<a href={ templ.SafeURL(seg.Href) }>{ seg.Label }</a>
+						} else {
+							{ seg.Label }
+						}
+						<span class="num">{ strconv.FormatInt(seg.Count, 10) }</span>
+						<span class="share">{ seg.Share() }%</span>
+					</li>
+				}
+			</ul>
+		}
+	</figure>
+}
+
+// MixBar is the compact form of a proportion bar, for a table cell: the bar
+// alone, with the numbers in its title.
+templ MixBar(v ProportionView) {
+	if v.Empty() {
+		<span class="muted">—</span>
+	} else {
+		<svg viewBox="0 0 100 8" preserveAspectRatio="none" class="proportion-bar mini" role="img"
+			aria-label={ v.Caption }>
+			<title>{ v.Caption }</title>
+			for _, seg := range v.Segments {
+				<rect class={ seg.CSS() } y="0" height="8" x={ seg.Offset() } width={ seg.Width() }></rect>
+			}
+		</svg>
+	}
+}
+
+// Timeline is the event count over time, each interval divided by
+// classification.
+templ Timeline(v TimelineView) {
+	<figure class="chart timeline">
+		<figcaption>
+			{ v.Title }
+			if v.Caption != "" {
+				<span class="caption">{ v.Caption }</span>
+			}
+		</figcaption>
+		if v.Empty() {
+			<p class="empty">—</p>
+		} else {
+			<svg viewBox={ v.ViewBox() } preserveAspectRatio="none" class="timeline-chart" role="img"
+				aria-label={ v.Title }>
+				for _, col := range v.Columns {
+					if col.Count > 0 {
+						<g>
+							<title>{ col.Title }</title>
+							for _, seg := range col.Segments {
+								<rect class={ seg.CSS() } x={ col.X() } width={ col.Width() }
+									y={ seg.Y() } height={ seg.Height() }></rect>
+							}
+						</g>
+					}
+				}
+			</svg>
+			<div class="axis">
+				<span>{ v.Start }</span>
+				<span>{ v.Middle }</span>
+				<span>{ v.End }</span>
+			</div>
+		}
+	</figure>
+}
+
+// ClassLegend names the classifications a chart stacks, in the order it
+// stacks them.
+templ ClassLegend(p PageView) {
+	<ul class="legend">
+		for _, class := range ClassDisplayOrder() {
+			<li>
+				<span class={ "seg seg-" + string(class) + " swatch" }></span>
+				{ ClassLabel(p.Lang, string(class)) }
+			</li>
+		}
+	</ul>
+}
+
+// MatrixTable is the communication matrix: a table of endpoints with each
+// cell shaded by how much traffic it carries.
+templ MatrixTable(v MatrixChartView, p PageView) {
+	if v.Empty() {
+		<p class="empty">{ T(p.Lang, "matrix.none") }</p>
+	} else {
+		<div class="matrix-wrap">
+			<table class="matrix">
+				<thead>
+					<tr>
+						<th scope="col" class="corner">{ T(p.Lang, "matrix.corner") }</th>
+						for _, col := range v.Columns {
+							<th scope="col"><span class="vertical">{ col }</span></th>
+						}
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range v.Rows {
+						<tr>
+							<th scope="row">
+								<a href={ templ.SafeURL(row.Href) }>{ row.Label }</a>
+							</th>
+							for _, cell := range row.Cells {
+								<td class={ cell.CSS() }>
+									if cell.Count > 0 {
+										<a href={ templ.SafeURL(cell.Href) } title={ cell.Title }>
+											<span class="sr">{ cell.Title }</span>
+										</a>
+									}
+								</td>
+							}
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		if v.Truncated {
+			<p class="caption">{ T(p.Lang, "matrix.truncated") }</p>
+		}
+	}
+}
+
+// StatTiles is the row of numbers at the top of the dashboard.
+templ StatTiles(tiles []StatTile) {
+	<div class="tiles">
+		for _, tile := range tiles {
+			if tile.Href != "" {
+				<a class={ tile.CSS() } href={ templ.SafeURL(tile.Href) }>
+					<span class="tile-value">{ tile.Value }</span>
+					<span class="tile-label">{ tile.Label }</span>
+					if tile.Note != "" {
+						<span class="tile-note">{ tile.Note }</span>
+					}
+				</a>
+			} else {
+				<div class={ tile.CSS() }>
+					<span class="tile-value">{ tile.Value }</span>
+					<span class="tile-label">{ tile.Label }</span>
+					if tile.Note != "" {
+						<span class="tile-note">{ tile.Note }</span>
+					}
+				</div>
+			}
+		}
+	</div>
+}

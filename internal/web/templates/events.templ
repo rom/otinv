@@ -1,0 +1,213 @@
+package templates
+
+// EventsPage is every decoded operation in the project, filtered and paged.
+// It is the view an analyst ends up in from everywhere else: a flow, an
+// asset, a protocol or a capture all narrow this table.
+templ EventsPage(v EventsView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "events.title") }</h1>
+		<form class="filters" method="get" action="/events" hx-get="/events" hx-target="#event-table" hx-push-url="true">
+			<input
+				type="search"
+				name="q"
+				value={ v.Filter.Search }
+				placeholder={ T(v.Page.Lang, "events.search") }
+				aria-label={ T(v.Page.Lang, "events.search") }
+			/>
+			<label>
+				{ T(v.Page.Lang, "events.protocol") }
+				<select name="protocol">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, proto := range v.Protocols {
+						if proto == v.Filter.Protocol {
+							<option value={ proto } selected>{ ProtocolLabel(proto) }</option>
+						} else {
+							<option value={ proto }>{ ProtocolLabel(proto) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "events.class") }
+				<select name="class">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, class := range v.Classes {
+						if class == v.Filter.Class {
+							<option value={ class } selected>{ ClassLabel(v.Page.Lang, class) }</option>
+						} else {
+							<option value={ class }>{ ClassLabel(v.Page.Lang, class) }</option>
+						}
+					}
+				</select>
+			</label>
+			<label>
+				{ T(v.Page.Lang, "events.operation") }
+				<select name="operation">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, op := range v.Operations {
+						if op == v.Filter.Operation {
+							<option value={ op } selected>{ op }</option>
+						} else {
+							<option value={ op }>{ op }</option>
+						}
+					}
+				</select>
+			</label>
+			<label class="check">
+				if v.Filter.Malformed {
+					<input type="checkbox" name="malformed" value="1" checked/>
+				} else {
+					<input type="checkbox" name="malformed" value="1"/>
+				}
+				{ T(v.Page.Lang, "events.only_malformed") }
+			</label>
+			<label class="check">
+				if v.Filter.Anomalous {
+					<input type="checkbox" name="anomalous" value="1" checked/>
+				} else {
+					<input type="checkbox" name="anomalous" value="1"/>
+				}
+				{ T(v.Page.Lang, "events.only_anomalous") }
+			</label>
+			if v.Filter.Src != "" {
+				<input type="hidden" name="src" value={ v.Filter.Src }/>
+				<span class="chip">{ v.Filter.Src } →</span>
+			}
+			if v.Filter.Dst != "" {
+				<input type="hidden" name="dst" value={ v.Filter.Dst }/>
+				<span class="chip">→ { v.Filter.Dst }</span>
+			}
+			if v.Filter.Capture != "" {
+				<input type="hidden" name="capture" value={ v.Filter.Capture }/>
+				<span class="chip">{ v.Filter.Capture }</span>
+			}
+			<button type="submit">{ T(v.Page.Lang, "assets.filter") }</button>
+			if v.Filter.Active() {
+				<a class="clear" href={ templ.SafeURL(v.ClearURL()) }>{ T(v.Page.Lang, "events.clear") }</a>
+			}
+		</form>
+		@EventTable(v)
+	}
+}
+
+// EventTable is swapped on its own when htmx asks for a filtered page.
+templ EventTable(v EventsView) {
+	<div id="event-table">
+		<p class="count">{ Count(v.Theme, int64(v.Total)) } { T(v.Page.Lang, "events.count") }</p>
+		if len(v.Rows) == 0 {
+			<p class="empty">{ T(v.Page.Lang, "events.none") }</p>
+		} else {
+			<table>
+				<thead>
+					@SortableHeaders(v.Headers())
+				</thead>
+				<tbody>
+					for _, row := range v.Rows {
+						<tr class={ rowClass(row.Malformed, row.Exception) }>
+							<td>{ FormatTimeIn(v.Theme, row.Time) }</td>
+							<td>{ ProtocolLabel(row.Protocol) }</td>
+							<td>
+								{ row.Operation }
+								if row.Detail != "" {
+									<div class="sub">{ row.Detail }</div>
+								}
+								if row.Exception != "" {
+									<div class="sub warn">{ row.Exception }</div>
+								}
+							</td>
+							<td>
+								{ ClassLabel(v.Page.Lang, row.Class) }
+								<div class="sub">{ DirectionLabel(v.Page.Lang, row.Direction) }</div>
+							</td>
+							<td><a href={ templ.SafeURL(row.SrcHref) }>{ row.Src }</a></td>
+							<td><a href={ templ.SafeURL(row.DstHref) }>{ row.Dst }</a></td>
+							<td class="num">{ CountU(v.Theme, row.Packet) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<nav class="pager">
+				if v.HasPrev() {
+					<a href={ templ.SafeURL(v.PrevURL()) }>{ T(v.Page.Lang, "assets.prev") }</a>
+				}
+				<span>{ v.PageLabel() }</span>
+				if v.HasNext() {
+					<a href={ templ.SafeURL(v.NextURL()) }>{ T(v.Page.Lang, "assets.next") }</a>
+				}
+			</nav>
+		}
+	</div>
+}
+
+// ProtocolsPage is the per-protocol statistics: what was spoken, how much of
+// it decoded, and what the operations were.
+templ ProtocolsPage(v ProtocolsView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "protocols.title") }</h1>
+		<nav class="tabs">
+			if v.Selected == "" {
+				<span class="tab active">{ T(v.Page.Lang, "assets.all") }</span>
+			} else {
+				<a class="tab" href={ templ.SafeURL(v.FilterURL("")) }>{ T(v.Page.Lang, "assets.all") }</a>
+			}
+			for _, proto := range v.Protocols {
+				if proto == v.Selected {
+					<span class="tab active">{ ProtocolLabel(proto) }</span>
+				} else {
+					<a class="tab" href={ templ.SafeURL(v.FilterURL(proto)) }>{ ProtocolLabel(proto) }</a>
+				}
+			}
+		</nav>
+		if len(v.Rows) == 0 {
+			<p class="empty">{ T(v.Page.Lang, "protocols.none") }</p>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						for _, header := range v.Headers() {
+							<th class={ header.Class() }>{ header.Label }</th>
+						}
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range v.Rows {
+						<tr>
+							<td>
+								<a href={ templ.SafeURL(row.Href) }>{ ProtocolLabel(row.Protocol) }</a>
+								<div class="sub">{ row.Protocol }</div>
+							</td>
+							<td class="num">{ Count(v.Theme, row.Events) }</td>
+							<td class="num">{ Count(v.Theme, row.Flows) }</td>
+							<td class="mix">@MixBar(row.Classes)</td>
+							<td>
+								<span class={ "pill pill-" + HealthTone(row.Events, row.Malformed) }>
+									{ row.Health }
+								</span>
+								if row.Malformed > 0 {
+									<div class="sub warn">{ T(v.Page.Lang, "protocols.malformed") }: { Count(v.Theme, row.Malformed) }</div>
+								}
+								if row.Anomalies > 0 {
+									<div class="sub">{ T(v.Page.Lang, "protocols.anomalies") }: { Count(v.Theme, row.Anomalies) }</div>
+								}
+							</td>
+							<td>
+								{ FormatTimeIn(v.Theme, row.FirstSeen) }
+								<div class="sub">{ Duration(row.FirstSeen, row.LastSeen) }</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+		if v.Theme.Charts() {
+			<section class="panel">
+				@Timeline(v.Timeline)
+				@ClassLegend(v.Page)
+			</section>
+			<div class="grid">
+				<section class="panel">@BarChart(v.Operations)</section>
+				<section class="panel">@BarChart(v.Ports)</section>
+			</div>
+		}
+	}
+}

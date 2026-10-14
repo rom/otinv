@@ -15,7 +15,12 @@ type PageView struct {
 	Lang    Lang
 	Title   string
 	Project string
-	Nav     string // "assets" or "captures"
+	// Nav is the key of the view in the navigation, so that the current one
+	// can be marked.
+	Nav string
+	// Theme is the resolved appearance, which the layout turns into data
+	// attributes on the root element.
+	Theme Theme
 }
 
 // AssetsFilter is the asset list's filter state. It round-trips through the
@@ -398,6 +403,16 @@ func (v AssetsView) listURL(offset int, s Sort) string {
 		return "/assets"
 	}
 	return "/assets?" + q.Encode()
+}
+
+// AssetURLByAddress links to the asset list filtered to one address, which is
+// how a view that knows an address but not an asset key — the matrix, the flow
+// table — reaches the asset behind it.
+func AssetURLByAddress(address string) string {
+	if address == "" {
+		return "/assets"
+	}
+	return "/assets?q=" + url.QueryEscape(address)
 }
 
 // AssetURL is the deep link to one asset.

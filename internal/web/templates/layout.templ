@@ -3,9 +3,13 @@ package templates
 // Layout is the chrome around every page. There are no inline scripts and no
 // external origins: the GUI must work on an air-gapped laptop under a strict
 // content security policy.
+//
+// The appearance settings are data attributes on the root element rather than
+// a different stylesheet, so a page arrives already themed and nothing
+// flashes on load.
 templ Layout(p PageView) {
 	<!DOCTYPE html>
-	<html lang={ string(p.Lang) }>
+	<html lang={ string(p.Lang) } { p.Theme.HTMLAttrs()... }>
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -15,13 +19,16 @@ templ Layout(p PageView) {
 		</head>
 		<body>
 			<header class="topbar">
-				<span class="brand">otinv</span>
+				<a class="brand" href="/">otinv</a>
 				if p.Project != "" {
 					<span class="project">{ p.Project }</span>
 				}
 				<nav>
-					<a href="/assets" class={ navClass(p.Nav, "assets") }>{ T(p.Lang, "nav.assets") }</a>
-					<a href="/captures" class={ navClass(p.Nav, "captures") }>{ T(p.Lang, "nav.captures") }</a>
+					for _, item := range NavItems(p.Lang) {
+						<a href={ templ.SafeURL(item.Href) } class={ navClass(p.Nav, item.Key) }>
+							{ item.Label }
+						</a>
+					}
 				</nav>
 			</header>
 			<main>

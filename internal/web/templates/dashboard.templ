@@ -1,0 +1,89 @@
+package templates
+
+// DashboardPage is the project at a glance: the counts worth knowing before
+// any filtering, the mix of protocols and classifications, and when the
+// traffic happened.
+templ DashboardPage(v DashboardView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "dashboard.title") }</h1>
+		@StatTiles(v.Tiles)
+		if v.Theme.Charts() {
+			<section class="panel">
+				@Timeline(v.Timeline)
+				@ClassLegend(v.Page)
+			</section>
+			<div class="grid">
+				<section class="panel">
+					@BarChart(v.Protocols)
+				</section>
+				<section class="panel">
+					@Proportion(v.Classes)
+				</section>
+				<section class="panel">
+					@BarChart(v.Roles)
+				</section>
+				<section class="panel">
+					@BarChart(v.Vendors)
+				</section>
+				<section class="panel">
+					@BarChart(v.Operations)
+				</section>
+				<section class="panel">
+					@BarChart(v.Exceptions)
+				</section>
+			</div>
+		} else {
+			<p class="caption">{ T(v.Page.Lang, "dashboard.charts_off") }</p>
+			<div class="grid">
+				<section class="panel">@BarChart(v.Protocols)</section>
+				<section class="panel">@BarChart(v.Operations)</section>
+			</div>
+		}
+		<section class="panel">
+			<h2>{ T(v.Page.Lang, "dashboard.recent") }</h2>
+			if len(v.Recent) == 0 {
+				<p class="empty">{ T(v.Page.Lang, "dashboard.no_events") }</p>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th>{ T(v.Page.Lang, "events.time") }</th>
+							<th>{ T(v.Page.Lang, "events.operation") }</th>
+							<th>{ T(v.Page.Lang, "events.class") }</th>
+							<th>{ T(v.Page.Lang, "asset.peer") }</th>
+							<th class="num">{ T(v.Page.Lang, "events.packet") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range v.Recent {
+							<tr class={ rowClass(row.Malformed, row.Exception) }>
+								<td>{ FormatTimeIn(v.Theme, row.Time) }</td>
+								<td>
+									{ row.Operation }
+									if row.Detail != "" {
+										<div class="sub">{ row.Detail }</div>
+									}
+								</td>
+								<td>{ ClassLabel(v.Page.Lang, row.Class) }</td>
+								<td>{ row.Peer }</td>
+								<td class="num">{ CountU(v.Theme, row.Packet) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				<p><a href="/events">{ T(v.Page.Lang, "dashboard.all_events") }</a></p>
+			}
+		</section>
+	}
+}
+
+func rowClass(malformed bool, exception string) string {
+	switch {
+	case malformed:
+		return "row-malformed"
+	case exception != "":
+		return "row-exception"
+	default:
+		return ""
+	}
+}

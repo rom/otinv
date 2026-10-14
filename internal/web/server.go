@@ -31,9 +31,6 @@ var staticFS embed.FS
 // DefaultAddr is the address the GUI binds to unless told otherwise.
 const DefaultAddr = "127.0.0.1:8080"
 
-// assetPageSize is how many assets one page of the list shows.
-const assetPageSize = 50
-
 // maxAssetEvents is how many of an asset's events the detail page shows.
 const maxAssetEvents = 100
 
@@ -119,11 +116,18 @@ func (s *Server) routes() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/assets", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	})
+	mux.HandleFunc("GET /dashboard", s.handleDashboard)
 	mux.HandleFunc("GET /assets", s.handleAssets)
 	mux.HandleFunc("GET /assets/{key}", s.handleAsset)
+	mux.HandleFunc("GET /flows", s.handleFlows)
+	mux.HandleFunc("GET /matrix", s.handleMatrix)
+	mux.HandleFunc("GET /events", s.handleEvents)
+	mux.HandleFunc("GET /protocols", s.handleProtocols)
 	mux.HandleFunc("GET /captures", s.handleCaptures)
+	mux.HandleFunc("GET /settings", s.handleSettings)
+	mux.HandleFunc("POST /settings", s.handleSaveSettings)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("ok\n"))
@@ -195,25 +199,50 @@ func cacheStatic(next http.Handler) http.Handler {
 	})
 }
 
-// page builds the shared chrome, including the UI language. The caller sets
-// the title afterwards, because a translated title needs the language this
-// returns.
+// page builds the shared chrome: the UI language and the appearance settings.
+// The caller sets the title afterwards, because a translated title needs the
+// language this returns.
+//
+// The settings are read per request rather than cached, so that saving them
+// takes effect on the next page rather than on the next restart. The table
+// holds a handful of rows and the read is a local SQLite query.
 func (s *Server) page(r *http.Request, nav string) templates.PageView {
+	stored, err := s.store.Settings(r.Context(), s.project.ID)
+	if err != nil {
+		// A page is more useful with default settings than not at all.
+		s.log.Warn("reading settings failed", "err", err)
+		stored = nil
+	}
+	theme := templates.NewTheme(stored)
+
+	// An explicit ?lang= wins, then the stored setting, then what the browser
+	// asks for: a link someone sends should arrive in the language it was
+	// written in.
+	lang := theme.Lang()
+	if explicit := r.URL.Query().Get("lang"); explicit != "" {
+		lang = templates.ParseLang(explicit, "")
+	} else if _, ok := stored[templates.SettingLang]; !ok {
+		lang = templates.ParseLang("", r.Header.Get("Accept-Language"))
+	}
+
 	return templates.PageView{
-		Lang:    templates.ParseLang(r.URL.Query().Get("lang"), r.Header.Get("Accept-Language")),
+		Lang:    lang,
 		Project: s.project.Name,
 		Nav:     nav,
+		Theme:   theme,
 	}
 }
 
 func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	page := s.page(r, "assets")
+	page.Title = templates.T(page.Lang, "assets.title")
 	filter := templates.AssetsFilter{
 		Search:   q.Get("q"),
 		Role:     q.Get("role"),
 		Protocol: q.Get("protocol"),
 	}
-	limit := clampInt(q.Get("limit"), assetPageSize, 1, 500)
+	limit := clampInt(q.Get("limit"), page.Theme.PageSize(), 1, 500)
 	offset := clampInt(q.Get("offset"), 0, 0, 1<<30)
 	// A column the store does not know how to order by is dropped rather than
 	// refused, so a stale or hand-edited link still shows the list.
@@ -248,8 +277,6 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := s.page(r, "assets")
-	page.Title = templates.T(page.Lang, "assets.title")
 	view := templates.AssetsView{
 		Page:      page,
 		Rows:      assetRows(assets),

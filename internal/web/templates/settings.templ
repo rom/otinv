@@ -1,0 +1,100 @@
+package templates
+
+import "strconv"
+
+// SettingsPage is where the GUI is configured: the theme, the accent, how
+// much the tables fit on a screen, whether the charts are drawn at all, and
+// what a timestamp looks like.
+//
+// The settings are stored in the project database, so they follow the project
+// rather than the browser — there are no accounts yet, so everyone who can
+// reach this port sees the same ones. The form posts and reloads; nothing
+// here needs a script.
+templ SettingsPage(v SettingsView) {
+	@Layout(v.Page) {
+		<h1>{ T(v.Page.Lang, "settings.title") }</h1>
+		if v.Saved {
+			<p class="notice">{ T(v.Page.Lang, "settings.saved") }</p>
+		}
+		<p class="caption">{ T(v.Page.Lang, "settings.scope") }</p>
+		<form class="settings" method="post" action="/settings">
+			<input type="hidden" name="csrf" value={ v.CSRF }/>
+			for _, group := range v.Groups {
+				<fieldset>
+					<legend>{ T(v.Page.Lang, group.Label) }</legend>
+					for _, row := range group.Settings {
+						<div class="setting">
+							<div class="setting-label">
+								<span>{ T(v.Page.Lang, row.Def.Label) }</span>
+								if row.Def.Help != "" {
+									<span class="caption">{ T(v.Page.Lang, row.Def.Help) }</span>
+								}
+							</div>
+							<div class="setting-control">
+								if row.Def.Kind == KindNumber {
+									<select name={ row.Def.Key } aria-label={ T(v.Page.Lang, row.Def.Label) }>
+										for _, opt := range row.Options {
+											if opt.Selected {
+												<option value={ opt.Value } selected>{ opt.Label }</option>
+											} else {
+												<option value={ opt.Value }>{ opt.Label }</option>
+											}
+										}
+									</select>
+								} else {
+									<div class="choices">
+										for _, opt := range row.Options {
+											<label class="choice">
+												if opt.Selected {
+													<input
+														type="radio"
+														name={ row.Def.Key }
+														value={ opt.Value }
+														checked
+													/>
+												} else {
+													<input type="radio" name={ row.Def.Key } value={ opt.Value }/>
+												}
+												<span>{ opt.Label }</span>
+											</label>
+										}
+									</div>
+								}
+							</div>
+						</div>
+					}
+				</fieldset>
+			}
+			<div class="actions">
+				<button type="submit" name="action" value="save">{ T(v.Page.Lang, "settings.save") }</button>
+				<button type="submit" name="action" value="reset" class="secondary">
+					{ T(v.Page.Lang, "settings.reset") }
+				</button>
+			</div>
+		</form>
+		<section class="panel">
+			<h2>{ T(v.Page.Lang, "settings.about") }</h2>
+			<table class="kv">
+				<tbody>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "settings.project") }</th>
+						<td>{ v.Page.Project }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "settings.database") }</th>
+						<td class="mono">{ v.DatabasePath }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "settings.listen") }</th>
+						<td class="mono">{ v.Listen }</td>
+					</tr>
+					<tr>
+						<th scope="row">{ T(v.Page.Lang, "settings.schema") }</th>
+						<td>{ strconv.Itoa(v.SchemaVer) }</td>
+					</tr>
+				</tbody>
+			</table>
+			<p class="caption">{ T(v.Page.Lang, "settings.passive") }</p>
+		</section>
+	}
+}

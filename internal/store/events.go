@@ -172,18 +172,52 @@ func (s *Store) EachEvent(ctx context.Context, projectID int64, fn func(model.Ev
 	return nil
 }
 
-// EventQuery selects events for a view.
+// EventQuery selects, filters and orders events for a view.
 type EventQuery struct {
 	ProjectID int64
 	// Addresses matches any of these against either endpoint's IP or MAC,
 	// which is how a multi-homed asset's own traffic is selected for its
 	// detail page.
 	Addresses []string
-	Limit     int
+	// Protocol, Class and Operation are exact matches, as the facet filters
+	// of the event table offer them.
+	Protocol  string
+	Class     string
+	Operation string
+	// Src and Dst match one direction of a flow, which is how the flow table
+	// drills through to the events behind a row.
+	Src string
+	Dst string
+	// Search matches the operation, the exception, the error text or either
+	// endpoint, which is what a reader types into one box.
+	Search string
+	// Capture limits the view to one ingested file.
+	Capture string
+	// OnlyMalformed and OnlyAnomalous narrow the table to the frames that
+	// did not decode and the ones a dissector flagged.
+	OnlyMalformed bool
+	OnlyAnomalous bool
+
+	Limit  int
+	Offset int
+	Sort   string
+	Desc   bool
 }
 
-// Events returns the most recent events matching the query.
-func (s *Store) Events(ctx context.Context, q EventQuery) ([]model.Event, error) {
+// EventSortColumns are the orderings the event table offers. The map is a
+// whitelist, so a column name arriving from a URL never reaches the query.
+var EventSortColumns = map[string]string{
+	"time":      "ts",
+	"protocol":  "protocol",
+	"operation": "operation",
+	"class":     "class",
+	"src":       "src_ip",
+	"dst":       "dst_ip",
+	"packet":    "packet_index",
+}
+
+// where builds the predicates and their arguments.
+func (q EventQuery) where() ([]string, []any) {
 	where := []string{"project_id = ?"}
 	args := []any{q.ProjectID}
 	if len(q.Addresses) > 0 {
@@ -196,32 +230,121 @@ func (s *Store) Events(ctx context.Context, q EventQuery) ([]model.Event, error)
 			}
 		}
 	}
+	for _, f := range []struct {
+		column string
+		value  string
+	}{
+		{"protocol", q.Protocol},
+		{"class", q.Class},
+		{"operation", q.Operation},
+		{"capture_id", q.Capture},
+	} {
+		if f.value != "" {
+			where = append(where, f.column+" = ?")
+			args = append(args, f.value)
+		}
+	}
+	if q.Src != "" {
+		where = append(where, "("+endpointSQL("src")+" = ?)")
+		args = append(args, q.Src)
+	}
+	if q.Dst != "" {
+		where = append(where, "("+endpointSQL("dst")+" = ?)")
+		args = append(args, q.Dst)
+	}
+	if q.Search != "" {
+		like := "%" + q.Search + "%"
+		where = append(where, "(operation LIKE ? OR COALESCE(exception, '') LIKE ?"+
+			" OR COALESCE(error, '') LIKE ? OR "+endpointSQL("src")+" LIKE ?"+
+			" OR "+endpointSQL("dst")+" LIKE ?)")
+		args = append(args, like, like, like, like, like)
+	}
+	if q.OnlyMalformed {
+		where = append(where, "malformed = 1")
+	}
+	if q.OnlyAnomalous {
+		where = append(where, `attrs LIKE '%"anomaly"%'`)
+	}
+	return where, args
+}
+
+// Events returns the matching events, most recent first unless the query asks
+// for another order.
+func (s *Store) Events(ctx context.Context, q EventQuery) ([]model.Event, error) {
+	events, _, err := s.eventsPage(ctx, q, false)
+	return events, err
+}
+
+// EventsPage returns one page of matching events and how many there are in
+// all, which is what a paged table needs.
+func (s *Store) EventsPage(ctx context.Context, q EventQuery) ([]model.Event, int, error) {
+	return s.eventsPage(ctx, q, true)
+}
+
+func (s *Store) eventsPage(ctx context.Context, q EventQuery, withTotal bool) ([]model.Event, int, error) {
+	where, args := q.where()
+
+	total := 0
+	if withTotal {
+		//nolint:gosec // G202: only clauses and placeholders are concatenated here
+		row := s.db.QueryRowContext(ctx,
+			`SELECT COUNT(*) FROM events WHERE `+joinAnd(where), args...)
+		if err := row.Scan(&total); err != nil {
+			return nil, 0, fmt.Errorf("store: counting events: %w", err)
+		}
+	}
+
 	limit := q.Limit
 	if limit <= 0 || limit > 1000 {
 		limit = 100
 	}
-	args = append(args, limit)
+	order := "ts DESC, id DESC"
+	if column, ok := EventSortColumns[q.Sort]; ok {
+		order = column
+		if q.Desc {
+			order += " DESC"
+		}
+		order += ", id"
+	}
 
-	//nolint:gosec // G202: only clauses and placeholders are concatenated here
+	//nolint:gosec // G202: the ordering comes from the EventSortColumns whitelist
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT `+selectEventColumns+` FROM events WHERE `+joinAnd(where)+
-			` ORDER BY ts DESC, id DESC LIMIT ?`, args...)
+			` ORDER BY `+order+` LIMIT ? OFFSET ?`,
+		append(args, limit, max(q.Offset, 0))...)
 	if err != nil {
-		return nil, fmt.Errorf("store: querying events: %w", err)
+		return nil, 0, fmt.Errorf("store: querying events: %w", err)
 	}
 	var out []model.Event
 	for rows.Next() {
 		e, err := scanEvent(rows)
 		if err != nil {
 			_ = rows.Close()
-			return nil, err
+			return nil, 0, err
 		}
 		out = append(out, e)
 	}
 	if err := closeRows(rows); err != nil {
-		return nil, fmt.Errorf("store: querying events: %w", err)
+		return nil, 0, fmt.Errorf("store: querying events: %w", err)
 	}
-	return out, nil
+	if !withTotal {
+		total = len(out)
+	}
+	return out, total, nil
+}
+
+// EventOperations lists the operations seen in a project, most frequent first,
+// which is what the event table's operation filter offers.
+func (s *Store) EventOperations(ctx context.Context, projectID int64, protocol string) ([]string, error) {
+	if protocol == "" {
+		return s.distinct(ctx,
+			`SELECT operation FROM (SELECT operation, COUNT(*) AS n FROM events
+			 WHERE project_id = ? GROUP BY operation ORDER BY n DESC LIMIT 200)`, projectID)
+	}
+	return s.distinct(ctx,
+		`SELECT operation FROM (SELECT operation, COUNT(*) AS n FROM events
+		 WHERE project_id = ? AND protocol = ? GROUP BY operation ORDER BY n DESC LIMIT 200)`,
+		projectID, protocol)
 }
 
 func scanEvent(rows *sql.Rows) (model.Event, error) {
