@@ -31,7 +31,8 @@ type AssetsFilter struct {
 	Protocol string
 	// Level is a Purdue level as the store spells it: a number, or
 	// "unknown" for the assets nothing placed.
-	Level string
+	Level  string
+	Vendor string
 }
 
 // Sort is a table's sort state, and like the filters it round-trips through
@@ -136,6 +137,7 @@ type AssetsView struct {
 	Roles     []string
 	Protocols []string
 	Levels    []string
+	Vendors   []string
 }
 
 // Headers are the asset list's column headers. The list is paged in the
@@ -395,6 +397,9 @@ func (v AssetsView) listURL(offset int, s Sort) string {
 	}
 	if v.Filter.Level != "" {
 		q.Set("level", v.Filter.Level)
+	}
+	if v.Filter.Vendor != "" {
+		q.Set("vendor", v.Filter.Vendor)
 	}
 	if s.Column != "" {
 		q.Set("sort", s.Column)

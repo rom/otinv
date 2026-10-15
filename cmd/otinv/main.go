@@ -71,6 +71,7 @@ func newRootCommand() *cobra.Command {
 		newServeCommand(),
 		newExportCommand(),
 		newProtocolsCommand(),
+		newOUICommand(),
 		newRulesCommand(),
 		newVersionCommand(),
 	)

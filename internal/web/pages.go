@@ -138,7 +138,7 @@ func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 			if label == "" {
 				return ""
 			}
-			return "/assets?q=" + url.QueryEscape(label)
+			return "/assets?vendor=" + url.QueryEscape(label)
 		})
 	view.Operations = templates.NewBars(templates.T(lang, "chart.operations"),
 		buckets(byOperation), nil, func(label string) string {

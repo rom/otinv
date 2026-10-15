@@ -322,6 +322,7 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 	page.Title = templates.T(page.Lang, "assets.title")
 	filter := templates.AssetsFilter{
 		Search:   q.Get("q"),
+		Vendor:   q.Get("vendor"),
 		Role:     q.Get("role"),
 		Protocol: q.Get("protocol"),
 		Level:    q.Get("level"),
@@ -341,6 +342,7 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		Role:      filter.Role,
 		Protocol:  filter.Protocol,
 		Level:     filter.Level,
+		Vendor:    filter.Vendor,
 		Search:    filter.Search,
 		Limit:     limit,
 		Offset:    offset,
@@ -366,6 +368,11 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, "listing levels", err)
 		return
 	}
+	vendors, err := s.store.AssetVendors(ctx, s.project.ID)
+	if err != nil {
+		s.fail(w, r, "listing vendors", err)
+		return
+	}
 
 	view := templates.AssetsView{
 		Page:      page,
@@ -378,6 +385,7 @@ func (s *Server) handleAssets(w http.ResponseWriter, r *http.Request) {
 		Roles:     roles,
 		Protocols: protocols,
 		Levels:    levels,
+		Vendors:   vendors,
 	}
 
 	// htmx asks for the table alone, so filtering and paging stay on the

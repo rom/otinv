@@ -147,9 +147,103 @@ func TestIdentityEnrichment(t *testing.T) {
 	require.Contains(t, fields, "firmware_revision")
 	assert.Equal(t, "1.0", fields["firmware_revision"].Value)
 
-	// The client learns nothing about itself from the device's reply.
+	// The device's own reply says what it is, whoever made the network chip
+	// inside it.
+	require.Contains(t, fields, "nic_vendor")
+	assert.Equal(t, "Intel Corporation", fields["nic_vendor"].Value)
+	assert.Greater(t, fields["vendor"].Confidence, fields["nic_vendor"].Confidence,
+		"a device naming itself outranks the card fitted in it")
+
+	// The client learns nothing about itself from the device's reply. Its own
+	// address is the one thing that gives it away.
 	hmi := assets["mac:00:20:78:00:62:0d"]
-	assert.Empty(t, hmi.Attributes)
+	assert.Equal(t, []string{"nic_vendor", "vendor"}, attributeFields(hmi))
+}
+
+// The IEEE register names the maker of a card from the address alone, which
+// is the only identity a frame carries for free.
+func TestMACVendor(t *testing.T) {
+	f := flow("00:1b:1b:0a:0b:0c", "10.0.0.57", 2578, "00:1d:9c:11:22:33", "10.0.0.3", 502)
+	poll := request(f, "ReadHoldingRegisters", 3, model.ClassRead, 0)
+	poll.PacketIndex = 7
+
+	b := inventory.New()
+	b.Add(poll)
+	assets := byKey(b.Assets())
+
+	hmi := assets["mac:00:1b:1b:0a:0b:0c"]
+	fields := attributesByField(hmi)
+	require.Contains(t, fields, "nic_vendor")
+	assert.Equal(t, "Siemens AG", fields["nic_vendor"].Value)
+	assert.Equal(t, "ieee_oui_001b1b", fields["nic_vendor"].Source)
+	assert.Equal(t, uint64(7), fields["nic_vendor"].Evidence.PacketIndex,
+		"the evidence is the frame that showed the address")
+	assert.Equal(t, "cap", fields["nic_vendor"].Evidence.CaptureID)
+	require.Contains(t, fields, "vendor")
+	assert.Equal(t, "Siemens AG", fields["vendor"].Value)
+	assert.Less(t, fields["vendor"].Confidence, 60,
+		"what the card implies about the device ranks below any identity it states")
+
+	plc := assets["mac:00:1d:9c:11:22:33"]
+	assert.Equal(t, "Rockwell Automation", attributesByField(plc)["nic_vendor"].Value)
+}
+
+// An address nobody was assigned names nobody. A hypervisor or a container
+// runtime makes its addresses up, and the few blocks the IEEE registered
+// before the local bit meant anything must not be read back as a maker.
+func TestMACVendorSaysNothingWithoutAnAssignment(t *testing.T) {
+	cases := map[string]string{
+		"locally administered":                "02:42:ac:11:00:02",
+		"a legacy locally administered entry": "aa:00:04:00:01:02",
+		"an unassigned block":                 "fc:ff:ff:00:00:01",
+	}
+	for name, mac := range cases {
+		t.Run(name, func(t *testing.T) {
+			f := flow(mac, "10.0.0.57", 2578, "00:1d:9c:11:22:33", "10.0.0.3", 502)
+			b := inventory.New()
+			b.Add(request(f, "ReadHoldingRegisters", 3, model.ClassRead, 0))
+
+			host := byKey(b.Assets())["mac:"+mac]
+			assert.Empty(t, attributeFields(host))
+		})
+	}
+}
+
+// The card a frame arrived on belongs to the device that sent it. Behind a
+// router that is the router's card, so the hosts it forwards for must not be
+// credited with it.
+func TestMACVendorStaysWithTheCard(t *testing.T) {
+	const gatewayMAC = "00:50:04:93:70:67"
+	b := inventory.New()
+	for i, ip := range []string{"10.1.0.1", "10.1.0.2", "10.1.0.3", "10.1.0.4", "10.1.0.5"} {
+		f := flow("00:1b:1b:0a:0b:0c", "10.0.0.57", 2578, gatewayMAC, ip, 502)
+		b.Add(request(f, "ReadHoldingRegisters", 3, model.ClassRead, time.Duration(i)*time.Second))
+	}
+
+	assets := byKey(b.Assets())
+	behind := assets["ip:10.1.0.1"]
+	require.NotEmpty(t, behind.Key)
+	assert.Empty(t, attributeFields(behind),
+		"the host behind the router did not supply the card the frames came on")
+
+	gateway := assets["mac:"+gatewayMAC]
+	assert.Equal(t, "3COM", attributesByField(gateway)["nic_vendor"].Value)
+}
+
+func attributesByField(a model.Asset) map[string]model.Attribute {
+	out := make(map[string]model.Attribute, len(a.Attributes))
+	for _, at := range a.Attributes {
+		out[at.Field] = at
+	}
+	return out
+}
+
+func attributeFields(a model.Asset) []string {
+	var out []string
+	for _, at := range a.Attributes {
+		out = append(out, at.Field)
+	}
+	return out
 }
 
 // A routed segment makes many IPs share the gateway's MAC. Those hosts must

@@ -53,6 +53,19 @@ templ AssetsPage(v AssetsView) {
 					}
 				</select>
 			</label>
+			<label>
+				{ T(v.Page.Lang, "assets.vendor") }
+				<select name="vendor">
+					<option value="">{ T(v.Page.Lang, "assets.all") }</option>
+					for _, vendor := range v.Vendors {
+						if vendor == v.Filter.Vendor {
+							<option value={ vendor } selected>{ vendor }</option>
+						} else {
+							<option value={ vendor }>{ vendor }</option>
+						}
+					}
+				</select>
+			</label>
 			<button type="submit">{ T(v.Page.Lang, "assets.filter") }</button>
 		</form>
 		@AssetTable(v)

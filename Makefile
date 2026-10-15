@@ -12,6 +12,12 @@ TEMPL_VERSION := v0.3.898
 # release that can analyse the version in go.mod.
 GOLANGCI_VERSION := v2.14.0
 
+# Where `make oui` reads the IEEE registry from, and what the provenance note
+# should say about it. OUI_DIR is empty by default, which makes that target
+# explain itself and change nothing.
+OUI_DIR ?=
+OUI_SOURCE ?= https://standards-oui.ieee.org/
+
 # How long each fuzz target runs in `make fuzz`. Long enough to catch a
 # regression in a changed dissector, short enough to run on every change.
 FUZZTIME ?= 30s
@@ -32,7 +38,7 @@ LDFLAGS := -s -w \
 	-X main.commit=$(COMMIT) \
 	-X main.buildDate=$(BUILD_DATE)
 
-.PHONY: all build generate test test-integration test-update fuzz lint fmt tidy ci verify-generated clean
+.PHONY: all build generate generate-templ oui test test-integration test-update fuzz lint fmt tidy ci verify-generated clean
 
 all: build
 
@@ -41,11 +47,13 @@ all: build
 build:
 	go build -trimpath -ldflags '$(LDFLAGS)' -o $(BIN) ./cmd/otinv
 
-# Regenerates the templ components. The generated *_templ.go files are
-# committed, so building needs no tools beyond the Go toolchain; only changing
-# a .templ file needs templ itself.
-# The OUI table regeneration hooks in here once internal/oui exists.
-generate:
+# Regenerates what is generated and committed: the templ components and the
+# embedded IEEE MAC vendor table.
+generate: generate-templ oui
+
+# The generated *_templ.go files are committed, so building needs no tools
+# beyond the Go toolchain; only changing a .templ file needs templ itself.
+generate-templ:
 	@command -v templ >/dev/null 2>&1 || { \
 		echo "templ is needed only when a .templ file changes; building and testing do not need it."; \
 		echo "To install it:"; \
@@ -53,6 +61,26 @@ generate:
 		echo "    # then make sure \$$(go env GOPATH)/bin is on your PATH"; \
 		exit 1; }
 	templ generate
+
+# Rebuilds internal/oui/table.txt.gz, which names the maker of a network card
+# from a MAC address, from the IEEE registry files oui.txt and iab.txt.
+#
+# The table is committed, so this is a deliberate refresh and never part of a
+# build: the files come from https://standards-oui.ieee.org/, which the
+# air-gapped laptop otinv is built for cannot reach. Download them where there
+# is a network, copy them across, and point OUI_DIR at them. The generator
+# records in internal/oui/PROVENANCE.md where they came from, when, and what
+# they contained.
+oui:
+	@if [ -z "$(OUI_DIR)" ]; then \
+		echo "skipping the MAC vendor table: it is committed, and a refresh needs the IEEE registry."; \
+		echo "To refresh it:"; \
+		echo "    make oui OUI_DIR=/path/to/dir/holding/oui.txt/and/iab.txt"; \
+	else \
+		go run ./internal/oui/ouigen \
+			-oui "$(OUI_DIR)/oui.txt" -iab "$(OUI_DIR)/iab.txt" \
+			-out internal/oui -source "$(OUI_SOURCE)"; \
+	fi
 
 test:
 	go test $(PKG)

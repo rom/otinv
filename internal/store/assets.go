@@ -26,6 +26,12 @@ type AssetQuery struct {
 	// "unknown" for the assets nothing placed. An empty value selects every
 	// level, which is not the same as selecting the unplaced ones.
 	Level string
+	// Vendor selects one vendor exactly, as AssetVendors spells it. It is an
+	// exact match rather than a search because two makers' names commonly
+	// share a word: "Siemens AG" from a MAC block and "Siemens" from an S7
+	// identity reply are different answers to the same question, and a facet
+	// that mixed them would be no facet at all.
+	Vendor string
 	// Search matches the label, the inferred vendor and any observed address.
 	Search string
 	Limit  int
@@ -229,6 +235,10 @@ func assetFilter(q AssetQuery) (string, []any) {
 			where = append(where, "a.purdue_level = ?")
 			args = append(args, level)
 		}
+	}
+	if q.Vendor != "" {
+		where = append(where, "IFNULL(a.vendor, '') = ?")
+		args = append(args, q.Vendor)
 	}
 	if q.Search != "" {
 		like := "%" + q.Search + "%"
@@ -547,6 +557,16 @@ func nullLevel(l model.Level) any {
 		return nil
 	}
 	return int64(l.Value)
+}
+
+// AssetVendors lists the vendors present in a project, for the filter panel.
+// An asset no vendor was inferred for is left out: the filter offers what can
+// be selected, and "no vendor" is what an empty selection already shows.
+func (s *Store) AssetVendors(ctx context.Context, projectID int64) ([]string, error) {
+	return s.distinct(ctx,
+		`SELECT DISTINCT vendor FROM assets
+		 WHERE project_id = ? AND IFNULL(vendor, '') <> ''
+		 ORDER BY vendor COLLATE NOCASE`, projectID)
 }
 
 // AssetRoles lists the roles present in a project, for the filter panel.

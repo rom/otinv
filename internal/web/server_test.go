@@ -176,6 +176,19 @@ func TestAssetListShowsInventory(t *testing.T) {
 	assert.Less(t, strings.Index(body, "10.0.0.57"), strings.Index(body, "10.0.0.3"))
 }
 
+// The filter panel offers the vendors the project holds, so a vendor read
+// from a MAC block can be picked rather than typed.
+func TestAssetListOffersAVendorFacet(t *testing.T) {
+	h, _, _ := serve(t, sampleAssets())
+	body := get(t, h, "/assets", nil).Body.String()
+
+	assert.Contains(t, body, `<select name="vendor">`)
+	assert.Contains(t, body, `<option value="Wingpath Limited">Wingpath Limited</option>`)
+
+	selected := get(t, h, "/assets?vendor=Wingpath+Limited", nil).Body.String()
+	assert.Contains(t, selected, `<option value="Wingpath Limited" selected>`)
+}
+
 func TestAssetListFilters(t *testing.T) {
 	h, _, _ := serve(t, sampleAssets())
 
@@ -205,6 +218,19 @@ func TestAssetListFilters(t *testing.T) {
 			target:    "/assets?protocol=modbus",
 			wantIn:    "10.0.0.3",
 			wantCount: "2 matching assets",
+		},
+		{
+			name:      "by vendor",
+			target:    "/assets?vendor=Wingpath+Limited",
+			wantIn:    "10.0.0.3",
+			wantNotIn: "10.0.0.57",
+			wantCount: "1 matching assets",
+		},
+		{
+			name:      "by vendor, which is exact",
+			target:    "/assets?vendor=Wingpath",
+			wantIn:    "No assets match this filter.",
+			wantCount: "0 matching assets",
 		},
 		{
 			name:      "no match",

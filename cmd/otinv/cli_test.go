@@ -107,6 +107,69 @@ func TestProtocolsCommandTierFilter(t *testing.T) {
 	assert.Contains(t, err.Error(), "--tier must be 1, 2 or 3")
 }
 
+func TestOUICommandNamesTheCardMaker(t *testing.T) {
+	out := mustRun(t, "oui", "00:1b:1b:0a:0b:0c", "001d9c112233", "00-50-C2-00-0A-BB")
+
+	assert.Contains(t, out, "Siemens AG")
+	assert.Contains(t, out, "Rockwell Automation")
+	assert.Contains(t, out, "00:1d:9c/24", "the block an address was named from")
+	assert.Contains(t, out, "00:50:c2:00:0/36",
+		"a 36-bit assignment, which beats the shared block it sits in")
+	assert.Contains(t, out, "3 of 3 addresses named")
+}
+
+func TestOUICommandExplainsWhatItCannotName(t *testing.T) {
+	out := mustRun(t, "oui", "02:42:ac:11:00:02", "01:0c:cd:01:00:00", "fc:ff:ff:00:00:01", "00:50:c2")
+
+	assert.Contains(t, out, "locally administered")
+	assert.Contains(t, out, "a group address")
+	assert.Contains(t, out, "no entry in the IEEE register")
+	assert.Contains(t, out, "shared IEEE block")
+	assert.Contains(t, out, "0 of 4 addresses named")
+}
+
+func TestOUICommandJSON(t *testing.T) {
+	out := mustRun(t, "oui", "--json", "00:1b:1b:0a:0b:0c", "02:42:ac:11:00:02")
+
+	var answer ouiAnswer
+	require.NoError(t, json.Unmarshal([]byte(out), &answer))
+	require.Len(t, answer.Addresses, 2)
+
+	assert.Equal(t, "00:1b:1b:0a:0b:0c", answer.Addresses[0].MAC)
+	assert.Equal(t, "Siemens AG", answer.Addresses[0].Vendor)
+	assert.Equal(t, "00:1b:1b", answer.Addresses[0].Block)
+	assert.Equal(t, 24, answer.Addresses[0].Bits)
+	assert.True(t, answer.Addresses[0].Manufacturer)
+
+	assert.Empty(t, answer.Addresses[1].Vendor)
+	assert.False(t, answer.Addresses[1].Manufacturer)
+	assert.True(t, answer.Addresses[1].Local)
+	assert.Contains(t, answer.Addresses[1].Note, "locally administered")
+
+	assert.Greater(t, answer.Register.Bits24, 30000, "the embedded registry travels with the binary")
+	assert.Greater(t, answer.Register.Bits36, 4000)
+}
+
+func TestOUICommandReadsStandardInput(t *testing.T) {
+	root := newRootCommand()
+	var out bytes.Buffer
+	root.SetOut(&out)
+	root.SetErr(&out)
+	root.SetIn(strings.NewReader("# addresses from a report\n\n00:1b:1b:0a:0b:0c\n  00:1d:9c:11:22:33  \n"))
+	root.SetArgs([]string{"oui"})
+	require.NoError(t, root.Execute())
+
+	assert.Contains(t, out.String(), "Siemens AG")
+	assert.Contains(t, out.String(), "Rockwell Automation")
+	assert.Contains(t, out.String(), "2 of 2 addresses named")
+}
+
+func TestOUICommandRejectsSomethingThatIsNotAnAddress(t *testing.T) {
+	_, err := run(t, "oui", "plc1.example.org")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not a MAC address")
+}
+
 func TestAnalyzeWritesItsReportToAFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "report.json")

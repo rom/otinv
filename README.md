@@ -41,11 +41,12 @@ fuzzed.
 | `internal/dissect/opcua` — Tier 1 OPC UA binary, including the security posture of every endpoint | done |
 | `internal/store` — SQLite (pure Go), embedded migrations, batched event writes, asset/event/flow queries, aggregates, per-project settings | done |
 | `internal/inventory` — asset identity and merge, gateway detection, role inference, identity enrichment | done |
+| `internal/oui` — the embedded IEEE MAC registry, which names the maker of a network card | done |
 | `internal/topology` — L2/L3 graph building, Purdue level placement, cross-level flows | done |
 | `internal/rules` — rule engine, thirteen built-in rules, the YAML DSL for custom ones | done |
 | `internal/web` — GUI: dashboard, assets, topology, flows, communication matrix, events, findings with triage, rules, protocol statistics, captures, settings | done |
 | `internal/export` — JSON and CSV export of every stored table | done |
-| `cmd/otinv` — `analyze`, `serve`, `export`, `protocols`, `rules`, `version` | done |
+| `cmd/otinv` — `analyze`, `serve`, `export`, `protocols`, `oui`, `rules`, `version` | done |
 | `internal/baseline` | not started |
 | Tier 2 and Tier 3 protocols | not started |
 | HTML report and CycloneDX-style asset export | not started |
@@ -96,18 +97,21 @@ for: one device identified across both protocols, and a station classified by
 what it did rather than by its address.
 
 ```
-Address                             Role                      Vendor            Protocols                        Events
-192.168.1.40  00:1b:1b:23:eb:3b     PLC / RTU / IED           Siemens           s7comm (server)                     200
-192.168.1.10  90:e6:ba:84:5e:41     Engineering workstation   —                 s7comm (client)                     200
-10.0.0.3      00:02:b3:ce:70:51     PLC / RTU / IED           Wingpath Limited  dnp3 (server), modbus (server)      127
-10.0.0.57     00:20:78:00:62:0d     HMI / SCADA               —                 modbus (client)                      38
+Address                           Role                     Vendor                       Protocols                       Events
+192.168.1.40  00:1b:1b:23:eb:3b   PLC / RTU / IED          Siemens (90%)                s7comm (server)                    218
+192.168.1.10  90:e6:ba:84:5e:41   Engineering workstation  ASUSTek COMPUTER INC. (55%)  s7comm (client)                    218
+10.0.0.3      00:02:b3:ce:70:51   PLC / RTU / IED          Wingpath Limited (70%)       dnp3 (server), modbus (server)     127
+10.0.0.57     00:20:78:00:62:0d   HMI / SCADA              RUNTOP, INC. (55%)           modbus (client)                     38
 ```
 
 Nothing there comes from an address or a port alone. 10.0.0.3 is one asset
 speaking two protocols, merged on its MAC, with the vendor read out of its own
 Modbus identity reply. 192.168.1.40 is a Siemens CPU because it said so when
 asked for its SZL lists, and 192.168.1.10 is an engineering workstation
-because it downloaded a block into that CPU.
+because it downloaded a block into that CPU. The two vendors at 55% were read
+from the IEEE register of MAC blocks instead — those hosts never said anything
+about themselves, and the maker of a network card is only weak evidence about
+the device it is fitted in, so the confidence says so.
 
 Copy `otinv.example.yaml` to `otinv.yaml` to add non-standard ports. Protocols
 are also detected heuristically, so an unlisted port is still found.
@@ -119,6 +123,7 @@ otinv analyze <capture…>   decode captures, report, and optionally store them 
 otinv serve                browse a project in the GUI
 otinv export               write a project out as JSON or CSV
 otinv protocols            list the dissectors in this binary, with tiers and default ports
+otinv oui                  name the maker of a network card from a MAC address
 otinv rules                list the detection rules, or validate a custom rule file
 otinv version              version, commit, build date and the Go toolchain
 ```
@@ -210,6 +215,23 @@ s7comm        1     102    -           -          length, defers
 
 `--json` for the machine-readable form, `--tier` to list one depth tier, and
 `--config` to show the extra ports a configuration file adds.
+
+### oui
+
+```
+$ bin/otinv oui 00:1b:1b:0a:0b:0c 001d9c112233 00-50-C2-00-0A-BB 02:42:ac:11:00:02
+ADDRESS            VENDOR               BLOCK             NOTE
+00:1b:1b:0a:0b:0c  Siemens AG           00:1b:1b/24
+00:1d:9c:11:22:33  Rockwell Automation  00:1d:9c/24
+00:50:c2:00:0a:bb  T.L.S. Corp.         00:50:c2:00:0/36
+02:42:ac:11:00:02  -                    -                 locally administered, so the address was chosen where the device runs and not by a manufacturer
+
+3 of 4 addresses named, from a registry of 35084 24-bit and 4575 36-bit assignments.
+```
+
+Colons, hyphens, dots or none of them are all accepted, a block on its own
+(`00:1b:1b`) is a valid question, and with no arguments the addresses are read
+from standard input one per line. `--json` for the machine-readable form.
 
 ### rules
 
@@ -465,6 +487,68 @@ identifier, so the stream state remembers that a message is in progress and
 reports a continuation as what it is, rather than reading its first octets as
 a service. A sequence number that skips is reported as `sequence_gap`.
 
+## The MAC vendor registry
+
+Every frame carries the address of the card that sent it, and the IEEE
+publishes who bought which block of addresses. `internal/oui` embeds that
+register — 35,084 24-bit assignments and 4,575 36-bit ones, about 390 KB
+compressed — so the one piece of identity a frame gives away for free costs
+nothing but a table read. Nothing is asked of any device, which is what makes
+it usable at all here.
+
+Two attributes come out of a lookup, because they are two different claims:
+
+| Field | Confidence | What it says |
+|-------|------------|--------------|
+| `nic_vendor` | 85 | who made the network interface. A fact about the hardware. |
+| `vendor` | 55 | who made the device. A guess from the card, and deliberately ranked below every identity a device states about itself — 60 for an unmapped identity field, 90 for a structured one |
+
+So a Siemens CPU that answers an SZL read is a Siemens CPU at 90% whatever
+chip is inside it, and a controller that never says anything about itself is
+still attributed to the maker of its card at 55%. Where the two disagree, both
+are on the asset page with the packet that proves each one, which is how an
+OEM panel with somebody else's board in it reads correctly instead of
+plausibly.
+
+Four kinds of address name nobody, and all four say so rather than guessing:
+
+- **Locally administered** (the U/L bit): a hypervisor or container runtime
+  made the address up. A handful of the oldest OUIs were registered before
+  that bit meant anything — `AA-00-04` is DECnet — so the register's entry is
+  shown but not read as a manufacturer.
+- **Group addresses** (the I/G bit): a GOOSE publication or a discovery
+  broadcast names a set of receivers, not a card.
+- **Shared blocks**: `00-50-C2` and `40-D8-55` are divided into smaller
+  assignments. The embedded register resolves the 36-bit IAB ones; a MAC from
+  the 28-bit MA-M or 36-bit MA-S registries lands on the IEEE's own name,
+  which is reported as a shared block rather than as a vendor.
+- **Withheld holders**: a block the register prints as `Private` is assigned,
+  but to a holder who asked the IEEE not to publish the name.
+
+In the GUI this is what fills the vendor column, the vendor facet on the asset
+list and the "assets by vendor" chart on the dashboard — 47 of the 54 assets
+in the bundled sample project have a vendor now, where without the register
+seven would. Each one's asset page says where the name came from and shows the
+packet that proves it, so a card's maker is never mistaken for a device's.
+
+A MAC seen only behind a router belongs to the router, so the hosts it
+forwards for are not credited with its card — the same gateway detection that
+keeps those hosts from merging into one asset.
+
+The table is generated from IEEE's `oui.txt` and `iab.txt` by
+`internal/oui/ouigen` and committed, so a build needs nothing but the Go
+toolchain and an air-gapped laptop needs no network. Refreshing it is a
+deliberate act:
+
+```
+make oui OUI_DIR=/path/to/dir/holding/oui.txt/and/iab.txt
+```
+
+`internal/oui/PROVENANCE.md` records where the files came from, when, how many
+assignments each held and their SHA-256 — including that three of the
+register's lines repeat a prefix another holder already has, which the table
+keeps together instead of picking a winner.
+
 ## Topology and Purdue levels
 
 `internal/topology` turns the inventory and the flow aggregate into a graph,
@@ -627,8 +711,8 @@ view is deep-linkable: the whole filter state lives in the URL.
   Purdue level and by vendor, findings by severity, exceptions by name, a
   timeline of the whole project, and the latest events. Every tile, bar and segment links through to the filtered
   view behind it.
-- **Assets** — faceted list (search, role, protocol, Purdue level), paged and
-  sortable, with the inferred level on every row
+- **Assets** — faceted list (search, role, protocol, Purdue level, vendor),
+  paged and sortable, with the inferred level on every row
 - **Asset detail** — the inferred role *with the reasons for it*, identity
   fields with their confidence and the packet that proves each one, every
   observed (MAC, IP, VLAN) tuple with its time range, protocols as client and
@@ -774,6 +858,16 @@ than from the URL, and a test tries to drop the table through the search box.
   level; `CLAUDE.md` requires those to be overridable and they will be. Until
   then a wrong level can be argued with — the asset page shows the reasoning —
   but not corrected.
+- **Vendor names are not normalised.** A device that names itself "Siemens"
+  and one placed by its MAC block alone, which the register spells "Siemens
+  AG", are two entries in the vendor facet and two bars on the dashboard. The
+  register's own spelling is kept rather than guessed at; folding the two
+  together needs an alias table the analyst can see and correct, which is a
+  later milestone.
+- **The embedded IEEE register carries the MA-L and IAB files only**, so an
+  address from the 28-bit MA-M or 36-bit MA-S registries is reported as a
+  shared block instead of being resolved to its holder. Those registries are
+  published separately and are not in this build's source.
 - **Purdue levels 0 and 4 are never inferred**, and the zones and subnets
   `CLAUDE.md` wants in the settings are not there yet, so a plant with an
   enterprise segment in the capture will see it placed at level 2 by

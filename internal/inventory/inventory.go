@@ -16,9 +16,11 @@ import (
 	"net"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rom/otinv/internal/model"
+	"github.com/rom/otinv/internal/oui"
 	"github.com/rom/otinv/internal/topology"
 )
 
@@ -34,6 +36,12 @@ const (
 	confidencePolledServer   = 60
 	confidenceProgrammed     = 70
 	confidenceGateway        = 75
+	// The IEEE register names the maker of the network card with certainty,
+	// so that is held high; what the card says about the device it is fitted
+	// in is held below every protocol identity, because an OEM commonly
+	// builds somebody else's network chip into its controller.
+	confidenceNICVendor     = 85
+	confidenceVendorFromMAC = 55
 )
 
 // Builder accumulates events and produces assets. It is not safe for
@@ -105,6 +113,10 @@ type tupleStats struct {
 	first, last time.Time
 	protocols   map[protoKey]*protoStats
 	attrs       []attrCandidate
+	// macAttrs is what the MAC itself says. It is kept apart from attrs
+	// because it describes the card the frames carried, which for a tuple
+	// reached through a router is the router's card and not the host's.
+	macAttrs []attrCandidate
 }
 
 // Add folds one event into the inventory. Both endpoints of the event are
@@ -188,6 +200,7 @@ func (b *Builder) observe(k tupleKey, e model.Event, side string) {
 		}
 		b.tuples[k] = st
 		b.order = append(b.order, k)
+		st.macAttrs = macVendor(k.mac, e)
 	}
 	st.events++
 	if e.Timestamp.Before(st.first) {
@@ -413,6 +426,7 @@ func (b *Builder) Assets() []model.Asset {
 				FirstSeen: st.first,
 				LastSeen:  st.last,
 			})
+			gwAcc.attrs = append(gwAcc.attrs, st.macAttrs...)
 			gw.Events += st.events
 			widenSeen(gw, st.first, st.last)
 		}
@@ -478,6 +492,54 @@ func unicastMAC(mac string) string {
 		return mac
 	}
 	return ""
+}
+
+// macVendor reads what the IEEE register says about an address.
+//
+// It is the one piece of identity that costs nothing but the frame header:
+// the block a MAC was handed out from belongs to whoever made the card, which
+// otinv embeds rather than asking anybody. Two attributes come out of it,
+// because they are two different claims. The card's maker is a fact about the
+// hardware and is recorded as such; what that implies about the device is a
+// guess, and ranks below every identity a device states about itself, so that
+// a Siemens CPU with a third-party network chip is still a Siemens CPU — and
+// so that the difference between the two stays visible in the GUI.
+//
+// A locally administered address, a group address, a block whose holder the
+// IEEE does not publish and a block the IEEE subdivides beyond what the
+// embedded register lists all name nobody, and yield nothing.
+func macVendor(mac string, e model.Event) []attrCandidate {
+	if mac == "" {
+		return nil
+	}
+	v, ok := oui.Lookup(mac)
+	if !ok {
+		return nil
+	}
+
+	evidence := model.Evidence{
+		CaptureID:   e.CaptureID,
+		PacketIndex: e.PacketIndex,
+		Timestamp:   e.Timestamp,
+		Protocol:    e.Protocol,
+		Operation:   e.Operation,
+		SrcIP:       e.Flow.SrcIP,
+		DstIP:       e.Flow.DstIP,
+	}
+	source := fmt.Sprintf("ieee_oui_%s", strings.ReplaceAll(v.Prefix, ":", ""))
+	return []attrCandidate{{
+		field:      "nic_vendor",
+		value:      v.Name,
+		confidence: confidenceNICVendor,
+		source:     source,
+		evidence:   evidence,
+	}, {
+		field:      "vendor",
+		value:      v.Name,
+		confidence: confidenceVendorFromMAC,
+		source:     source,
+		evidence:   evidence,
+	}}
 }
 
 // unicastIP drops an address that names a group of machines rather than one.
@@ -584,6 +646,9 @@ func mergeTuple(a *model.Asset, ac *assetAcc, tk tupleKey, st *tupleStats, viaGa
 		}
 	}
 	ac.attrs = append(ac.attrs, st.attrs...)
+	if !viaGateway {
+		ac.attrs = append(ac.attrs, st.macAttrs...)
+	}
 }
 
 func addAddress(a *model.Asset, addr model.Address) {

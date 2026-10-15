@@ -368,6 +368,18 @@ func TestAssetQueryFilters(t *testing.T) {
 			wantKeys: []string{"mac:00:02:b3:ce:70:51"},
 		},
 		{
+			name:     "by vendor",
+			query:    store.AssetQuery{ProjectID: p.ID, Vendor: "Wingpath Limited"},
+			wantKeys: []string{"mac:00:02:b3:ce:70:51"},
+		},
+		{
+			// The facet names a vendor, so half of one is not that vendor:
+			// "Siemens" and "Siemens AG" are two answers, not one.
+			name:     "by vendor, which is exact",
+			query:    store.AssetQuery{ProjectID: p.ID, Vendor: "Wingpath"},
+			wantKeys: nil,
+		},
+		{
 			name:     "paged",
 			query:    store.AssetQuery{ProjectID: p.ID, Limit: 1, Offset: 1},
 			wantKeys: []string{"ip:10.0.0.57"},
@@ -424,6 +436,12 @@ func TestProtocolAndRoleFacets(t *testing.T) {
 	roles, err := s.AssetRoles(ctx, p.ID)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{string(model.RoleController), string(model.RoleOperator)}, roles)
+
+	// The second asset has no vendor, and the facet offers what can be
+	// selected rather than a blank entry.
+	vendors, err := s.AssetVendors(ctx, p.ID)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"Wingpath Limited"}, vendors)
 }
 
 func TestEventsByAddress(t *testing.T) {
